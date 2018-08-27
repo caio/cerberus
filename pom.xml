@@ -15,6 +15,8 @@
         <junit.jupiter.version>5.2.0</junit.jupiter.version>
         <junit.platform.version>1.2.0</junit.platform.version>
         <lucene.version>7.4.0</lucene.version>
+        <protoc.version>3.6.1</protoc.version>
+        <!-- <protoc.binary>/usr/bin/protoc</protoc.binary> -->
     </properties>
 
     <dependencies>
@@ -34,9 +36,26 @@
             <artifactId>lucene-queryparser</artifactId>
             <version>${lucene.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protoc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protoc.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.6.0</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -56,6 +75,22 @@
                         <version>${junit.platform.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.5.1</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
