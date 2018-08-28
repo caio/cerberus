@@ -1,21 +1,48 @@
 package co.caio.cerberus;
 
-import org.junit.jupiter.api.DisplayName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("The Recipe wrapper class")
 class RecipeTest {
+    @Test
+    void cantBuildWithoutRequired() {
+        var builder = new Recipe.Builder()
+                .recipeId(12)
+                .name("this is incomplete");
+        assertThrows(IllegalStateException.class, () -> builder.build());
+    }
 
     @Test
-    @DisplayName("Doesn't yield a valid instance on bad json")
-    void fromBadJson() {
-        assertFalse(Recipe.fromJson("").isPresent());
-        assertFalse(Recipe.fromJson("[]").isPresent());
-        assertFalse(Recipe.fromJson("--").isPresent());
-        // FIXME we need very basic validation AT LEAST.
-        // gonna investigate other schemas...
-        assertFalse(Recipe.fromJson("{}").isPresent());
+    void strictBuilder() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> new Recipe.Builder().recipeId(1).recipeId(1));
+    }
+
+    @Test
+    Recipe basicBuild() {
+        var recipe = new Recipe.Builder()
+                .recipeId(1)
+                .name("valid recipe 1")
+                .description("valid recipe 1 description")
+                .slug("recipe-1")
+                .instructions("there is nothing to do")
+                .imageUrl("image.jpg")
+                .crawlUrl("https://nowhere.local")
+                .build();
+        return recipe;
+    }
+
+    @Test
+    void jsonSerialization() throws Exception {
+        var recipe = basicBuild();
+        var mapper = new ObjectMapper();
+        mapper.registerModule(new Jdk8Module());
+
+        var recipeAsJson = mapper.writeValueAsString(recipe);
+        assertEquals(recipe, mapper.readValue(recipeAsJson, Recipe.class));
     }
 }
