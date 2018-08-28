@@ -1,7 +1,5 @@
 package co.caio.cerberus;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,12 +35,8 @@ class RecipeTest {
     }
 
     @Test
-    void jsonSerialization() throws Exception {
+    void jsonSerialization() {
         var recipe = basicBuild();
-        var mapper = new ObjectMapper();
-        mapper.registerModule(new Jdk8Module());
-
-        var recipeAsJson = mapper.writeValueAsString(recipe);
-        assertEquals(recipe, mapper.readValue(recipeAsJson, Recipe.class));
+        assertEquals(recipe, Recipe.fromJson(Recipe.toJson(recipe).get()).get());
     }
 }

@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
-import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
-
 
 @Value.Style(
         strictBuilder = true,
@@ -39,5 +38,21 @@ public interface Recipe {
     OptionalInt proteinContent();
 
     class Builder extends co.caio.cerberus.ImmutableRecipe.Builder {}
+
+    public static Optional<Recipe> fromJson(String json) {
+        try {
+            return Optional.of(Environment.getObjectMapper().readValue(json, Recipe.class));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<String> toJson(Recipe recipe) {
+        try {
+            return Optional.of(Environment.getObjectMapper().writeValueAsString(recipe));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
 }
 
