@@ -26,7 +26,7 @@ class RecipeTest {
                 () -> new Recipe.Builder().recipeId(1).recipeId(1));
     }
 
-    Recipe basicBuild() {
+    static Recipe basicBuild() {
         var recipe = new Recipe.Builder()
                 .recipeId(1)
                 .siteId(12)
