@@ -1,0 +1,19 @@
+{
+  "recipeId": 1,
+  "name": "valid recipe 1",
+  "slug": "recipe-1",
+  "description": "valid recipe 1 description",
+  "instructions": "there is nothing to do",
+  "imageUrl": "image.jpg",
+  "crawlUrl": "https://nowhere.local",
+  "ingredients": ["10g of coconut oil", "1g of erythritol"],
+  "labels": [],
+  "keywords": ["a", "b", "c", "d"],
+  "prepTime": 10,
+  "cookTime": 10,
+  "totalTime": 20,
+  "calories": 120,
+  "carbohydrateContent": null,
+  "fatContent": 1,
+  "proteinContent": null
+}

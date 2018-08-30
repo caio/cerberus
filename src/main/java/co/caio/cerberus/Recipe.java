@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 
 @Value.Style(
         strictBuilder = true,
@@ -24,9 +25,9 @@ public interface Recipe {
     String instructions();
     String imageUrl();
     String crawlUrl();
-    List<String> labels();
     List<String> ingredients();
-    List<String> parsedIngredients();
+    Set<String> labels();
+    Set<String> keywords();
 
     OptionalInt prepTime();
     OptionalInt cookTime();
@@ -39,7 +40,7 @@ public interface Recipe {
 
     class Builder extends co.caio.cerberus.ImmutableRecipe.Builder {}
 
-    public static Optional<Recipe> fromJson(String json) {
+    static Optional<Recipe> fromJson(String json) {
         try {
             return Optional.of(Environment.getObjectMapper().readValue(json, Recipe.class));
         } catch (Exception e) {
@@ -47,7 +48,7 @@ public interface Recipe {
         }
     }
 
-    public static Optional<String> toJson(Recipe recipe) {
+    static Optional<String> toJson(Recipe recipe) {
         try {
             return Optional.of(Environment.getObjectMapper().writeValueAsString(recipe));
         } catch (Exception e) {

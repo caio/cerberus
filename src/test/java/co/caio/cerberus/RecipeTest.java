@@ -2,6 +2,12 @@ package co.caio.cerberus;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class RecipeTest {
@@ -20,7 +26,6 @@ class RecipeTest {
                 () -> new Recipe.Builder().recipeId(1).recipeId(1));
     }
 
-    @Test
     Recipe basicBuild() {
         var recipe = new Recipe.Builder()
                 .recipeId(1)
@@ -38,5 +43,16 @@ class RecipeTest {
     void jsonSerialization() {
         var recipe = basicBuild();
         assertEquals(recipe, Recipe.fromJson(Recipe.toJson(recipe).get()).get());
+    }
+
+    @Test
+    void loadSingleJson() throws IOException {
+        var jsonBytes = getClass().getResourceAsStream("/single_recipe.json")
+                .readAllBytes();
+        var recipe = Recipe.fromJson(new String(jsonBytes)).get();
+        assertEquals(120, recipe.calories().getAsInt());
+        assertEquals(2, recipe.ingredients().size());
+        assertFalse(recipe.carbohydrateContent().isPresent());
+        assertEquals(Set.of("a", "b", "c", "d"), recipe.keywords());
     }
 }
