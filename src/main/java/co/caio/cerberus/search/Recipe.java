@@ -1,5 +1,6 @@
-package co.caio.cerberus;
+package co.caio.cerberus.search;
 
+import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
@@ -37,7 +38,7 @@ public interface Recipe {
     OptionalInt fatContent();
     OptionalInt proteinContent();
 
-    class Builder extends co.caio.cerberus.ImmutableRecipe.Builder {}
+    class Builder extends ImmutableRecipe.Builder {}
 
     static Optional<Recipe> fromJson(String json) {
         try {

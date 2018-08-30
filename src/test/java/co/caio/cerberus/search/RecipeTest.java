@@ -1,8 +1,11 @@
-package co.caio.cerberus;
+package co.caio.cerberus.search;
 
+import co.caio.cerberus.search.Recipe;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
