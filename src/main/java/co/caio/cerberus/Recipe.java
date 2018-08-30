@@ -19,12 +19,11 @@ import java.util.Set;
 @Value.Immutable
 public interface Recipe {
     long recipeId();
-    String name();
+    long siteId();
     String slug();
+    String name();
     String description();
     String instructions();
-    String imageUrl();
-    String crawlUrl();
     List<String> ingredients();
     Set<String> labels();
     Set<String> keywords();

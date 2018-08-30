@@ -1,11 +1,10 @@
 {
   "recipeId": 1,
+  "siteId": 12,
   "name": "valid recipe 1",
   "slug": "recipe-1",
   "description": "valid recipe 1 description",
   "instructions": "there is nothing to do",
-  "imageUrl": "image.jpg",
-  "crawlUrl": "https://nowhere.local",
   "ingredients": ["10g of coconut oil", "1g of erythritol"],
   "labels": [],
   "keywords": ["a", "b", "c", "d"],
