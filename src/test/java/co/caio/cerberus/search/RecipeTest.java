@@ -55,4 +55,11 @@ class RecipeTest {
         assertFalse(recipe.carbohydrateContent().isPresent());
         assertEquals(Set.of("a", "b", "c", "d"), recipe.keywords());
     }
+
+    @Test
+    void loadAllSamples() throws IOException {
+        var samples = getClass().getResource("/sample_recipes.jsonlines").getFile();
+        var numSamples = Files.lines(Paths.get(samples)).map(Recipe::fromJson).count();
+        assertEquals(226, numSamples);
+    }
 }
