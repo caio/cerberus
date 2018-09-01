@@ -30,7 +30,7 @@ class IndexerTest {
         var tempDir = Files.createTempDirectory("cerberus-test");
         var index = new Indexer.Builder().directory(tempDir).createOrAppendMode().build();
         assertEquals(0, index.numDocs());
-        index.addRecipe(Util.basicBuild());
+        index.addRecipe(Util.getBasicRecipe());
         assertEquals(1, index.numDocs());
         index.close();
 

@@ -48,7 +48,7 @@ class RecipeTest {
 
     @Test
     void jsonSerialization() {
-        var recipe = Util.basicBuild();
+        var recipe = Util.getBasicRecipe();
         assertEquals(recipe, Recipe.fromJson(Recipe.toJson(recipe).get()).get());
     }
 
