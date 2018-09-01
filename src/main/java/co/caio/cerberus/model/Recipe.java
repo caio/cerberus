@@ -39,7 +39,7 @@ public interface Recipe {
 
     @Value.Default
     default String description() {
-        return new String();
+        return "";
     }
 
     @Value.Check
@@ -64,7 +64,6 @@ public interface Recipe {
         static void nonEmpty(String fieldName, List items) {
             if (items.isEmpty()) {
                 throw new IllegalStateException(String.format("Field `%s` must have items", fieldName));
-
             }
         }
     }
