@@ -1,6 +1,6 @@
-package co.caio.cerberus.search;
+package co.caio.cerberus.model;
 
-import co.caio.cerberus.search.Recipe;
+import co.caio.cerberus.Util;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -46,21 +46,9 @@ class RecipeTest {
                 .name("not empty").slug("not empty").instructions("not empty").addIngredients("item 1").build());
     }
 
-    static Recipe basicBuild() {
-        return new Recipe.Builder()
-                .recipeId(1)
-                .siteId(12)
-                .slug("recipe-1")
-                .name("valid recipe 1")
-                .description("valid recipe 1 description")
-                .instructions("there is nothing to do")
-                .addIngredients("item a", "item b").build();
-
-    }
-
     @Test
     void jsonSerialization() {
-        var recipe = basicBuild();
+        var recipe = Util.basicBuild();
         assertEquals(recipe, Recipe.fromJson(Recipe.toJson(recipe).get()).get());
     }
 

@@ -1,5 +1,6 @@
 package co.caio.cerberus.search;
 
+import co.caio.cerberus.Util;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class IndexTest {
         var tempDir = Files.createTempDirectory("cerberus-test");
         var index = new Index.Builder().directory(tempDir).createOrAppendMode().build();
         assertEquals(0, index.numDocs());
-        index.addRecipe(RecipeTest.basicBuild());
+        index.addRecipe(Util.basicBuild());
         assertEquals(1, index.numDocs());
         index.close();
 

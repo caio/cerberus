@@ -1,4 +1,4 @@
-package co.caio.cerberus.search;
+package co.caio.cerberus.model;
 
 import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
