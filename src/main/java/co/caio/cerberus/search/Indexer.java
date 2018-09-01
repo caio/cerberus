@@ -5,6 +5,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -23,10 +24,9 @@ public class Indexer {
     }
 
     public void addRecipe(Recipe recipe) throws IOException {
-        assert(indexWriter.isOpen());
-
         var doc = new Document();
         doc.add(new TextField("name", recipe.name(), Field.Store.YES));
+        doc.add(new LongPoint("recipe_id", recipe.recipeId()));
         indexWriter.addDocument(doc);
     }
 
@@ -39,8 +39,11 @@ public class Indexer {
     }
 
     public void close() throws IOException {
-        assert(indexWriter.isOpen());
         indexWriter.close();
+    }
+
+    public void commit() throws IOException {
+        indexWriter.commit();
     }
 
     public static class Builder {
