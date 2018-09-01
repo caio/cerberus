@@ -4,8 +4,6 @@ import co.caio.cerberus.Util;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,8 +64,7 @@ class RecipeTest {
 
     @Test
     void loadAllSamples() throws IOException {
-        var samples = getClass().getResource("/sample_recipes.jsonlines").getFile();
-        var numSamples = Files.lines(Paths.get(samples)).map(Recipe::fromJson).count();
-        assertEquals(226, numSamples);
+        assertEquals(226, Util.getSampleRecipes().count());
     }
+
 }
