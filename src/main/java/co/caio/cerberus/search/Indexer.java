@@ -18,8 +18,8 @@ import java.nio.file.Path;
 public class Indexer {
     private final IndexWriter indexWriter;
 
-    private Indexer(Builder builder) throws IOException {
-        indexWriter = new IndexWriter(builder.directory, builder.writerConfig);
+    private Indexer(IndexWriter writer) {
+        indexWriter = writer;
     }
 
     public void addRecipe(Recipe recipe) throws IOException {
@@ -28,6 +28,10 @@ public class Indexer {
         var doc = new Document();
         doc.add(new TextField("name", recipe.name(), Field.Store.YES));
         indexWriter.addDocument(doc);
+    }
+
+    protected Directory getDirectory() {
+        return indexWriter.getDirectory();
     }
 
     public int numDocs() {
@@ -95,7 +99,7 @@ public class Indexer {
             return openMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         }
 
-        public Indexer build() throws IOException {
+        public Indexer build() {
             if (analyzer == null) {
                 analyzer = new StandardAnalyzer();
             }
@@ -114,7 +118,11 @@ public class Indexer {
 
             writerConfig.setOpenMode(openMode);
 
-            return new Indexer(this);
+            try {
+                return new Indexer(new IndexWriter(directory, writerConfig));
+            } catch (IOException e) {
+                throw new IndexBuilderException(String.format("Failure creating index writer: %s", e));
+            }
         }
 
         class IndexBuilderException extends RuntimeException {

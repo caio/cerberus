@@ -20,10 +20,9 @@ class IndexerTest {
                 () -> assertThrows(exc, builder::build),
                 () -> assertThrows(exc, () -> builder.reset().createMode().build()),
                 () -> assertThrows(exc, () -> builder.reset().analyzer(new StandardAnalyzer()).build()),
-                () -> assertThrows(exc, () -> builder.reset().directory(Paths.get("void")).createMode().build())
+                () -> assertThrows(exc, () -> builder.reset().directory(Paths.get("void")).createMode().build()),
+                () -> assertThrows(exc, () -> builder.reset().inMemory().appendMode().build())
         );
-        // This would be valid if it weren't for the mode being append
-        assertThrows(IndexNotFoundException.class, () -> builder.reset().inMemory().appendMode().build());
     }
 
     @Test
