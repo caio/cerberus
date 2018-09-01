@@ -15,10 +15,10 @@ import org.apache.lucene.store.RAMDirectory;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class Index {
+public class Indexer {
     private final IndexWriter indexWriter;
 
-    private Index(Builder builder) throws IOException {
+    private Indexer(Builder builder) throws IOException {
         indexWriter = new IndexWriter(builder.directory, builder.writerConfig);
     }
 
@@ -95,7 +95,7 @@ public class Index {
             return openMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         }
 
-        public Index build() throws IOException {
+        public Indexer build() throws IOException {
             if (analyzer == null) {
                 analyzer = new StandardAnalyzer();
             }
@@ -114,7 +114,7 @@ public class Index {
 
             writerConfig.setOpenMode(openMode);
 
-            return new Index(this);
+            return new Indexer(this);
         }
 
         class IndexBuilderException extends RuntimeException {

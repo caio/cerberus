@@ -16,7 +16,7 @@ class RecipeTest {
         var builder = new Recipe.Builder()
                 .recipeId(12)
                 .name("this is incomplete");
-        assertThrows(IllegalStateException.class, () -> builder.build());
+        assertThrows(IllegalStateException.class, builder::build);
     }
 
     @Test
