@@ -26,16 +26,36 @@ class RecipeTest {
                 () -> new Recipe.Builder().recipeId(1).recipeId(1));
     }
 
+    @Test
+    void preconditions() {
+        assertThrows(IllegalStateException.class,
+                () -> new Recipe.Builder().recipeId(1).siteId(1)
+                        .name("").slug("").instructions("").build());
+        assertThrows(IllegalStateException.class,
+                () -> new Recipe.Builder().recipeId(1).siteId(1)
+                        .name("not empty").slug("").instructions("").build());
+        assertThrows(IllegalStateException.class,
+                () -> new Recipe.Builder().recipeId(1).siteId(1)
+                        .name("not empty").slug("not empty").instructions("").build());
+        assertThrows(IllegalStateException.class,
+                () -> new Recipe.Builder().recipeId(1).siteId(1)
+                        .name("not empty").slug("not empty").instructions("not empty").build());
+        new Recipe.Builder().recipeId(1).siteId(1)
+                .name("not empty").slug("not empty").instructions("not empty").addIngredients("item 1").build();
+        assertDoesNotThrow(() -> new Recipe.Builder().recipeId(1).siteId(1)
+                .name("not empty").slug("not empty").instructions("not empty").addIngredients("item 1").build());
+    }
+
     static Recipe basicBuild() {
-        var recipe = new Recipe.Builder()
+        return new Recipe.Builder()
                 .recipeId(1)
                 .siteId(12)
                 .slug("recipe-1")
                 .name("valid recipe 1")
                 .description("valid recipe 1 description")
                 .instructions("there is nothing to do")
-                .build();
-        return recipe;
+                .addIngredients("item a", "item b").build();
+
     }
 
     @Test
