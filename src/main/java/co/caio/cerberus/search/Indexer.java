@@ -16,37 +16,18 @@ import org.apache.lucene.store.RAMDirectory;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class Indexer {
-    private final IndexWriter indexWriter;
+public interface Indexer {
+    void addRecipe(Recipe recipe) throws IOException;
 
-    private Indexer(IndexWriter writer) {
-        indexWriter = writer;
-    }
+    Directory getDirectory();
 
-    public void addRecipe(Recipe recipe) throws IOException {
-        var doc = new Document();
-        doc.add(new TextField("name", recipe.name(), Field.Store.YES));
-        doc.add(new LongPoint("recipe_id", recipe.recipeId()));
-        indexWriter.addDocument(doc);
-    }
+    int numDocs();
 
-    protected Directory getDirectory() {
-        return indexWriter.getDirectory();
-    }
+    void close() throws IOException;
 
-    public int numDocs() {
-        return indexWriter.numDocs();
-    }
+    void commit() throws IOException;
 
-    public void close() throws IOException {
-        indexWriter.close();
-    }
-
-    public void commit() throws IOException {
-        indexWriter.commit();
-    }
-
-    public static class Builder {
+    class Builder {
         private Directory directory;
         private Analyzer analyzer;
         private IndexWriterConfig writerConfig;
@@ -122,16 +103,53 @@ public class Indexer {
             writerConfig.setOpenMode(openMode);
 
             try {
-                return new Indexer(new IndexWriter(directory, writerConfig));
+                return new IndexerImpl(new IndexWriter(directory, writerConfig));
             } catch (IOException e) {
                 throw new IndexBuilderException(String.format("Failure creating index writer: %s", e));
             }
         }
 
-        class IndexBuilderException extends RuntimeException {
-            IndexBuilderException(String message) {
-                super(message);
+        private class IndexerImpl implements Indexer {
+            private final IndexWriter indexWriter;
+
+            private IndexerImpl(IndexWriter writer) {
+                indexWriter = writer;
             }
+
+            @Override
+            public void addRecipe(Recipe recipe) throws IOException {
+                var doc = new Document();
+                doc.add(new TextField("name", recipe.name(), Field.Store.YES));
+                doc.add(new LongPoint("recipe_id", recipe.recipeId()));
+                indexWriter.addDocument(doc);
+            }
+
+            @Override
+            public Directory getDirectory() {
+                return indexWriter.getDirectory();
+            }
+
+            @Override
+            public int numDocs() {
+                return indexWriter.numDocs();
+            }
+
+            @Override
+            public void close() throws IOException {
+                indexWriter.close();
+            }
+
+            @Override
+            public void commit() throws IOException {
+                indexWriter.commit();
+            }
+
+        }
+    }
+
+    class IndexBuilderException extends RuntimeException {
+        IndexBuilderException(String message) {
+            super(message);
         }
     }
 }

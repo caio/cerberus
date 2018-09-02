@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class IndexerTest {
     @Test
     public void badUsage() {
-        var exc = Indexer.Builder.IndexBuilderException.class;
+        var exc = Indexer.IndexBuilderException.class;
         var builder = new Indexer.Builder();
         assertAll("index builder",
                 () -> assertThrows(exc, builder::build),
