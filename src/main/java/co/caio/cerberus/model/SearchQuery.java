@@ -15,10 +15,10 @@ import java.util.Optional;
         visibility = Value.Style.ImplementationVisibility.PACKAGE,
         overshadowImplementation = true
 )
-@JsonSerialize(as = ImmutableQuery.class)
-@JsonDeserialize(as = ImmutableQuery.class)
+@JsonSerialize(as = ImmutableSearchQuery.class)
+@JsonDeserialize(as = ImmutableSearchQuery.class)
 @Value.Immutable
-public interface Query {
+public interface SearchQuery {
     Optional<String> fulltext();
     List<String> withIngredients();
     List<String> withoutIngredients();
@@ -75,21 +75,21 @@ public interface Query {
         throw new IllegalStateException("At least one field must be set");
     }
 
-    static Optional<Query> fromJson(String serializedQuery) {
+    static Optional<SearchQuery> fromJson(String serializedQuery) {
         try {
-            return Optional.of(Environment.getObjectMapper().readValue(serializedQuery, Query.class));
+            return Optional.of(Environment.getObjectMapper().readValue(serializedQuery, SearchQuery.class));
         } catch (Exception e) {
             return Optional.empty();
         }
     }
 
-    static Optional<String> toJson(Query query) {
+    static Optional<String> toJson(SearchQuery searchQuery) {
         try {
-            return Optional.of(Environment.getObjectMapper().writeValueAsString(query));
+            return Optional.of(Environment.getObjectMapper().writeValueAsString(searchQuery));
         } catch (Exception e) {
             return Optional.empty();
         }
     }
 
-    class Builder extends ImmutableQuery.Builder {};
+    class Builder extends ImmutableSearchQuery.Builder {};
 }
