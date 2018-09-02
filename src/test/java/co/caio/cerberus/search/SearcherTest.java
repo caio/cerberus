@@ -2,8 +2,6 @@ package co.caio.cerberus.search;
 
 import co.caio.cerberus.Util;
 import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.TermQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +34,7 @@ class SearcherTest {
         assertThrows(IllegalStateException.class,
                 () -> new Searcher.Builder().build());
         assertThrows(Searcher.Builder.SearcherBuilderException.class,
-                () -> new Searcher.Builder().directory(Paths.get("/this/doesnt/exist")));
+                () -> new Searcher.Builder().directory(Paths.get("/this/doesnt/exist")).build());
 
         assertDoesNotThrow(() -> new Searcher.Builder().directory(inMemoryIndexer.getDirectory()).build());
     }
