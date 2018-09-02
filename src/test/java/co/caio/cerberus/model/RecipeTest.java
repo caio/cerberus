@@ -38,10 +38,11 @@ class RecipeTest {
         assertThrows(IllegalStateException.class,
                 () -> new Recipe.Builder().recipeId(1).siteId(1)
                         .name("not empty").slug("not empty").instructions("not empty").build());
-        new Recipe.Builder().recipeId(1).siteId(1)
-                .name("not empty").slug("not empty").instructions("not empty").addIngredients("item 1").build();
+        assertThrows(IllegalStateException.class,
+                () -> new Recipe.Builder().recipeId(1).siteId(1)
+                        .name("not empty").slug("not empty").instructions("not empty").crawlUrl("").build());
         assertDoesNotThrow(() -> new Recipe.Builder().recipeId(1).siteId(1)
-                .name("not empty").slug("not empty").instructions("not empty").addIngredients("item 1").build());
+                .name("not empty").slug("not empty").crawlUrl("not empty").instructions("not empty").addIngredients("item 1").build());
     }
 
     @Test
@@ -64,7 +65,7 @@ class RecipeTest {
 
     @Test
     void loadAllSamples() throws IOException {
-        assertEquals(226, Util.getSampleRecipes().count());
+        assertEquals(225, Util.getSampleRecipes().count());
     }
 
 }

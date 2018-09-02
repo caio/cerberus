@@ -3,6 +3,7 @@
   "siteId": 12,
   "name": "valid recipe 1",
   "slug": "recipe-1",
+  "crawlUrl": "https://recipes.recipes/1",
   "description": "valid recipe 1 description",
   "instructions": "there is nothing to do",
   "ingredients": ["10g of coconut oil", "1g of erythritol"],

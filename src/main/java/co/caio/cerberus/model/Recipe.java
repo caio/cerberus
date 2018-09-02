@@ -23,6 +23,7 @@ public interface Recipe {
     long siteId();
     String slug();
     String name();
+    String crawlUrl();
     String instructions();
     List<String> ingredients();
     Set<String> labels();
@@ -51,6 +52,7 @@ public interface Recipe {
         static void check(Recipe recipe) {
             nonEmpty("name", recipe.name());
             nonEmpty("slug", recipe.slug());
+            nonEmpty("crawlUrl", recipe.crawlUrl());
             nonEmpty("instructions", recipe.instructions());
             nonEmpty("ingredients", recipe.ingredients());
         }
