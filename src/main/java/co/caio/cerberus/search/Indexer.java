@@ -3,10 +3,7 @@ package co.caio.cerberus.search;
 import co.caio.cerberus.model.Recipe;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -15,6 +12,7 @@ import org.apache.lucene.store.RAMDirectory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.OptionalInt;
 
 public interface Indexer {
     void addRecipe(Recipe recipe) throws IOException;
@@ -119,9 +117,35 @@ public interface Indexer {
             @Override
             public void addRecipe(Recipe recipe) throws IOException {
                 var doc = new Document();
+                doc.add(new LongPoint("recipeId", recipe.recipeId()));
+                doc.add(new LongPoint("siteId", recipe.siteId()));
+                doc.add(new StringField("crawlUrl", recipe.crawlUrl(), Field.Store.YES));
+
                 doc.add(new TextField("name", recipe.name(), Field.Store.YES));
-                doc.add(new LongPoint("recipe_id", recipe.recipeId()));
+                doc.add(new TextField("instructions", recipe.instructions(), Field.Store.NO));
+                doc.add(new TextField("description", recipe.description(), Field.Store.NO));
+
+                doc.add(new TextField("ingredients",
+                        String.join("\n", recipe.ingredients()), Field.Store.NO));
+                doc.add(new IntPoint("numIngredients", recipe.ingredients().size()));
+
+                // FIXME labels and keywords for faceting
+
+                addOptionalIntField(doc, "prepTime", recipe.prepTime());
+                addOptionalIntField(doc, "cookTime", recipe.cookTime());
+                addOptionalIntField(doc, "totalTime", recipe.totalTime());
+
+                addOptionalIntField(doc, "calories", recipe.calories());
+                addOptionalIntField(doc, "carbohydrateContent", recipe.carbohydrateContent());
+                addOptionalIntField(doc, "fatContent", recipe.fatContent());
+                addOptionalIntField(doc, "proteinContent", recipe.proteinContent());
                 indexWriter.addDocument(doc);
+            }
+
+            private void addOptionalIntField(Document doc, String fieldName, OptionalInt value) {
+                if (value.isPresent()) {
+                    doc.add(new IntPoint(fieldName, value.getAsInt()));
+                }
             }
 
             @Override
