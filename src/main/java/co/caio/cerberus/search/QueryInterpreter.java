@@ -8,6 +8,8 @@ import org.apache.lucene.search.Query;
 
 import java.util.Optional;
 
+import static co.caio.cerberus.search.IndexField.*;
+
 public class QueryInterpreter {
 
     public QueryInterpreter() {
@@ -32,14 +34,14 @@ public class QueryInterpreter {
             throw new RuntimeException("not implemented yet");
         }
 
-        addFieldRangeQuery(queryBuilder, "numIngredients", searchQuery.numIngredients());
-        addFieldRangeQuery(queryBuilder, "cookTime", searchQuery.cookTime());
-        addFieldRangeQuery(queryBuilder, "prepTime", searchQuery.prepTime());
-        addFieldRangeQuery(queryBuilder, "totalTime", searchQuery.totalTime());
-        addFieldRangeQuery(queryBuilder, "calories", searchQuery.calories());
-        addFieldRangeQuery(queryBuilder, "fatContent", searchQuery.fatContent());
-        addFieldRangeQuery(queryBuilder, "proteinContent", searchQuery.proteinContent());
-        addFieldRangeQuery(queryBuilder, "carbohydrateContent", searchQuery.carbohydrateContent());
+        addFieldRangeQuery(queryBuilder, NUM_INGREDIENTS, searchQuery.numIngredients());
+        addFieldRangeQuery(queryBuilder, COOK_TIME, searchQuery.cookTime());
+        addFieldRangeQuery(queryBuilder, PREP_TIME, searchQuery.prepTime());
+        addFieldRangeQuery(queryBuilder, TOTAL_TIME, searchQuery.totalTime());
+        addFieldRangeQuery(queryBuilder, CALORIES, searchQuery.calories());
+        addFieldRangeQuery(queryBuilder, FAT_CONTENT, searchQuery.fatContent());
+        addFieldRangeQuery(queryBuilder, PROTEIN_CONTENT, searchQuery.proteinContent());
+        addFieldRangeQuery(queryBuilder, CARBOHYDRATE_CONTENT, searchQuery.carbohydrateContent());
 
         return queryBuilder.build();
     }

@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.OptionalInt;
 
+import static co.caio.cerberus.search.IndexField.*;
+
 public interface Indexer {
     void addRecipe(Recipe recipe) throws IOException;
 
@@ -117,28 +119,28 @@ public interface Indexer {
             @Override
             public void addRecipe(Recipe recipe) throws IOException {
                 var doc = new Document();
-                doc.add(new LongPoint("recipeId", recipe.recipeId()));
-                doc.add(new LongPoint("siteId", recipe.siteId()));
-                doc.add(new StringField("crawlUrl", recipe.crawlUrl(), Field.Store.YES));
+                doc.add(new LongPoint(RECIPE_ID, recipe.recipeId()));
+                doc.add(new LongPoint(SITE_ID, recipe.siteId()));
+                doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
 
-                doc.add(new TextField("name", recipe.name(), Field.Store.YES));
-                doc.add(new TextField("instructions", recipe.instructions(), Field.Store.NO));
-                doc.add(new TextField("description", recipe.description(), Field.Store.NO));
+                doc.add(new TextField(NAME, recipe.name(), Field.Store.YES));
+                doc.add(new TextField(INSTRUCTIONS, recipe.instructions(), Field.Store.NO));
+                doc.add(new TextField(DESCRIPTION, recipe.description(), Field.Store.NO));
 
-                doc.add(new TextField("ingredients",
+                doc.add(new TextField(INGREDIENTS,
                         String.join("\n", recipe.ingredients()), Field.Store.NO));
-                doc.add(new IntPoint("numIngredients", recipe.ingredients().size()));
+                doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
 
                 // FIXME labels and keywords for faceting
 
-                addOptionalIntField(doc, "prepTime", recipe.prepTime());
-                addOptionalIntField(doc, "cookTime", recipe.cookTime());
-                addOptionalIntField(doc, "totalTime", recipe.totalTime());
+                addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
+                addOptionalIntField(doc, COOK_TIME, recipe.cookTime());
+                addOptionalIntField(doc, TOTAL_TIME, recipe.totalTime());
 
-                addOptionalIntField(doc, "calories", recipe.calories());
-                addOptionalIntField(doc, "carbohydrateContent", recipe.carbohydrateContent());
-                addOptionalIntField(doc, "fatContent", recipe.fatContent());
-                addOptionalIntField(doc, "proteinContent", recipe.proteinContent());
+                addOptionalIntField(doc, CALORIES, recipe.calories());
+                addOptionalIntField(doc, CARBOHYDRATE_CONTENT, recipe.carbohydrateContent());
+                addOptionalIntField(doc, FAT_CONTENT, recipe.fatContent());
+                addOptionalIntField(doc, PROTEIN_CONTENT, recipe.proteinContent());
                 indexWriter.addDocument(doc);
             }
 

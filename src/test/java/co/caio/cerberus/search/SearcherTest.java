@@ -45,7 +45,7 @@ class SearcherTest {
     public void findRecipes() throws IOException {
         var searcher = new Searcher.Builder().directory(inMemoryIndexer.getDirectory()).build();
         for (long recipeId: recipeIds) {
-            var query = LongPoint.newExactQuery("recipeId", recipeId);
+            var query = LongPoint.newExactQuery(IndexField.RECIPE_ID, recipeId);
             var result = searcher.indexSearcher.search(query, 1);
             assertEquals(1, result.totalHits);
         }
