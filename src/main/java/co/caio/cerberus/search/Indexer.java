@@ -124,12 +124,11 @@ public interface Indexer {
                 doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
 
                 doc.add(new TextField(NAME, recipe.name(), Field.Store.YES));
-                doc.add(new TextField(FULLTEXT,
-                        String.join("\n", recipe.name(), recipe.description(), recipe.instructions()),
-                        Field.Store.NO));
+                doc.add(new TextField(FULLTEXT, recipe.name(), Field.Store.NO));
+                doc.add(new TextField(FULLTEXT, recipe.description(), Field.Store.NO));
+                doc.add(new TextField(FULLTEXT, recipe.instructions(), Field.Store.NO));
 
-                doc.add(new TextField(INGREDIENTS,
-                        String.join("\n", recipe.ingredients()), Field.Store.NO));
+                recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
                 doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
 
                 // FIXME labels and keywords for faceting
