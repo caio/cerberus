@@ -7,8 +7,6 @@ class IndexField {
     static final String SITE_ID = "siteId";
     static final String CRAWL_URL = "crawlUrl";
     static final String NAME = "name";
-    static final String INSTRUCTIONS = "instructions";
-    static final String DESCRIPTION = "description";
     static final String NUM_INGREDIENTS = "numIngredients";
     static final String INGREDIENTS = "ingredients";
     static final String PREP_TIME = "prepTime";
@@ -18,4 +16,5 @@ class IndexField {
     static final String FAT_CONTENT = "fatContent";
     static final String PROTEIN_CONTENT = "proteinContent";
     static final String CARBOHYDRATE_CONTENT = "carbohydrateContent";
+    static final String FULLTEXT = "fulltext";
 }

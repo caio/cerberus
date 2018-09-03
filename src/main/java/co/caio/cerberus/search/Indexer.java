@@ -124,8 +124,9 @@ public interface Indexer {
                 doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
 
                 doc.add(new TextField(NAME, recipe.name(), Field.Store.YES));
-                doc.add(new TextField(INSTRUCTIONS, recipe.instructions(), Field.Store.NO));
-                doc.add(new TextField(DESCRIPTION, recipe.description(), Field.Store.NO));
+                doc.add(new TextField(FULLTEXT,
+                        String.join("\n", recipe.name(), recipe.description(), recipe.instructions()),
+                        Field.Store.NO));
 
                 doc.add(new TextField(INGREDIENTS,
                         String.join("\n", recipe.ingredients()), Field.Store.NO));
