@@ -1,9 +1,10 @@
 package co.caio.cerberus.search;
 
-import co.caio.cerberus.model.Recipe;
+import co.caio.cerberus.model.SearchQuery;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -11,11 +12,17 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class Searcher {
-    // FIXME make this private
-    protected final IndexSearcher indexSearcher;
+    private final IndexSearcher indexSearcher;
+    private final QueryInterpreter interpreter;
 
     private Searcher(Searcher.Builder builder) {
         indexSearcher = new IndexSearcher(builder.indexReader);
+        interpreter = new QueryInterpreter();
+    }
+
+    // FIXME define a result interface
+    protected TopDocs search(SearchQuery query, int maxResults) throws IOException {
+        return indexSearcher.search(interpreter.toLuceneQuery(query), maxResults);
     }
 
     public static class Builder {

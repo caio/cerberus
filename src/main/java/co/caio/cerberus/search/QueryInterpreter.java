@@ -1,37 +1,41 @@
 package co.caio.cerberus.search;
 
 import co.caio.cerberus.model.SearchQuery;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import static co.caio.cerberus.search.IndexField.*;
 
 public class QueryInterpreter {
+    private final Analyzer analyzer;
 
     public QueryInterpreter() {
+        analyzer = new StandardAnalyzer();
     }
 
-    // TODO add tests
     public Query toLuceneQuery(SearchQuery searchQuery) {
         var queryBuilder = new BooleanQuery.Builder();
 
         if (searchQuery.fulltext().isPresent()) {
-            // FIXME implement fulltext
-            throw new RuntimeException("not implemented yet");
+            addTermQueries(queryBuilder, FULLTEXT, searchQuery.fulltext().get(), BooleanClause.Occur.MUST);
         }
 
-        if (! searchQuery.withIngredients().isEmpty()) {
-            // FIXME implement withIngredients
-            throw new RuntimeException("not implemented yet");
+        for (String ingredient: searchQuery.withIngredients()) {
+            addTermQueries(queryBuilder, INGREDIENTS, ingredient, BooleanClause.Occur.MUST);
         }
 
-        if (! searchQuery.withoutIngredients().isEmpty()) {
-            // FIXME implement withoutIngredients
-            throw new RuntimeException("not implemented yet");
+        for (String notIngredient: searchQuery.withoutIngredients()) {
+            addTermQueries(queryBuilder, INGREDIENTS, notIngredient, BooleanClause.Occur.MUST_NOT);
         }
 
         addFieldRangeQuery(queryBuilder, NUM_INGREDIENTS, searchQuery.numIngredients());
@@ -51,5 +55,32 @@ public class QueryInterpreter {
             var range = maybeRange.get();
             builder.add(IntPoint.newRangeQuery(fieldName, range.start(), range.end()), BooleanClause.Occur.MUST);
         }
+    }
+
+    private void addTermQueries(BooleanQuery.Builder builder, String fieldName, String text, BooleanClause.Occur clause) {
+        try {
+           builder.add(textToTermQuery(fieldName, text), clause);
+        } catch (IOException ignored) {
+            // XXX log me maybe
+        }
+    }
+
+    private Query textToTermQuery(String fieldName, String text) throws IOException {
+        var builder = new BooleanQuery.Builder();
+
+        var stream = analyzer.tokenStream(fieldName, text);
+        var token = stream.addAttribute(CharTermAttribute.class);
+
+        try {
+           stream.reset();
+           while (stream.incrementToken()) {
+               builder.add(new TermQuery(new Term(fieldName, token.toString())), BooleanClause.Occur.SHOULD);
+           }
+           stream.end();
+        } finally {
+            stream.close();
+        }
+
+        return builder.build();
     }
 }
