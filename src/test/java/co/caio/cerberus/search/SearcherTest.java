@@ -46,39 +46,31 @@ class SearcherTest {
         // Recipes with up to 3 ingredients
         // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l
         var query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(0,3)).build();
-        checkTotalHits(searcher, 12, query);
+        assertEquals(12, searcher.search(query, 1).totalHits());
 
         // Recipes with exactly 5 ingredients
         // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. == 5'|grep true|wc -l
         query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(5,5)).build();
-        checkTotalHits(searcher, 14, query);
+        assertEquals(14, searcher.search(query, 1).totalHits());
 
         // Recipes that can be done between 10 and 25 minutes
         // $ cat sample_recipes.jsonlines |jq '.totalTime| . >= 10 and . <= 25'|grep true|wc -l
         query = new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).build();
-        checkTotalHits(searcher, 44, query);
+        assertEquals(44, searcher.search(query, 1).totalHits());
 
-        assertDoesNotThrow(
-                () -> {
-                    // Assumption: fulltext should match more items
-                    var q1 = new SearchQuery.Builder().fulltext("keto bagel bacon").build();
-                    // but drilling down on ingredients should be more precise
-                    var q2 = new SearchQuery.Builder().fulltext("keto bagel").addWithIngredients("bacon").build();
+        // Assumption: fulltext should match more items
+        var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").build();
+        // but drilling down on ingredients should be more precise
+        var q2 = new SearchQuery.Builder().fulltext("low carb")
+                .addWithIngredients("bacon")
+                .addWithIngredients("eggs").build();
 
-                    var r1 = searcher.search(q1, 1);
-                    assertTrue(r1.totalHits > 0);
-                    var r2 = searcher.search(q2, 1);
-                    assertTrue(r2.totalHits > 0 && r2.totalHits <= r1.totalHits);
+        var r1 = searcher.search(q1, 1);
+        assertTrue(r1.totalHits() > 0);
+        var r2 = searcher.search(q2, 1);
+        assertTrue(r2.totalHits() > 0 && r2.totalHits() <= r1.totalHits());
 
-                    // This particular query should have the same doc as the top one
-                    assertEquals(r1.scoreDocs[0].doc, r2.scoreDocs[0].doc);
-                }
-        );
-    }
-
-    private void checkTotalHits(Searcher searcher, int expectedHits, SearchQuery query) {
-        assertDoesNotThrow(
-                () -> assertEquals(expectedHits, searcher.search(query, 1).totalHits)
-        );
+        // This particular query should have the same doc as the top one
+        assertEquals(r1.recipes().get(0), r2.recipes().get(0));
     }
 }
