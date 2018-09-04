@@ -119,7 +119,7 @@ public interface Indexer {
             @Override
             public void addRecipe(Recipe recipe) throws IOException {
                 var doc = new Document();
-                doc.add(new LongPoint(RECIPE_ID, recipe.recipeId()));
+                doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
                 doc.add(new LongPoint(SITE_ID, recipe.siteId()));
                 doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
 
