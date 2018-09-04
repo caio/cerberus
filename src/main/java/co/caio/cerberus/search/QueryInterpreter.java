@@ -10,6 +10,8 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import static co.caio.cerberus.search.IndexField.*;
 
 public class QueryInterpreter {
     private final Analyzer analyzer;
+    private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
 
     public QueryInterpreter() {
         analyzer = new StandardAnalyzer();
@@ -47,7 +50,9 @@ public class QueryInterpreter {
         addFieldRangeQuery(queryBuilder, PROTEIN_CONTENT, searchQuery.proteinContent());
         addFieldRangeQuery(queryBuilder, CARBOHYDRATE_CONTENT, searchQuery.carbohydrateContent());
 
-        return queryBuilder.build();
+        var luceneQuery = queryBuilder.build();
+        logger.debug("Interpreted query {} as {}", searchQuery, luceneQuery);
+        return luceneQuery;
     }
 
     private void addFieldRangeQuery(BooleanQuery.Builder builder, String fieldName, Optional<SearchQuery.RangedSpec> maybeRange) {
@@ -60,8 +65,9 @@ public class QueryInterpreter {
     private void addTermQueries(BooleanQuery.Builder builder, String fieldName, String text, BooleanClause.Occur clause) {
         try {
            builder.add(textToTermQuery(fieldName, text), clause);
-        } catch (IOException ignored) {
-            // XXX log me maybe
+        } catch (IOException exception) {
+            logger.error("Building text query for input <{}> (Field {}) failed with {}",
+                    text, fieldName, exception);
         }
     }
 

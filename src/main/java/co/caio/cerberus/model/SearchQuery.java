@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +80,8 @@ public interface SearchQuery {
         try {
             return Optional.of(Environment.getObjectMapper().readValue(serializedQuery, SearchQuery.class));
         } catch (Exception e) {
+            LoggerFactory.getLogger(SearchQuery.class).error(
+                    "Failed to read json <{}> as <{}>", serializedQuery, SearchQuery.class);
             return Optional.empty();
         }
     }
@@ -87,6 +90,8 @@ public interface SearchQuery {
         try {
             return Optional.of(Environment.getObjectMapper().writeValueAsString(searchQuery));
         } catch (Exception e) {
+            LoggerFactory.getLogger(SearchQuery.class).error(
+                    "Failed to serialize {} to json", searchQuery);
             return Optional.empty();
         }
     }

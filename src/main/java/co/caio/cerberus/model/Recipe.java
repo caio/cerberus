@@ -4,6 +4,7 @@ import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -76,6 +77,8 @@ public interface Recipe {
         try {
             return Optional.of(Environment.getObjectMapper().readValue(json, Recipe.class));
         } catch (Exception e) {
+            LoggerFactory.getLogger(Recipe.class).error(
+                    "Failed to read json <{}> as <{}>", json, Recipe.class);
             return Optional.empty();
         }
     }
@@ -84,6 +87,8 @@ public interface Recipe {
         try {
             return Optional.of(Environment.getObjectMapper().writeValueAsString(recipe));
         } catch (Exception e) {
+            LoggerFactory.getLogger(Recipe.class).error(
+                    "Failed to serialize {} to json", recipe);
             return Optional.empty();
         }
     }

@@ -8,6 +8,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,12 +18,13 @@ public class Searcher {
     private final IndexSearcher indexSearcher;
     private final QueryInterpreter interpreter;
     private static final SearchResult emptyResults = new SearchResult.Builder().build();
+    private static final Logger logger = LoggerFactory.getLogger(Searcher.class);
 
     public SearchResult search(SearchQuery query, int maxResults) {
         try {
             return _search(query, maxResults);
-        } catch (Exception ignored) {
-            // XXX log me maybe
+        } catch (Exception exception) {
+            logger.error("Query <{}> failed with: {}", query, exception);
             return emptyResults;
         }
     }

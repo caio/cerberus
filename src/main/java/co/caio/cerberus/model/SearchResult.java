@@ -4,6 +4,8 @@ import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +74,8 @@ public interface SearchResult {
         try {
             return Optional.of(Environment.getObjectMapper().readValue(json, SearchResult.class));
         } catch (Exception ignored) {
-            // XXX log me maybe
+            LoggerFactory.getLogger(SearchResult.class).error(
+                    "Failed to read json <{}> as <{}>", json, SearchResult.class);
             return Optional.empty();
         }
     }
@@ -81,7 +84,8 @@ public interface SearchResult {
         try {
             return Optional.of(Environment.getObjectMapper().writeValueAsString(sr));
         } catch (Exception ignored) {
-            // XXX log me maybe
+            LoggerFactory.getLogger(SearchResult.class).error(
+                    "Failed to serialize {} to json", sr);
             return Optional.empty();
         }
     }
