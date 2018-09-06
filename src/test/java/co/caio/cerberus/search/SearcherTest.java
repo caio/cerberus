@@ -19,7 +19,7 @@ class SearcherTest {
     @BeforeAll
     public static void prepare() throws IOException {
         recipeIds = new LinkedList<>();
-        inMemoryIndexer = new Indexer.Builder().inMemory().createMode().build();
+        inMemoryIndexer = new Indexer.Builder().inMemoryIndex().createMode().build();
         Util.getSampleRecipes().forEach(recipe -> {
             try {
                 inMemoryIndexer.addRecipe(recipe);

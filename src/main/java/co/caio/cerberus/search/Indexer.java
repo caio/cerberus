@@ -28,37 +28,37 @@ public interface Indexer {
     void commit() throws IOException;
 
     class Builder {
-        private Directory directory;
+        private Directory indexDirectory;
         private Analyzer analyzer;
         private IndexWriterConfig writerConfig;
         private IndexWriterConfig.OpenMode openMode;
 
         public Builder reset() {
-            directory = null;
+            indexDirectory = null;
             analyzer = null;
             writerConfig = null;
             openMode = null;
             return this;
         }
 
-        private Builder directory(Directory dir) {
-            directory = dir;
+        private Builder indexDirectory(Directory dir) {
+            indexDirectory = dir;
             return this;
         }
 
-        public Builder directory(Path dir) {
+        public Builder indexDirectory(Path dir) {
             if (! dir.toFile().isDirectory()) {
                 throw new IndexBuilderException(String.format("%s is not a directory", dir));
             }
             try {
-                return directory(FSDirectory.open(dir));
+                return indexDirectory(FSDirectory.open(dir));
             } catch (Exception e) {
                 throw new IndexBuilderException(String.format("Exception opening %s: %s", dir, e));
             }
         }
 
-        public Builder inMemory() {
-            return directory(new RAMDirectory());
+        public Builder inMemoryIndex() {
+            return indexDirectory(new RAMDirectory());
         }
 
         public Builder analyzer(Analyzer an) {
@@ -96,14 +96,14 @@ public interface Indexer {
                 throw new IndexBuilderException("Missing `openMode`");
             }
 
-            if (directory == null) {
+            if (indexDirectory == null) {
                 throw new IndexBuilderException("Missing `directory`");
             }
 
             writerConfig.setOpenMode(openMode);
 
             try {
-                return new IndexerImpl(new IndexWriter(directory, writerConfig));
+                return new IndexerImpl(new IndexWriter(indexDirectory, writerConfig));
             } catch (IOException e) {
                 throw new IndexBuilderException(String.format("Failure creating index writer: %s", e));
             }
