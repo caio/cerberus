@@ -10,13 +10,9 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.OptionalInt;
 
@@ -41,7 +37,6 @@ public interface Indexer {
         private IndexWriterConfig writerConfig;
         private IndexWriterConfig.OpenMode openMode;
 
-        private static Logger logger = LoggerFactory.getLogger(Builder.class);
         // XXX This should be somewhere more accessible since the searcher also needs it
         private static String INDEX_DIR_NAME = "index";
         private static String TAXONOMY_DIR_NAME = "taxonomy";
@@ -56,8 +51,12 @@ public interface Indexer {
         }
 
         public Builder dataDirectory(Path dir) {
-            indexDirectory = openDirectory(dir.resolve(INDEX_DIR_NAME));
-            taxonomyDirectory = openDirectory(dir.resolve(TAXONOMY_DIR_NAME));
+            try {
+                indexDirectory = FileSystem.openDirectory(dir.resolve(INDEX_DIR_NAME));
+                taxonomyDirectory = FileSystem.openDirectory(dir.resolve(TAXONOMY_DIR_NAME));
+            } catch (Exception e) {
+                throw new IndexBuilderException(e.getMessage());
+            }
             return this;
         }
 
@@ -87,25 +86,6 @@ public interface Indexer {
 
         public Builder createOrAppendMode() {
             return openMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-        }
-
-        private Directory openDirectory(Path dir) {
-            if (! dir.toFile().exists() && dir.getParent().toFile().isDirectory()) {
-                logger.debug("Creating directory %s", dir);
-                try {
-                    Files.createDirectory(dir);
-                } catch (IOException wrapped) {
-                    throw new IndexBuilderException(wrapped.getMessage());
-                }
-            }
-            if (! dir.toFile().isDirectory()) {
-                throw new IndexBuilderException(String.format("%s is not a directory", dir));
-            }
-            try {
-                return FSDirectory.open(dir);
-            } catch (Exception e) {
-                throw new IndexBuilderException(String.format("Exception opening %s: %s", dir, e));
-            }
         }
 
         public Indexer build() {
