@@ -34,7 +34,8 @@ public interface SearchQuery {
     Optional<RangedSpec> proteinContent();
     Optional<RangedSpec> carbohydrateContent();
 
-    // TODO add possibility to drill down on facets
+    List<String> matchDiet();
+    List<String> matchKeyword();
 
     @Value.Immutable(builder=false)
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
@@ -65,6 +66,8 @@ public interface SearchQuery {
         if (fulltext().isPresent() ||
                 !withIngredients().isEmpty() ||
                 !withoutIngredients().isEmpty() ||
+                !matchDiet().isEmpty() ||
+                !matchKeyword().isEmpty() ||
                 numIngredients().isPresent() ||
                 prepTime().isPresent() ||
                 cookTime().isPresent() ||

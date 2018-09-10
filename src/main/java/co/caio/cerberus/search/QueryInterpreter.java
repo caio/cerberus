@@ -5,6 +5,8 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.facet.DrillDownQuery;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -20,10 +22,12 @@ import static co.caio.cerberus.search.IndexField.*;
 
 public class QueryInterpreter {
     private final Analyzer analyzer;
+    private final FacetsConfig facetsConfig;
     private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
 
     public QueryInterpreter() {
         analyzer = new StandardAnalyzer();
+        facetsConfig = FacetConfiguration.getFacetsConfig();
     }
 
     public Query toLuceneQuery(SearchQuery searchQuery) {
@@ -52,7 +56,25 @@ public class QueryInterpreter {
 
         var luceneQuery = queryBuilder.build();
         logger.debug("Interpreted query {} as {}", searchQuery, luceneQuery);
-        return luceneQuery;
+
+        // no need to drill down on facets, we're done
+        if (searchQuery.matchKeyword().isEmpty() && searchQuery.matchDiet().isEmpty()) {
+            return luceneQuery;
+        }
+
+        logger.debug("Drilling it down with diet={} keyword={}",
+                searchQuery.matchDiet(), searchQuery.matchKeyword());
+
+        DrillDownQuery drillQuery;
+        if (luceneQuery.clauses().isEmpty()) {
+            drillQuery = new DrillDownQuery(facetsConfig);
+        } else {
+            drillQuery = new DrillDownQuery(facetsConfig, luceneQuery);
+        }
+
+        searchQuery.matchKeyword().forEach(kw -> drillQuery.add(IndexField.FACET_DIM_KEYWORD, kw));
+        searchQuery.matchDiet().forEach(d -> drillQuery.add(IndexField.FACET_DIM_DIET, d));
+        return drillQuery;
     }
 
     private void addFieldRangeQuery(BooleanQuery.Builder builder, String fieldName, Optional<SearchQuery.RangedSpec> maybeRange) {

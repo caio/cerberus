@@ -49,6 +49,29 @@ class SearcherTest {
         var veganData = dietFacet.get().children().stream().filter(x -> x.label().equals("vegan")).findFirst();
         assertTrue(veganData.isPresent());
         assertEquals(5, veganData.get().count());
+
+        // now lets drill down the same query on the vegan facet.
+        //  it should give us just 5 results as verified above
+        result = searcher.search(new SearchQuery.Builder().fulltext("vegan").addMatchDiet("vegan").build(), 1);
+        assertEquals(5, result.totalHits());
+
+        // but only searching for the vegan diet facet (i.e. not searching for the term<vegan>
+        // in the whole index would give us AT LEAST the same number as above, but maybe
+        // more since a recipe can be vegan without having to call itself vegan
+        result = searcher.search(new SearchQuery.Builder().addMatchDiet("vegan").build(), 1);
+        assertTrue(result.totalHits() >= 5);
+    }
+
+    @Test
+    public void multipleFacetsAreOr() {
+        var searcher = inMemoryIndexer.buildSearcher();
+        var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil");
+        var justOilResult = searcher.search(queryBuilder.build(), 1);
+        var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build(), 1);
+        // since drilldown queries on same facets are OR'ed,
+        // the expectation is that the more keywords are input,
+        // more recipes are matched
+        assertTrue(oilAndSaltResult.totalHits() >= justOilResult.totalHits());
     }
 
     @Test
