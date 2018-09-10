@@ -1,12 +1,12 @@
 package co.caio.cerberus.search;
 
+import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
-import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
@@ -14,11 +14,9 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 public class Searcher {
@@ -86,7 +84,7 @@ public class Searcher {
     }
 
     private void addFacetData(SearchResult.Builder sb, FacetResult fr) {
-        var facetDataBuilder = new SearchResult.FacetData.Builder().dimension(fr.dim);
+        var facetDataBuilder = new FacetData.Builder().dimension(fr.dim);
         for (int i = 0; i < fr.labelValues.length; i++) {
             facetDataBuilder.addChild(fr.labelValues[i].label, fr.labelValues[i].value.longValue());
         }

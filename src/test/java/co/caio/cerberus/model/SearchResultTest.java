@@ -19,9 +19,9 @@ class SearchResultTest {
 
     @Test
     void itemBuild() {
-        assertThrows(IllegalStateException.class, () -> SearchResult.Item.of(-1, "n", "c"));
-        assertThrows(IllegalStateException.class, () -> SearchResult.Item.of(1, "", "c"));
-        assertThrows(IllegalStateException.class, () -> SearchResult.Item.of(1, "n", ""));
+        assertThrows(IllegalStateException.class, () -> SearchResultRecipe.of(-1, "n", "c"));
+        assertThrows(IllegalStateException.class, () -> SearchResultRecipe.of(1, "", "c"));
+        assertThrows(IllegalStateException.class, () -> SearchResultRecipe.of(1, "n", ""));
     }
 
     private SearchResult simple() {
