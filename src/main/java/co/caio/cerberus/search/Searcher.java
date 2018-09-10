@@ -3,7 +3,11 @@ package co.caio.cerberus.search;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.LabelAndValue;
+import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.index.DirectoryReader;
@@ -21,7 +25,7 @@ public class Searcher {
     private final IndexSearcher indexSearcher;
     private final TaxonomyReader taxonomyReader;
     private final QueryInterpreter interpreter;
-    private final FacetsCollector facetsCollector;
+    private final FacetsConfig facetsConfig;
 
     private static final SearchResult emptyResults = new SearchResult.Builder().build();
     private static final Logger logger = LoggerFactory.getLogger(Searcher.class);
@@ -39,20 +43,54 @@ public class Searcher {
         indexSearcher = new IndexSearcher(builder.indexReader);
         taxonomyReader = builder.taxonomyReader;
         interpreter = new QueryInterpreter();
-        facetsCollector = new FacetsCollector();
+        facetsConfig = FacetConfiguration.getFacetsConfig();
     }
 
-    private SearchResult _search(SearchQuery query, int maxResults) throws IOException {
-        var result = indexSearcher.search(interpreter.toLuceneQuery(query), maxResults);
+    private SearchResult _search(SearchQuery query, int maxResults) throws Exception {
+        var fc = new FacetsCollector();
+
+        var result = FacetsCollector.search(
+                indexSearcher, interpreter.toLuceneQuery(query), maxResults, fc);
         var builder = new SearchResult.Builder().totalHits(result.totalHits);
+
+        var diets = new FastTaxonomyFacetCounts(
+                IndexField.FACET_DIET, taxonomyReader, facetsConfig, fc);
+
+        var keywords = new FastTaxonomyFacetCounts(
+                IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);
+
+
+        // TODO maybe allow changing how many facets to retrieve
+        var topDiets = diets.getTopChildren(10, IndexField.FACET_DIM_DIET);
+        var topKeywords = keywords.getTopChildren(10, IndexField.FACET_DIM_KEYWORD);
+
+        if (topDiets == null) {
+            throw new NullPointerException("topDiets is null when it shouldn't");
+        }
+
+        if (topKeywords == null) {
+            throw new NullPointerException("topKeywords is null when it shouldn't");
+        }
+
         for (int i = 0; i < result.scoreDocs.length; i++) {
             Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
             builder.addRecipe(
                     doc.getField(IndexField.RECIPE_ID).numericValue().longValue(),
                     doc.get(IndexField.NAME),
                     doc.get(IndexField.CRAWL_URL));
+
+            addFacetData(builder, topDiets);
+            addFacetData(builder, topKeywords);
         }
         return builder.build();
+    }
+
+    private void addFacetData(SearchResult.Builder sb, FacetResult fr) {
+        var facetDataBuilder = new SearchResult.FacetData.Builder().dimension(fr.dim);
+        for (int i = 0; i < fr.labelValues.length; i++) {
+            facetDataBuilder.addChild(fr.labelValues[i].label, fr.labelValues[i].value.longValue());
+        }
+        sb.addFacets(facetDataBuilder.build());
     }
 
     public static class Builder {

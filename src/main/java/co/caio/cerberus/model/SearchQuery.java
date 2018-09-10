@@ -34,6 +34,8 @@ public interface SearchQuery {
     Optional<RangedSpec> proteinContent();
     Optional<RangedSpec> carbohydrateContent();
 
+    // TODO add possibility to drill down on facets
+
     @Value.Immutable(builder=false)
     @JsonFormat(shape = JsonFormat.Shape.ARRAY)
     @JsonPropertyOrder({"start", "end"})

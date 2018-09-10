@@ -38,6 +38,20 @@ class SearcherTest {
     }
 
     @Test
+    public void facets() {
+        var searcher = inMemoryIndexer.buildSearcher();
+        var query = new SearchQuery.Builder().fulltext("vegan").build();
+        var result = searcher.search(query, 1);
+
+        var dietFacet = result.facets().stream().filter(x -> x.dimension().equals(IndexField.FACET_DIM_DIET)).findFirst();
+        assertTrue(dietFacet.isPresent());
+        // make sure that when searching for vegan we actually get a count for Diet => vegan
+        var veganData = dietFacet.get().children().stream().filter(x -> x.label().equals("vegan")).findFirst();
+        assertTrue(veganData.isPresent());
+        assertEquals(5, veganData.get().count());
+    }
+
+    @Test
     public void findRecipes() {
         var searcher = inMemoryIndexer.buildSearcher();
 
