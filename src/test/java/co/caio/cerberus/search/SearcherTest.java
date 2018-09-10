@@ -34,14 +34,12 @@ class SearcherTest {
         assertThrows(IllegalStateException.class,
                 () -> new Searcher.Builder().build());
         assertThrows(Searcher.Builder.SearcherBuilderException.class,
-                () -> new Searcher.Builder().directory(Paths.get("/this/doesnt/exist")).build());
-
-        assertDoesNotThrow(() -> new Searcher.Builder().directory(inMemoryIndexer.getDirectory()).build());
+                () -> new Searcher.Builder().dataDirectory(Paths.get("/this/doesnt/exist")).build());
     }
 
     @Test
     public void findRecipes() {
-        var searcher = new Searcher.Builder().directory(inMemoryIndexer.getDirectory()).build();
+        var searcher = inMemoryIndexer.buildSearcher();
 
         // Recipes with up to 3 ingredients
         // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l

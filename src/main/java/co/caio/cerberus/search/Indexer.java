@@ -31,6 +31,8 @@ public interface Indexer {
 
     void commit() throws IOException;
 
+    Searcher buildSearcher();
+
     class Builder {
         private Directory indexDirectory;
         private Directory taxonomyDirectory;
@@ -196,6 +198,14 @@ public interface Indexer {
             public void commit() throws IOException {
                 indexWriter.commit();
                 taxonomyWriter.commit();
+            }
+
+            @Override
+            public Searcher buildSearcher() {
+                return new Searcher.Builder()
+                        .indexReader(indexWriter.getDirectory())
+                        .taxonomyReader(taxonomyWriter.getDirectory())
+                        .build();
             }
 
         }

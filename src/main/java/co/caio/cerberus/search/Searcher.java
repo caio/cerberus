@@ -3,6 +3,9 @@ package co.caio.cerberus.search;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -16,7 +19,10 @@ import java.nio.file.Path;
 
 public class Searcher {
     private final IndexSearcher indexSearcher;
+    private final TaxonomyReader taxonomyReader;
     private final QueryInterpreter interpreter;
+    private final FacetsCollector facetsCollector;
+
     private static final SearchResult emptyResults = new SearchResult.Builder().build();
     private static final Logger logger = LoggerFactory.getLogger(Searcher.class);
 
@@ -31,7 +37,9 @@ public class Searcher {
 
     private Searcher(Searcher.Builder builder) {
         indexSearcher = new IndexSearcher(builder.indexReader);
+        taxonomyReader = builder.taxonomyReader;
         interpreter = new QueryInterpreter();
+        facetsCollector = new FacetsCollector();
     }
 
     private SearchResult _search(SearchQuery query, int maxResults) throws IOException {
@@ -49,22 +57,36 @@ public class Searcher {
 
     public static class Builder {
         private IndexReader indexReader;
+        private TaxonomyReader taxonomyReader;
 
-        public Builder directory(Directory directory) {
+        public Builder dataDirectory(Path dir) {
             try {
-                indexReader = DirectoryReader.open(directory);
+                var indexDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.INDEX_DIR_NAME));
+                var taxonomyDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.TAXONOMY_DIR_NAME));
+                indexReader = DirectoryReader.open(indexDirectory);
+                taxonomyReader = new DirectoryTaxonomyReader(taxonomyDirectory);
             } catch (Exception e) {
-                throw new SearcherBuilderException(String.format("Error creating index reader: %s", e));
+                throw new SearcherBuilderException(e.getMessage());
             }
             return this;
         }
 
-        public Builder directory(Path dir) {
-            try (var d = FSDirectory.open(dir)){
-                return directory(d);
-            } catch (IOException e) {
-                throw new SearcherBuilderException(String.format("Error opening directory: %s", e));
+        protected Builder indexReader(Directory dir) {
+            try {
+                indexReader = DirectoryReader.open(dir);
+            } catch (Exception wrapped) {
+                throw new SearcherBuilderException(wrapped.getMessage());
             }
+            return this;
+        }
+
+        protected Builder taxonomyReader(Directory dir) {
+            try {
+                taxonomyReader = new DirectoryTaxonomyReader(dir);
+            } catch (Exception wrapped) {
+                throw new SearcherBuilderException(wrapped.getMessage());
+            }
+            return this;
         }
 
         public Searcher build() {
