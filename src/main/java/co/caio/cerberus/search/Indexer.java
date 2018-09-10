@@ -130,13 +130,7 @@ public interface Indexer {
             private IndexerImpl(IndexWriter writer, DirectoryTaxonomyWriter taxWriter) {
                 indexWriter = writer;
                 taxonomyWriter = taxWriter;
-                facetsConfig = new FacetsConfig();
-
-                facetsConfig.setIndexFieldName(FACET_DIET, "$diet$");
-                facetsConfig.setMultiValued(FACET_DIET, true);
-
-                facetsConfig.setIndexFieldName(FACET_KEYWORD, "$keyword$");
-                facetsConfig.setMultiValued(FACET_KEYWORD, true);
+                facetsConfig = FacetConfiguration.getFacetsConfig();
             }
 
             @Override
@@ -156,9 +150,9 @@ public interface Indexer {
                 doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
 
                 // TODO rename labels to diets and make it a Map<String,float>
-                recipe.labels().forEach(label -> doc.add(new FacetField(FACET_DIET, label)));
+                recipe.labels().forEach(label -> doc.add(new FacetField(FACET_DIM_DIET, label)));
                 // XXX is "keyword" a good name?
-                recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
+                recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_DIM_KEYWORD, kw)));
 
                 addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
                 addOptionalIntField(doc, COOK_TIME, recipe.cookTime());
