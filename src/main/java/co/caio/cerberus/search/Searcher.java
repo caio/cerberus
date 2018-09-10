@@ -76,10 +76,9 @@ public class Searcher {
                     doc.getField(IndexField.RECIPE_ID).numericValue().longValue(),
                     doc.get(IndexField.NAME),
                     doc.get(IndexField.CRAWL_URL));
-
-            addFacetData(builder, topDiets);
-            addFacetData(builder, topKeywords);
         }
+        addFacetData(builder, topDiets);
+        addFacetData(builder, topKeywords);
         return builder.build();
     }
 
