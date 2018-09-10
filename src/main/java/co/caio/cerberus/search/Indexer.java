@@ -4,6 +4,7 @@ import co.caio.cerberus.model.Recipe;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
+import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
@@ -37,10 +38,6 @@ public interface Indexer {
         private IndexWriterConfig writerConfig;
         private IndexWriterConfig.OpenMode openMode;
 
-        // XXX This should be somewhere more accessible since the searcher also needs it
-        private static String INDEX_DIR_NAME = "index";
-        private static String TAXONOMY_DIR_NAME = "taxonomy";
-
         public Builder reset() {
             indexDirectory = null;
             taxonomyDirectory = null;
@@ -51,9 +48,12 @@ public interface Indexer {
         }
 
         public Builder dataDirectory(Path dir) {
+            if (! dir.toFile().isDirectory()) {
+                throw new IndexBuilderException(String.format("'%s' is not a directory", dir));
+            }
             try {
-                indexDirectory = FileSystem.openDirectory(dir.resolve(INDEX_DIR_NAME));
-                taxonomyDirectory = FileSystem.openDirectory(dir.resolve(TAXONOMY_DIR_NAME));
+                indexDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.INDEX_DIR_NAME), true);
+                taxonomyDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.TAXONOMY_DIR_NAME), true);
             } catch (Exception e) {
                 throw new IndexBuilderException(e.getMessage());
             }
@@ -120,15 +120,21 @@ public interface Indexer {
             }
         }
 
-        private class IndexerImpl implements Indexer {
+        private final class IndexerImpl implements Indexer {
             private final IndexWriter indexWriter;
-            private final TaxonomyWriter taxonomyWriter;
+            private final DirectoryTaxonomyWriter taxonomyWriter;
             private final FacetsConfig facetsConfig;
 
-            private IndexerImpl(IndexWriter writer, TaxonomyWriter taxWriter) {
+            private IndexerImpl(IndexWriter writer, DirectoryTaxonomyWriter taxWriter) {
                 indexWriter = writer;
                 taxonomyWriter = taxWriter;
                 facetsConfig = new FacetsConfig();
+
+                facetsConfig.setIndexFieldName(FACET_DIET, "$diet$");
+                facetsConfig.setMultiValued(FACET_DIET, true);
+
+                facetsConfig.setIndexFieldName(FACET_KEYWORD, "$keyword$");
+                facetsConfig.setMultiValued(FACET_KEYWORD, true);
             }
 
             @Override
@@ -147,7 +153,10 @@ public interface Indexer {
                 recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
                 doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
 
-                // FIXME labels and keywords for faceting
+                // TODO rename labels to diets and make it a Map<String,float>
+                recipe.labels().forEach(label -> doc.add(new FacetField(FACET_DIET, label)));
+                // XXX is "keyword" a good name?
+                recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
 
                 addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
                 addOptionalIntField(doc, COOK_TIME, recipe.cookTime());

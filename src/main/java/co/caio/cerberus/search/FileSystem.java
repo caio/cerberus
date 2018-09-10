@@ -11,8 +11,15 @@ import java.nio.file.Path;
 public class FileSystem {
     private static Logger logger = LoggerFactory.getLogger(FileSystem.class);
 
+    static String INDEX_DIR_NAME = "index";
+    static String TAXONOMY_DIR_NAME = "taxonomy";
+
     static Directory openDirectory(Path dir) throws Exception {
-        if (! dir.toFile().exists() && dir.getParent().toFile().isDirectory()) {
+        return openDirectory(dir, false);
+    }
+
+    static Directory openDirectory(Path dir, boolean create) throws Exception {
+        if (create && ! dir.toFile().exists() && dir.getParent().toFile().isDirectory()) {
             logger.debug("Creating directory %s", dir);
             Files.createDirectory(dir);
         }

@@ -17,4 +17,6 @@ class IndexField {
     static final String PROTEIN_CONTENT = "proteinContent";
     static final String CARBOHYDRATE_CONTENT = "carbohydrateContent";
     static final String FULLTEXT = "fulltext";
+    static final String FACET_DIET = "Diet";
+    static final String FACET_KEYWORD = "Keyword";
 }

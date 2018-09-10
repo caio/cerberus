@@ -15,13 +15,11 @@ class IndexerTest {
     public void badUsage() {
         var exc = Indexer.IndexBuilderException.class;
         var builder = new Indexer.Builder();
-        assertAll("index builder",
-                () -> assertThrows(exc, builder::build),
-                () -> assertThrows(exc, () -> builder.reset().createMode().build()),
-                () -> assertThrows(exc, () -> builder.reset().analyzer(new StandardAnalyzer()).build()),
-                () -> assertThrows(exc, () -> builder.reset().dataDirectory(Paths.get("void")).createMode().build()),
-                () -> assertThrows(exc, () -> builder.reset().inMemory().appendMode().build())
-        );
+        assertThrows(exc, builder::build);
+        assertThrows(exc, () -> builder.reset().createMode().build());
+        assertThrows(exc, () -> builder.reset().analyzer(new StandardAnalyzer()).build());
+        assertThrows(exc, () -> builder.reset().dataDirectory(Paths.get("/this/doesnt/exist")).createMode().build());
+        assertThrows(exc, () -> builder.reset().inMemory().appendMode().build());
     }
 
     @Test
