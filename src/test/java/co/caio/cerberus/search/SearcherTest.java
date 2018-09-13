@@ -7,23 +7,18 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SearcherTest {
     private static Indexer inMemoryIndexer;
-    private static List<Long> recipeIds;
 
     @BeforeAll
     public static void prepare() throws IOException {
-        recipeIds = new LinkedList<>();
         inMemoryIndexer = new Indexer.Builder().inMemory().createMode().build();
         Util.getSampleRecipes().forEach(recipe -> {
             try {
                 inMemoryIndexer.addRecipe(recipe);
-                recipeIds.add(recipe.recipeId());
             } catch (Exception ignored) {}
         });
         inMemoryIndexer.commit();
