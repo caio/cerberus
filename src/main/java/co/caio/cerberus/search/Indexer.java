@@ -21,9 +21,6 @@ import static co.caio.cerberus.search.IndexField.*;
 public interface Indexer {
     void addRecipe(Recipe recipe) throws IOException;
 
-    // TODO get rid of this
-    Directory getDirectory();
-
     int numDocs();
 
     void close() throws IOException;
@@ -169,11 +166,6 @@ public interface Indexer {
                 if (value.isPresent()) {
                     doc.add(new IntPoint(fieldName, value.getAsInt()));
                 }
-            }
-
-            @Override
-            public Directory getDirectory() {
-                return indexWriter.getDirectory();
             }
 
             @Override
