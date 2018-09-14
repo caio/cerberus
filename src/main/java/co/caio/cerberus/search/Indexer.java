@@ -134,7 +134,6 @@ public interface Indexer {
                 var doc = new Document();
 
                 doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
-                doc.add(new LongPoint(SITE_ID, recipe.siteId()));
                 doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
 
                 doc.add(new TextField(NAME, recipe.name(), Field.Store.YES));
@@ -145,8 +144,8 @@ public interface Indexer {
                 recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
                 doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
 
-                // TODO rename labels to diets and make it a Map<String,float>
-                recipe.labels().forEach(label -> doc.add(new FacetField(FACET_DIM_DIET, label)));
+                // TODO make it a Map<String,float>
+                recipe.diets().forEach(diet -> doc.add(new FacetField(FACET_DIM_DIET, diet)));
                 // XXX is "keyword" a good name?
                 recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_DIM_KEYWORD, kw)));
 

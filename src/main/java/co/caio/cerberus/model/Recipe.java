@@ -21,13 +21,11 @@ import java.util.Set;
 @Value.Immutable
 public interface Recipe {
     long recipeId();
-    long siteId();
-    String slug();
     String name();
     String crawlUrl();
     String instructions();
     List<String> ingredients();
-    Set<String> labels();
+    Set<String> diets();
     Set<String> keywords();
 
     OptionalInt prepTime();
@@ -52,7 +50,6 @@ public interface Recipe {
     class RecipePrecondition {
         static void check(Recipe recipe) {
             nonEmpty("name", recipe.name());
-            nonEmpty("slug", recipe.slug());
             nonEmpty("crawlUrl", recipe.crawlUrl());
             nonEmpty("instructions", recipe.instructions());
             nonEmpty("ingredients", recipe.ingredients());

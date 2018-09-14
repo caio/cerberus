@@ -27,22 +27,22 @@ class RecipeTest {
     @Test
     void preconditions() {
         assertThrows(IllegalStateException.class,
-                () -> new Recipe.Builder().recipeId(1).siteId(1)
-                        .name("").slug("").instructions("").build());
+                () -> new Recipe.Builder().recipeId(1)
+                        .name("").instructions("").build());
         assertThrows(IllegalStateException.class,
-                () -> new Recipe.Builder().recipeId(1).siteId(1)
-                        .name("not empty").slug("").instructions("").build());
+                () -> new Recipe.Builder().recipeId(1)
+                        .name("not empty").instructions("").build());
         assertThrows(IllegalStateException.class,
-                () -> new Recipe.Builder().recipeId(1).siteId(1)
-                        .name("not empty").slug("not empty").instructions("").build());
+                () -> new Recipe.Builder().recipeId(1)
+                        .name("not empty").instructions("").build());
         assertThrows(IllegalStateException.class,
-                () -> new Recipe.Builder().recipeId(1).siteId(1)
-                        .name("not empty").slug("not empty").instructions("not empty").build());
+                () -> new Recipe.Builder().recipeId(1)
+                        .name("not empty").instructions("not empty").build());
         assertThrows(IllegalStateException.class,
-                () -> new Recipe.Builder().recipeId(1).siteId(1)
-                        .name("not empty").slug("not empty").instructions("not empty").crawlUrl("").build());
-        assertDoesNotThrow(() -> new Recipe.Builder().recipeId(1).siteId(1)
-                .name("not empty").slug("not empty").crawlUrl("not empty").instructions("not empty").addIngredients("item 1").build());
+                () -> new Recipe.Builder().recipeId(1)
+                        .name("not empty").instructions("not empty").crawlUrl("").build());
+        assertDoesNotThrow(() -> new Recipe.Builder().recipeId(1)
+                .name("not empty").crawlUrl("not empty").instructions("not empty").addIngredients("item 1").build());
     }
 
     @Test
@@ -58,7 +58,6 @@ class RecipeTest {
         var recipe = Recipe.fromJson(new String(jsonBytes)).get();
         assertEquals(120, recipe.calories().getAsInt());
         assertEquals(2, recipe.ingredients().size());
-        assertEquals(12, recipe.siteId());
         assertFalse(recipe.carbohydrateContent().isPresent());
         assertEquals(Set.of("a", "b", "c", "d"), recipe.keywords());
     }

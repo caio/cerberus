@@ -12,8 +12,6 @@ public class Util {
     public static Recipe getBasicRecipe() {
         return new Recipe.Builder()
                 .recipeId(1)
-                .siteId(12)
-                .slug("recipe-1")
                 .name("valid recipe 1")
                 .crawlUrl("https://recipes.recipes/1")
                 .description("valid recipe 1 description")
