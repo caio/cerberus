@@ -62,14 +62,6 @@ public class Searcher {
         var topDiets = diets.getTopChildren(10, IndexField.FACET_DIM_DIET);
         var topKeywords = keywords.getTopChildren(10, IndexField.FACET_DIM_KEYWORD);
 
-        if (topDiets == null) {
-            throw new NullPointerException("topDiets is null when it shouldn't");
-        }
-
-        if (topKeywords == null) {
-            throw new NullPointerException("topKeywords is null when it shouldn't");
-        }
-
         for (int i = 0; i < result.scoreDocs.length; i++) {
             Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
             builder.addRecipe(
@@ -83,6 +75,9 @@ public class Searcher {
     }
 
     private void addFacetData(SearchResult.Builder sb, FacetResult fr) {
+        if (fr == null) {
+            return;
+        }
         var facetDataBuilder = new FacetData.Builder().dimension(fr.dim);
         for (int i = 0; i < fr.labelValues.length; i++) {
             facetDataBuilder.addChild(fr.labelValues[i].label, fr.labelValues[i].value.longValue());
