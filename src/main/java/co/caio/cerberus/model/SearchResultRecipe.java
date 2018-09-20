@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder=false)
+@Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
 @JsonSerialize(as = ImmutableSearchResultRecipe.class)
 @JsonDeserialize(as = ImmutableSearchResultRecipe.class)
 public
