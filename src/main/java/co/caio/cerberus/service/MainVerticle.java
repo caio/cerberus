@@ -1,6 +1,6 @@
 package co.caio.cerberus.service;
 
-import co.caio.cerberus.service.api.V1Configuration;
+import co.caio.cerberus.service.api.V1SearchHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Launcher;
 import io.vertx.core.VertxOptions;
@@ -31,7 +31,7 @@ public class MainVerticle extends AbstractVerticle {
         //assert vertx.isNativeTransportEnabled();
 
         var router = Router.router(vertx);
-        router.mountSubRouter("/api/v1", V1Configuration.getRouter(vertx));
+        router.mountSubRouter("/api/v1", V1SearchHandler.buildRouter(vertx));
 
         vertx.createHttpServer(options).requestHandler(router::accept).listen(8080);
     }

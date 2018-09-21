@@ -20,6 +20,10 @@ public interface V1SearchResponse {
 
     ResponseMetadata metadata();
 
+    enum ErrorCode {
+        UNKNOWN_ERROR, INPUT_DECODE_ERROR, INTERNAL_SEARCH_ERROR
+    }
+
     @Value.Immutable(builder=false)
     @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
     @JsonSerialize(as = ImmutableResponseMetadata.class)
@@ -41,10 +45,6 @@ public interface V1SearchResponse {
         static ResponseMetadata errorMetadata(ErrorCode code, String cause) {
             return errorMetadata(ErrorMetadata.of(code, cause));
         }
-    }
-
-    enum ErrorCode {
-        UNKNOWN_ERROR, BAD_INPUT
     }
 
     @Value.Immutable(builder=false)

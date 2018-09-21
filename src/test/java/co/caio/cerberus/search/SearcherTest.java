@@ -33,7 +33,7 @@ class SearcherTest {
     }
 
     @Test
-    public void facets() {
+    public void facets() throws Exception {
         var searcher = inMemoryIndexer.buildSearcher();
         var query = new SearchQuery.Builder().fulltext("vegan").build();
         var result = searcher.search(query, 1);
@@ -58,7 +58,7 @@ class SearcherTest {
     }
 
     @Test
-    public void multipleFacetsAreOr() {
+    public void multipleFacetsAreOr() throws Exception {
         var searcher = inMemoryIndexer.buildSearcher();
         var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil");
         var justOilResult = searcher.search(queryBuilder.build(), 1);
@@ -70,7 +70,7 @@ class SearcherTest {
     }
 
     @Test
-    public void findRecipes() {
+    public void findRecipes() throws Exception {
         var searcher = inMemoryIndexer.buildSearcher();
 
         // Recipes with up to 3 ingredients

@@ -25,15 +25,17 @@ public class Searcher {
     private final QueryInterpreter interpreter;
     private final FacetsConfig facetsConfig;
 
-    private static final SearchResult emptyResults = new SearchResult.Builder().build();
-    private static final Logger logger = LoggerFactory.getLogger(Searcher.class);
-
-    public SearchResult search(SearchQuery query, int maxResults) {
+    public SearchResult search(SearchQuery query, int maxResults) throws SearcherException {
         try {
             return _search(query, maxResults);
-        } catch (Exception exception) {
-            logger.error("Query <{}> failed with: {}", query, exception);
-            return emptyResults;
+        } catch (Exception wrapped) {
+            throw new SearcherException(wrapped);
+        }
+    }
+
+    private class SearcherException extends Exception {
+        private SearcherException(Exception e) {
+            super(e);
         }
     }
 
