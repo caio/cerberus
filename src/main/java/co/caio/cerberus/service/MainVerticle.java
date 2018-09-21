@@ -7,6 +7,7 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.launcher.VertxLifecycleHooks;
 import io.vertx.core.net.SelfSignedCertificate;
+import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.web.Router;
 
 public class MainVerticle extends AbstractVerticle {
@@ -27,11 +28,19 @@ public class MainVerticle extends AbstractVerticle {
                 .setPemKeyCertOptions(certificate.keyCertOptions())
                 .setTrustOptions(certificate.trustOptions());
 
-        // TODO make this assertion a healthcheck maybe?
-        //assert vertx.isNativeTransportEnabled();
-
         var router = Router.router(vertx);
         router.mountSubRouter("/api/v1", V1SearchHandler.buildRouter(vertx));
+
+        var healthChecks = HealthCheckHandler.create(vertx);
+        healthChecks.register("native-transport", fut -> {
+            if (vertx.isNativeTransportEnabled()) {
+                fut.complete();
+            } else {
+                fut.fail("native transport not enabled");
+            }
+        });
+
+        router.route("/health*").handler(healthChecks);
 
         vertx.createHttpServer(options).requestHandler(router::accept).listen(8080);
     }
