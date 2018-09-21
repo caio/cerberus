@@ -2,9 +2,8 @@ package co.caio.cerberus.service.api;
 
 import co.caio.cerberus.Environment;
 import co.caio.cerberus.model.SearchQuery;
-import co.caio.cerberus.model.SearchResult;
 import co.caio.cerberus.search.Searcher;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
@@ -39,29 +38,82 @@ public class V1SearchHandler implements Handler<RoutingContext> {
     static public Router buildRouter(Vertx vertx) {
         var router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
-        router.route("/search")
-                .consumes(APPLICATION_JSON)
-                .handler(new V1SearchHandler());
+        router.route("/search").consumes(APPLICATION_JSON).handler(new V1SearchHandler());
         return router;
     }
 
     @Override
     public void handle(RoutingContext routingContext) {
-        try {
-            var searchQuery = readBody(routingContext);
-            var searchResult = runSearch(searchQuery, routingContext);
-            writeResponse(V1SearchResponse.success(searchResult), routingContext);
-        } catch (Exception e) {
-            logger.error("Exception caught handling V1 /search", e);
+        readSearchQuery(routingContext)
+            .compose(r -> runSearch(r, routingContext))
+            .compose(r -> renderResult(r, routingContext))
+            .setHandler(ar -> {
+                routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
+                if (ar.succeeded()) {
+                    routingContext.response().end(ar.result());
+                } else {
+                    writeError(routingContext, ar.cause());
+                }
+            });
+    }
 
-            var errorCode = (V1SearchResponse.ErrorCode) routingContext.get(CONTEXT_ERROR_KEY);
-
-            routingContext.response().setStatusCode(500);
-            if (errorCode != null) {
-                writeResponse(V1SearchResponse.failure(errorCode, errorCodeToMessage(errorCode)), routingContext);
-            } else {
-                routingContext.response().end(unknownFailureResponse);
+    private Future<String> renderResult(V1SearchResponse searchResponse, RoutingContext routingContext) {
+        return Future.future(future -> {
+            try {
+                var serializedResult = Environment.getObjectMapper().writeValueAsString(searchResponse);
+                future.complete(serializedResult);
+            } catch (Exception e) {
+                routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.OUTPUT_ENCODE_ERROR);
+                future.fail(e);
             }
+        });
+    }
+
+    private Future<V1SearchResponse> runSearch(SearchQuery searchQuery, RoutingContext routingContext) {
+        return Future.future(future -> {
+            try {
+                // XXX maybe get maxResults from the query instead
+                future.complete(V1SearchResponse.success(searcher.search(searchQuery, 10)));
+            } catch (Exception rethrown) {
+                routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INTERNAL_SEARCH_ERROR);
+                future.fail(rethrown);
+            }
+        });
+    }
+
+    private Future<SearchQuery> readSearchQuery(RoutingContext routingContext) {
+        return Future.future(ar -> {
+            try {
+                ar.complete(Environment.getObjectMapper()
+                        .readValue(routingContext.getBody().getBytes(), SearchQuery.class));
+            } catch (Exception exception) {
+                routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INPUT_DECODE_ERROR);
+                ar.fail(exception);
+            }
+        });
+    }
+
+    private void writeError(RoutingContext routingContext, Throwable cause) {
+        logger.error("Exception handling V1 /search request", cause);
+
+        var errorCode = (V1SearchResponse.ErrorCode) routingContext.get(CONTEXT_ERROR_KEY);
+
+        routingContext.response().setStatusCode(500);
+        if (errorCode != null) {
+            routingContext.response().end(renderErrorResponse(errorCode));
+        } else {
+            logger.error("No error code found, rendering unknown failure");
+            routingContext.response().end(unknownFailureResponse);
+        }
+    }
+
+    private String renderErrorResponse(V1SearchResponse.ErrorCode code) {
+        try {
+            return Environment.getObjectMapper().writeValueAsString(
+                    V1SearchResponse.failure(code, errorCodeToMessage(code)));
+        } catch (Exception e) {
+            logger.error("Exception rendering error response", e);
+            return unknownFailureResponse;
         }
     }
 
@@ -71,36 +123,10 @@ public class V1SearchHandler implements Handler<RoutingContext> {
                 return "Failure decoding input data";
             case INTERNAL_SEARCH_ERROR:
                 return "Error executing search";
+            case OUTPUT_ENCODE_ERROR:
+                return "Error encoding result for output";
             default:
                 throw new RuntimeException(String.format("Unknown error code '%s'", code));
-        }
-    }
-
-    private SearchResult runSearch(SearchQuery searchQuery, RoutingContext routingContext) throws Exception {
-        try {
-            // XXX maybe get maxResults from the query instead
-            return searcher.search(searchQuery, 10);
-        } catch (Exception rethrown) {
-            routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INTERNAL_SEARCH_ERROR);
-            throw rethrown;
-        }
-    }
-
-    private SearchQuery readBody(RoutingContext routingContext) throws Exception {
-        try {
-            return Environment.getObjectMapper().readValue(routingContext.getBody().getBytes(), SearchQuery.class);
-        } catch (Exception rethrown) {
-            routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INPUT_DECODE_ERROR);
-            throw rethrown;
-        }
-    }
-
-    private void writeResponse(V1SearchResponse searchResponse, RoutingContext context) {
-        try {
-            context.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
-            context.response().end(Environment.getObjectMapper().writeValueAsString(searchResponse));
-        } catch (Throwable propagated) {
-            context.fail(propagated);
         }
     }
 }

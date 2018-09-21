@@ -21,7 +21,7 @@ public interface V1SearchResponse {
     ResponseMetadata metadata();
 
     enum ErrorCode {
-        UNKNOWN_ERROR, INPUT_DECODE_ERROR, INTERNAL_SEARCH_ERROR
+        UNKNOWN_ERROR, INPUT_DECODE_ERROR, INTERNAL_SEARCH_ERROR, OUTPUT_ENCODE_ERROR
     }
 
     @Value.Immutable(builder=false)
