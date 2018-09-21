@@ -20,7 +20,7 @@ public class FileSystem {
 
     static Directory openDirectory(Path dir, boolean create) throws Exception {
         if (create && ! dir.toFile().exists() && dir.getParent().toFile().isDirectory()) {
-            logger.debug("Creating directory %s", dir);
+            logger.debug("Creating directory {}", dir);
             Files.createDirectory(dir);
         }
         return FSDirectory.open(dir);
