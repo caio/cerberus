@@ -1,4 +1,4 @@
-package co.caio.cerberus.service;
+package co.caio.cerberus.service.api;
 
 import co.caio.cerberus.model.SearchResult;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -12,10 +12,10 @@ import java.util.Optional;
         visibility = Value.Style.ImplementationVisibility.PACKAGE,
         overshadowImplementation = true
 )
-@JsonSerialize(as = ImmutableSearchResponse.class)
-@JsonDeserialize(as = ImmutableSearchResponse.class)
+@JsonSerialize(as = ImmutableV1SearchResponse.class)
+@JsonDeserialize(as = ImmutableV1SearchResponse.class)
 @Value.Immutable
-public interface SearchResponse {
+public interface V1SearchResponse {
     Optional<SearchResult> result();
 
     ResponseMetadata metadata();
@@ -69,13 +69,13 @@ public interface SearchResponse {
         }
     }
 
-    static SearchResponse success(SearchResult result) {
+    static V1SearchResponse success(SearchResult result) {
         return new Builder().result(result).metadata(ResponseMetadata.successMetadata()).build();
     }
 
-    static SearchResponse failure(ErrorCode code, String cause) {
+    static V1SearchResponse failure(ErrorCode code, String cause) {
         return new Builder().metadata(ResponseMetadata.errorMetadata(code, cause)).build();
     }
 
-    class Builder extends ImmutableSearchResponse.Builder {};
+    class Builder extends ImmutableV1SearchResponse.Builder {};
 }
