@@ -3,6 +3,7 @@ package co.caio.cerberus.service;
 import co.caio.cerberus.Environment;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
+import co.caio.cerberus.search.Searcher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -14,6 +15,8 @@ import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+
+import java.nio.file.Paths;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -48,7 +51,8 @@ public class MainVerticle extends AbstractVerticle {
 
     abstract class BaseV1APIHandler implements Handler<RoutingContext> {
         ObjectMapper mapper = Environment.getObjectMapper();
-        // TODO all .search stuff
+        private static final String CONTENT_TYPE = "Content-type";
+        private static final String APPLICATION_JSON = "application/json";
 
         SearchQuery readBody(RoutingContext routingContext) throws Exception {
             return mapper.readValue(routingContext.getBody().getBytes(), SearchQuery.class);
@@ -56,25 +60,26 @@ public class MainVerticle extends AbstractVerticle {
 
         void writeSuccess(SearchResult sr, RoutingContext context) throws Exception {
             var response = context.response();
-            response.putHeader("Content-type", "application/json");
+            response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
             response.end(mapper.writeValueAsString(SearchResponse.success(sr)));
         }
 
-        void writeFailure(RoutingContext context) throws Exception {
+        void writeFailure(SearchResponse.ErrorCode code, RoutingContext context) throws Exception {
             var response = context.response();
-            response.putHeader("Content-type", "application/json");
-            response.end(mapper.writeValueAsString(SearchResponse.failure(context.failure())));
+            response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
+            response.end(mapper.writeValueAsString(SearchResponse.failure(code, context.failure().getMessage())));
         }
     }
 
     class V1APIHandler extends BaseV1APIHandler {
+        // FIXME configuration
+        Searcher searcher = new Searcher.Builder().dataDirectory(Paths.get("/tmp/hue")).build();
 
         @Override
         public void handle(RoutingContext routingContext) {
             try {
                 var searchQuery = readBody(routingContext);
-                // writeSuccess(searcher.search(searchQuery)
-                routingContext.response().end();
+                writeSuccess(searcher.search(searchQuery, 10), routingContext);
             } catch (Exception e) {
                 routingContext.fail(e);
             }
@@ -86,7 +91,7 @@ public class MainVerticle extends AbstractVerticle {
         @Override
         public void handle(RoutingContext routingContext) {
             try {
-                writeFailure(routingContext);
+                writeFailure(SearchResponse.ErrorCode.UNKNOWN_ERROR, routingContext);
             } catch (Exception e) {
                 routingContext.fail(e);
             }

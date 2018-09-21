@@ -17,14 +17,64 @@ import java.util.Optional;
 @Value.Immutable
 public interface SearchResponse {
     Optional<SearchResult> result();
-    Optional<String> error();
 
-    static SearchResponse success(SearchResult result) {
-        return new Builder().result(result).build();
+    ResponseMetadata metadata();
+
+    @Value.Immutable(builder=false)
+    @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
+    @JsonSerialize(as = ImmutableResponseMetadata.class)
+    @JsonDeserialize(as = ImmutableResponseMetadata.class)
+    interface ResponseMetadata {
+        @Value.Parameter
+        boolean success();
+        @Value.Parameter
+        Optional<ErrorMetadata> error();
+
+        static ResponseMetadata successMetadata() {
+            return ImmutableResponseMetadata.of(true, Optional.empty());
+        }
+
+        static ResponseMetadata errorMetadata(ErrorMetadata meta) {
+            return ImmutableResponseMetadata.of(false, Optional.of(meta));
+        }
+
+        static ResponseMetadata errorMetadata(ErrorCode code, String cause) {
+            return errorMetadata(ErrorMetadata.of(code, cause));
+        }
     }
 
-    static SearchResponse failure(Throwable throwable) {
-        return new Builder().error(throwable.getMessage()).build();
+    enum ErrorCode {
+        UNKNOWN_ERROR, BAD_INPUT
+    }
+
+    @Value.Immutable(builder=false)
+    @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
+    @JsonSerialize(as = ImmutableErrorMetadata.class)
+    @JsonDeserialize(as = ImmutableErrorMetadata.class)
+    interface ErrorMetadata {
+        @Value.Default
+        @Value.Parameter
+        default ErrorCode code() {
+            return ErrorCode.UNKNOWN_ERROR;
+        }
+        @Value.Parameter
+        String message();
+
+        static ErrorMetadata of(ErrorCode code, String message) {
+            return ImmutableErrorMetadata.of(code, message);
+        }
+
+        static ErrorMetadata of(String message) {
+            return ImmutableErrorMetadata.of(ErrorCode.UNKNOWN_ERROR, message);
+        }
+    }
+
+    static SearchResponse success(SearchResult result) {
+        return new Builder().result(result).metadata(ResponseMetadata.successMetadata()).build();
+    }
+
+    static SearchResponse failure(ErrorCode code, String cause) {
+        return new Builder().metadata(ResponseMetadata.errorMetadata(code, cause)).build();
     }
 
     class Builder extends ImmutableSearchResponse.Builder {};
