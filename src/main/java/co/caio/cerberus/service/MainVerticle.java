@@ -29,7 +29,6 @@ public class MainVerticle extends AbstractVerticle {
                 .setTrustOptions(certificate.trustOptions());
 
         var router = Router.router(vertx);
-        router.mountSubRouter("/api/v1", V1SearchHandler.buildRouter(vertx));
 
         var healthChecks = HealthCheckHandler.create(vertx);
         healthChecks.register("native-transport", fut -> {
@@ -41,6 +40,7 @@ public class MainVerticle extends AbstractVerticle {
         });
 
         router.route("/health*").handler(healthChecks);
+        router.route("/api/v1/search").handler(new V1SearchHandler());
 
         vertx.createHttpServer(options).requestHandler(router::accept).listen(8080);
     }
