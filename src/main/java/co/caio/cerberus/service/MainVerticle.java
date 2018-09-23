@@ -9,6 +9,7 @@ import io.vertx.core.impl.launcher.VertxLifecycleHooks;
 import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -42,8 +43,11 @@ public class MainVerticle extends AbstractVerticle {
           }
         });
 
-    router.route("/health*").handler(healthChecks);
-    router.route("/api/v1/search").handler(new V1SearchHandler());
+    router.get("/health*").handler(healthChecks);
+    router.post("/api/v1/search")
+        .consumes("application/json")
+        .handler(BodyHandler.create())
+        .handler(new V1SearchHandler());
 
     vertx.createHttpServer(options).requestHandler(router::accept).listen(8080);
   }
