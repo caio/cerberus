@@ -27,16 +27,12 @@ public class MainVerticle extends AbstractVerticle {
     new CustomLauncher().dispatch(new String[] {"run", MainVerticle.class.getCanonicalName()});
   }
 
-  private int portNumber;
-  private String dataDirectory;
-  private boolean useSsl;
-
   @Override
   public void start(Future<Void> startFuture) {
-    readConfiguration().compose(v -> startWebServer()).setHandler(startFuture.completer());
+    readConfiguration().compose(this::startWebServer).setHandler(startFuture.completer());
   }
 
-  private Future<Void> startWebServer() {
+  private Future<Void> startWebServer(Configuration config) {
     return Future.future(
         future -> {
           var options =
@@ -45,7 +41,7 @@ public class MainVerticle extends AbstractVerticle {
                   .setTcpNoDelay(true)
                   .setTcpFastOpen(true);
 
-          if (useSsl) {
+          if (config.useSsl) {
             var certificate = SelfSignedCertificate.create();
             options
                 .setSsl(true)
@@ -54,19 +50,19 @@ public class MainVerticle extends AbstractVerticle {
                 .setTrustOptions(certificate.trustOptions());
           }
 
-          var router = getRouter();
+          var router = getRouter(config);
 
           vertx
               .createHttpServer(options)
               .requestHandler(router::accept)
               .listen(
-                  portNumber,
+                  config.portNumber,
                   ar -> {
                     if (ar.succeeded()) {
                       logger.info(
                           "Web server started at {}://localhost:{}",
-                          useSsl ? "https" : "http",
-                          portNumber);
+                          config.useSsl ? "https" : "http",
+                          config.portNumber);
                       future.complete();
                     } else {
                       future.fail(future.cause());
@@ -75,7 +71,7 @@ public class MainVerticle extends AbstractVerticle {
         });
   }
 
-  private Future<Void> readConfiguration() {
+  private Future<Configuration> readConfiguration() {
 
     var configRetriever = ConfigRetriever.create(vertx);
 
@@ -85,28 +81,18 @@ public class MainVerticle extends AbstractVerticle {
                 ar -> {
                   if (ar.succeeded()) {
                     var config = ar.result();
-                    portNumber = config.getInteger(CONFIG_SERVICE_PORT, 0);
-                    dataDirectory = config.getString(CONFIG_SERIVCE_DATA_DIR);
-                    useSsl = config.getBoolean(CONFIG_SERVICE_SSL, false);
-
-                    if (portNumber <= 0) {
-                      fut.fail(
-                          String.format(
-                              "Bad configuration for %s: %d", CONFIG_SERVICE_PORT, portNumber));
-                    } else if (dataDirectory == null) {
-                      fut.fail(
-                          String.format(
-                              "Must configure %s with a valid path", CONFIG_SERIVCE_DATA_DIR));
-                    } else {
-                      fut.complete();
-                    }
+                    fut.complete(
+                        new Configuration(
+                            config.getInteger(CONFIG_SERVICE_PORT, 0),
+                            config.getBoolean(CONFIG_SERVICE_SSL, false),
+                            config.getString(CONFIG_SERIVCE_DATA_DIR)));
                   } else {
                     fut.fail(ar.cause());
                   }
                 }));
   }
 
-  private Router getRouter() {
+  private Router getRouter(Configuration config) {
     var router = Router.router(vertx);
 
     var healthChecks = HealthCheckHandler.create(vertx);
@@ -125,9 +111,30 @@ public class MainVerticle extends AbstractVerticle {
         .post("/api/v1/search")
         .consumes("application/json")
         .handler(BodyHandler.create())
-        .handler(new V1SearchHandler(Paths.get(dataDirectory)));
+        .handler(new V1SearchHandler(Paths.get(config.dataDirectory)));
 
     return router;
+  }
+
+  private class Configuration {
+    int portNumber;
+    boolean useSsl;
+    String dataDirectory;
+
+    Configuration(int portNumber, boolean useSsl, String dataDirectory) {
+      this.portNumber = portNumber;
+      this.useSsl = useSsl;
+      this.dataDirectory = dataDirectory;
+
+      if (portNumber <= 0 || portNumber > 65535) {
+        throw new IllegalStateException(String.format("Invalid port number: %d", portNumber));
+      }
+
+      if (dataDirectory == null) {
+        throw new NullPointerException(
+            String.format("Configuration missing for %s", CONFIG_SERIVCE_DATA_DIR));
+      }
+    }
   }
 
   static class CustomLauncher extends Launcher implements VertxLifecycleHooks {
