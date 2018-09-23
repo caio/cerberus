@@ -6,13 +6,12 @@ import co.caio.cerberus.search.Searcher;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class V1SearchHandler implements Handler<RoutingContext> {
-  // FIXME configuration
-  private Searcher searcher = new Searcher.Builder().dataDirectory(Paths.get("/tmp/hue")).build();
+  private final Searcher searcher;
 
   private static final Logger logger = LoggerFactory.getLogger(V1SearchHandler.class);
 
@@ -32,6 +31,10 @@ public class V1SearchHandler implements Handler<RoutingContext> {
     } catch (Exception shouldNeverHappen) {
       throw new RuntimeException(shouldNeverHappen);
     }
+  }
+
+  public V1SearchHandler(Path dataDirectory) {
+    searcher = new Searcher.Builder().dataDirectory(dataDirectory).build();
   }
 
   @Override
@@ -57,9 +60,9 @@ public class V1SearchHandler implements Handler<RoutingContext> {
           try {
             var serializedResult = Environment.getObjectMapper().writeValueAsString(searchResponse);
             future.complete(serializedResult);
-          } catch (Exception e) {
+          } catch (Exception exception) {
             routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.OUTPUT_ENCODE_ERROR);
-            future.fail(e);
+            future.fail(exception);
           }
         });
   }
@@ -71,9 +74,9 @@ public class V1SearchHandler implements Handler<RoutingContext> {
           try {
             // XXX maybe get maxResults from the query instead
             future.complete(V1SearchResponse.success(searcher.search(searchQuery, 10)));
-          } catch (Exception rethrown) {
+          } catch (Exception exception) {
             routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INTERNAL_SEARCH_ERROR);
-            future.fail(rethrown);
+            future.fail(exception);
           }
         });
   }
@@ -110,8 +113,8 @@ public class V1SearchHandler implements Handler<RoutingContext> {
     try {
       return Environment.getObjectMapper()
           .writeValueAsString(V1SearchResponse.failure(code, errorCodeToMessage(code)));
-    } catch (Exception e) {
-      logger.error("Exception rendering error response", e);
+    } catch (Exception exception) {
+      logger.error("Exception rendering error response", exception);
       return unknownFailureResponse;
     }
   }
