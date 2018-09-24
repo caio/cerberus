@@ -10,7 +10,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -27,7 +26,7 @@ class MainVerticleTest {
   static int portNumber = -1;
 
   @Test
-  void simpleSearch(Vertx vertx, VertxTestContext testContext) throws Exception {
+  void simpleSearch(Vertx vertx, VertxTestContext testContext) {
     var searchQuery = new SearchQuery.Builder().fulltext("keto bacon").build();
     var maybeBody = SearchQuery.toJson(searchQuery);
     assertTrue(maybeBody.isPresent());
@@ -35,17 +34,8 @@ class MainVerticleTest {
         vertx,
         testContext,
         maybeBody.get(),
-        (response) -> {
-          testContext.verify(
-              () -> {
-                assertEquals(200, response.statusCode());
-                assertEquals(response.getHeader("Content-type"), "application/json");
-              });
-
-          var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
-          assertTrue(maybeSR.isPresent());
-          var sr = maybeSR.get();
-
+        200,
+        (sr) -> {
           testContext.verify(
               () -> {
                 assertTrue(sr.metadata().success());
@@ -63,17 +53,8 @@ class MainVerticleTest {
         vertx,
         testContext,
         "bad input that isnt even json",
-        (response) -> {
-          testContext.verify(
-              () -> {
-                assertEquals(500, response.statusCode());
-                assertEquals("application/json", response.getHeader("Content-type"));
-              });
-
-          var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
-          assertTrue(maybeSR.isPresent());
-          var sr = maybeSR.get();
-
+        500,
+        (sr) -> {
           testContext.verify(
               () -> {
                 assertFalse(sr.metadata().success());
@@ -97,7 +78,8 @@ class MainVerticleTest {
       Vertx vertx,
       VertxTestContext testContext,
       String body,
-      Consumer<HttpResponse<Buffer>> responseConsumer) {
+      int wantedStatus,
+      Consumer<V1SearchResponse> responseConsumer) {
     var client = WebClient.create(vertx);
 
     vertx.deployVerticle(
@@ -112,7 +94,17 @@ class MainVerticleTest {
                       Buffer.buffer(body),
                       ar -> {
                         if (ar.succeeded()) {
-                          responseConsumer.accept(ar.result());
+                          var response = ar.result();
+                          testContext.verify(
+                              () -> {
+                                assertEquals(wantedStatus, response.statusCode());
+                                assertEquals(
+                                    "application/json", response.getHeader("Content-type"));
+                              });
+
+                          var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
+                          assertTrue(maybeSR.isPresent());
+                          responseConsumer.accept(maybeSR.get());
                         } else {
                           testContext.failNow(ar.cause());
                         }
