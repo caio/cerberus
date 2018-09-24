@@ -20,7 +20,6 @@ class IndexerTest {
     assertThrows(
         exc,
         () -> builder.reset().dataDirectory(Paths.get("/this/doesnt/exist")).createMode().build());
-    assertThrows(exc, () -> builder.reset().inMemory().appendMode().build());
   }
 
   @Test

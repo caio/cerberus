@@ -58,12 +58,6 @@ public interface Indexer {
       return this;
     }
 
-    public Builder inMemory() {
-      indexDirectory = new RAMDirectory();
-      taxonomyDirectory = new RAMDirectory();
-      return this;
-    }
-
     public Builder analyzer(Analyzer an) {
       analyzer = an;
       return this;

@@ -1,6 +1,7 @@
 package co.caio.cerberus;
 
 import co.caio.cerberus.model.Recipe;
+import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -25,5 +26,24 @@ public class Util {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static Indexer indexer;
+
+  synchronized public static Indexer getTestIndexer() throws Exception {
+    if (indexer == null) {
+      var baseDir = Files.createTempDirectory("cerberus-test");
+      indexer = new Indexer.Builder().dataDirectory(baseDir).createMode().build();
+
+      getSampleRecipes().forEach(recipe -> {
+        try {
+          indexer.addRecipe(recipe);
+        } catch (Exception ignored) {
+          // pass
+        }
+      });
+      indexer.commit();
+    }
+    return indexer;
   }
 }

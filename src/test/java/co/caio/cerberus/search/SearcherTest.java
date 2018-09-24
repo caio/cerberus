@@ -10,20 +10,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class SearcherTest {
-  private static Indexer inMemoryIndexer;
+  private static Indexer tempDirIndexer;
 
   @BeforeAll
-  public static void prepare() throws IOException {
-    inMemoryIndexer = new Indexer.Builder().inMemory().createMode().build();
-    Util.getSampleRecipes()
-        .forEach(
-            recipe -> {
-              try {
-                inMemoryIndexer.addRecipe(recipe);
-              } catch (Exception ignored) {
-              }
-            });
-    inMemoryIndexer.commit();
+  public static void prepare() throws Exception {
+    tempDirIndexer = Util.getTestIndexer();
   }
 
   @Test
@@ -36,7 +27,7 @@ class SearcherTest {
 
   @Test
   public void facets() throws Exception {
-    var searcher = inMemoryIndexer.buildSearcher();
+    var searcher = tempDirIndexer.buildSearcher();
     var query = new SearchQuery.Builder().fulltext("vegan").build();
     var result = searcher.search(query, 1);
 
@@ -69,7 +60,7 @@ class SearcherTest {
 
   @Test
   public void multipleFacetsAreOr() throws Exception {
-    var searcher = inMemoryIndexer.buildSearcher();
+    var searcher = tempDirIndexer.buildSearcher();
     var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil");
     var justOilResult = searcher.search(queryBuilder.build(), 1);
     var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build(), 1);
@@ -81,7 +72,7 @@ class SearcherTest {
 
   @Test
   public void findRecipes() throws Exception {
-    var searcher = inMemoryIndexer.buildSearcher();
+    var searcher = tempDirIndexer.buildSearcher();
 
     // Recipes with up to 3 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l
