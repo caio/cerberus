@@ -11,10 +11,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.net.ServerSocket;
 import java.util.function.Consumer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,16 +24,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(VertxExtension.class)
 class MainVerticleTest {
 
-  // Set to a real value at setUp()
-  static int portNumber = -1;
+  private static WebClient client;
 
   @Test
-  void simpleSearch(Vertx vertx, VertxTestContext testContext) {
+  void simpleSearch(VertxTestContext testContext) {
     var searchQuery = new SearchQuery.Builder().fulltext("keto bacon").build();
     var maybeBody = SearchQuery.toJson(searchQuery);
     assertTrue(maybeBody.isPresent());
     searchRequest(
-        vertx,
         testContext,
         maybeBody.get(),
         200,
@@ -48,9 +48,8 @@ class MainVerticleTest {
   }
 
   @Test
-  void jsonOnBadInput(Vertx vertx, VertxTestContext testContext) {
+  void jsonOnBadInput(VertxTestContext testContext) {
     searchRequest(
-        vertx,
         testContext,
         "bad input that isnt even json",
         500,
@@ -66,58 +65,59 @@ class MainVerticleTest {
   }
 
   @BeforeAll
-  static void setUp() throws Exception {
+  static void setUp(Vertx vertx, VertxTestContext testContext) throws Exception {
     // record ephemeral port number obtained by opening a socket
     // so that we may use it as the test webserver port
     var serverSocket = new ServerSocket(0);
-    portNumber = serverSocket.getLocalPort();
+    var portNumber = serverSocket.getLocalPort();
     serverSocket.close();
+
+    client =
+        WebClient.create(
+            vertx, new WebClientOptions().setDefaultHost("localhost").setDefaultPort(portNumber));
+
+    var config =
+        new DeploymentOptions()
+            .setConfig(
+                new JsonObject()
+                    .put(MainVerticle.CONFIG_SERVICE_SSL, false)
+                    .put(MainVerticle.CONFIG_SERVICE_PORT, portNumber)
+                    .put(MainVerticle.CONFIG_SERIVCE_DATA_DIR, Util.getTestDataDir().toString()));
+
+    vertx.deployVerticle(
+        new MainVerticle(), config, testContext.succeeding(fut -> testContext.completeNow()));
+  }
+
+  @AfterAll
+  static void tearDown(Vertx vertx, VertxTestContext testContext) {
+    vertx.close(testContext.succeeding(fut -> testContext.completeNow()));
   }
 
   private void searchRequest(
-      Vertx vertx,
       VertxTestContext testContext,
       String body,
       int wantedStatus,
       Consumer<V1SearchResponse> responseConsumer) {
-    var client = WebClient.create(vertx);
+    client
+        .post("/api/v1/search")
+        .putHeader("Content-type", "application/json")
+        .sendBuffer(
+            Buffer.buffer(body),
+            ar -> {
+              if (ar.succeeded()) {
+                var response = ar.result();
+                testContext.verify(
+                    () -> {
+                      assertEquals(wantedStatus, response.statusCode());
+                      assertEquals("application/json", response.getHeader("Content-type"));
+                    });
 
-    vertx.deployVerticle(
-        new MainVerticle(),
-        getConfig(),
-        testContext.succeeding(
-            v -> {
-              client
-                  .post(portNumber, "localhost", "/api/v1/search")
-                  .putHeader("Content-type", "application/json")
-                  .sendBuffer(
-                      Buffer.buffer(body),
-                      ar -> {
-                        if (ar.succeeded()) {
-                          var response = ar.result();
-                          testContext.verify(
-                              () -> {
-                                assertEquals(wantedStatus, response.statusCode());
-                                assertEquals(
-                                    "application/json", response.getHeader("Content-type"));
-                              });
-
-                          var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
-                          assertTrue(maybeSR.isPresent());
-                          responseConsumer.accept(maybeSR.get());
-                        } else {
-                          testContext.failNow(ar.cause());
-                        }
-                      });
-            }));
-  }
-
-  private DeploymentOptions getConfig() {
-    return new DeploymentOptions()
-        .setConfig(
-            new JsonObject()
-                .put(MainVerticle.CONFIG_SERVICE_SSL, false)
-                .put(MainVerticle.CONFIG_SERVICE_PORT, portNumber)
-                .put(MainVerticle.CONFIG_SERIVCE_DATA_DIR, Util.getTestDataDir().toString()));
+                var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
+                assertTrue(maybeSR.isPresent());
+                responseConsumer.accept(maybeSR.get());
+              } else {
+                testContext.failNow(ar.cause());
+              }
+            });
   }
 }
