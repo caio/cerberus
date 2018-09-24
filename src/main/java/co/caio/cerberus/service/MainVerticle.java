@@ -21,7 +21,7 @@ public class MainVerticle extends AbstractVerticle {
   static final String CONFIG_SERVICE_PORT = "cerberus.service.port";
   static final String CONFIG_SERIVCE_DATA_DIR = "cerberus.service.data_dir";
   static final String CONFIG_SERVICE_SSL = "cerberus.service.ssl";
-  static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
+  private static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
   public static void main(String[] args) {
     new CustomLauncher().dispatch(new String[] {"run", MainVerticle.class.getCanonicalName()});
@@ -30,6 +30,11 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) {
     readConfiguration().compose(this::startWebServer).setHandler(startFuture.completer());
+  }
+
+  @Override
+  public void stop() {
+    logger.info("Service stopped");
   }
 
   private Future<Void> startWebServer(Configuration config) {
@@ -60,7 +65,7 @@ public class MainVerticle extends AbstractVerticle {
                   ar -> {
                     if (ar.succeeded()) {
                       logger.info(
-                          "Web server started at {}://localhost:{}",
+                          "Service started at {}://localhost:{}",
                           config.useSsl ? "https" : "http",
                           config.portNumber);
                       future.complete();

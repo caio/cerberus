@@ -96,7 +96,7 @@ public class V1SearchHandler implements Handler<RoutingContext> {
   }
 
   private void writeError(RoutingContext routingContext, Throwable cause) {
-    logger.error("Exception handling V1 /search request", cause);
+    logger.debug("Exception handling V1 /search request", cause);
 
     var errorCode = (V1SearchResponse.ErrorCode) routingContext.get(CONTEXT_ERROR_KEY);
 
@@ -104,7 +104,7 @@ public class V1SearchHandler implements Handler<RoutingContext> {
     if (errorCode != null) {
       routingContext.response().end(renderErrorResponse(errorCode));
     } else {
-      logger.error("No error code found, rendering unknown failure");
+      logger.error("No error code found, rendering unknown failure", cause);
       routingContext.response().end(unknownFailureResponse);
     }
   }

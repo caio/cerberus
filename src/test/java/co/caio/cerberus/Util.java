@@ -30,18 +30,20 @@ public class Util {
 
   private static Indexer indexer;
 
-  synchronized public static Indexer getTestIndexer() throws Exception {
+  public static synchronized Indexer getTestIndexer() throws Exception {
     if (indexer == null) {
       var baseDir = Files.createTempDirectory("cerberus-test");
       indexer = new Indexer.Builder().dataDirectory(baseDir).createMode().build();
 
-      getSampleRecipes().forEach(recipe -> {
-        try {
-          indexer.addRecipe(recipe);
-        } catch (Exception ignored) {
-          // pass
-        }
-      });
+      getSampleRecipes()
+          .forEach(
+              recipe -> {
+                try {
+                  indexer.addRecipe(recipe);
+                } catch (Exception ignored) {
+                  // pass
+                }
+              });
       indexer.commit();
     }
     return indexer;
