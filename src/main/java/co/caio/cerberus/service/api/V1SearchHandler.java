@@ -2,6 +2,7 @@ package co.caio.cerberus.service.api;
 
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.search.Searcher;
+import co.caio.cerberus.service.api.V1SearchResponse.ErrorCode;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
@@ -16,7 +17,6 @@ public class V1SearchHandler implements Handler<RoutingContext> {
 
   private static final String CONTENT_TYPE = "Content-type";
   private static final String APPLICATION_JSON = "application/json";
-  private static final String CONTEXT_ERROR_KEY = "error_code";
 
   private static final String unknownFailureResponse;
 
@@ -25,7 +25,7 @@ public class V1SearchHandler implements Handler<RoutingContext> {
         V1SearchResponse.toJson(
                 V1SearchResponse.failure(
                     V1SearchResponse.ErrorCode.UNKNOWN_ERROR, "Unknown/unhandled error"))
-            .get();
+            .orElseThrow();
   }
 
   public V1SearchHandler(Path dataDirectory) {
@@ -35,7 +35,7 @@ public class V1SearchHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext routingContext) {
     readSearchQuery(routingContext)
-        .compose(r -> runSearch(r, routingContext))
+        .compose(this::runSearch)
         .setHandler(
             ar -> {
               routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
@@ -48,16 +48,16 @@ public class V1SearchHandler implements Handler<RoutingContext> {
             });
   }
 
-  private Future<V1SearchResponse> runSearch(
-      SearchQuery searchQuery, RoutingContext routingContext) {
+  private Future<V1SearchResponse> runSearch(SearchQuery searchQuery) {
     return Future.future(
         future -> {
           try {
             // XXX maybe get maxResults from the query instead
             future.complete(V1SearchResponse.success(searcher.search(searchQuery, 10)));
-          } catch (Exception exception) {
-            routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INTERNAL_SEARCH_ERROR);
-            future.fail(exception);
+          } catch (Exception wrapped) {
+            future.fail(
+                new APIErrorMessage(
+                    ErrorCode.INTERNAL_SEARCH_ERROR, "An error occurred during search", wrapped));
           }
         });
   }
@@ -69,8 +69,9 @@ public class V1SearchHandler implements Handler<RoutingContext> {
           if (maybeSq.isPresent()) {
             future.complete(maybeSq.get());
           } else {
-            routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INPUT_DECODE_ERROR);
-            future.fail("Failed to decode input as a SearchQuery");
+            future.fail(
+                new APIErrorMessage(
+                    ErrorCode.INPUT_DECODE_ERROR, "Failed to decode input as a SearchQuery", null));
           }
         });
   }
@@ -78,32 +79,30 @@ public class V1SearchHandler implements Handler<RoutingContext> {
   private void writeError(RoutingContext routingContext, Throwable cause) {
     logger.debug("Exception handling V1 /search request", cause);
 
-    var errorCode = (V1SearchResponse.ErrorCode) routingContext.get(CONTEXT_ERROR_KEY);
-
     routingContext.response().setStatusCode(500);
-    if (errorCode != null) {
+    if (cause instanceof APIErrorMessage) {
+      var errorCode = ((APIErrorMessage) cause).code;
+      var errorMessage = ((APIErrorMessage) cause).message;
       routingContext
           .response()
           .end(
-              V1SearchResponse.toJson(
-                      V1SearchResponse.failure(errorCode, errorCodeToMessage(errorCode)))
+              V1SearchResponse.toJson(V1SearchResponse.failure(errorCode, errorMessage))
                   .orElse(unknownFailureResponse));
+
     } else {
       logger.error("No error code found, rendering unknown failure", cause);
       routingContext.response().end(unknownFailureResponse);
     }
   }
 
-  private String errorCodeToMessage(V1SearchResponse.ErrorCode code) {
-    switch (code) {
-      case INPUT_DECODE_ERROR:
-        return "Failure decoding input data";
-      case INTERNAL_SEARCH_ERROR:
-        return "Error executing search";
-      case OUTPUT_ENCODE_ERROR:
-        return "Error encoding result for output";
-      default:
-        throw new RuntimeException(String.format("Unknown error code '%s'", code));
+  private class APIErrorMessage extends Exception {
+    final ErrorCode code;
+    final String message;
+
+    APIErrorMessage(ErrorCode code, String message, Throwable cause) {
+      super(message, cause);
+      this.message = message;
+      this.code = code;
     }
   }
 }
