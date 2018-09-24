@@ -3,6 +3,7 @@ package co.caio.cerberus;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -29,11 +30,17 @@ public class Util {
   }
 
   private static Indexer indexer;
+  private static Path testDataDir;
 
-  public static synchronized Indexer getTestIndexer() throws Exception {
+  public static synchronized Indexer getTestIndexer() {
     if (indexer == null) {
-      var baseDir = Files.createTempDirectory("cerberus-test");
-      indexer = new Indexer.Builder().dataDirectory(baseDir).createMode().build();
+      try {
+        testDataDir = Files.createTempDirectory("cerberus-test");
+      } catch (Exception rethrown) {
+        throw new RuntimeException(rethrown);
+      }
+
+      indexer = new Indexer.Builder().dataDirectory(testDataDir).createMode().build();
 
       getSampleRecipes()
           .forEach(
@@ -44,8 +51,19 @@ public class Util {
                   // pass
                 }
               });
-      indexer.commit();
+      try {
+        indexer.commit();
+      } catch (Exception rethrown) {
+        throw new RuntimeException(rethrown);
+      }
     }
     return indexer;
+  }
+
+  public static synchronized Path getTestDataDir() {
+    if (indexer == null) {
+      getTestIndexer();
+    }
+    return testDataDir;
   }
 }

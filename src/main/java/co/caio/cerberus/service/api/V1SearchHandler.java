@@ -1,8 +1,8 @@
 package co.caio.cerberus.service.api;
 
-import co.caio.cerberus.Environment;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.search.Searcher;
+import co.caio.cerberus.service.Serializer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
@@ -24,10 +24,9 @@ public class V1SearchHandler implements Handler<RoutingContext> {
   static {
     try {
       unknownFailureResponse =
-          Environment.getObjectMapper()
-              .writeValueAsString(
-                  V1SearchResponse.failure(
-                      V1SearchResponse.ErrorCode.UNKNOWN_ERROR, "Unknown/unhandled error"));
+          Serializer.encode(
+              V1SearchResponse.failure(
+                  V1SearchResponse.ErrorCode.UNKNOWN_ERROR, "Unknown/unhandled error"));
     } catch (Exception shouldNeverHappen) {
       throw new RuntimeException(shouldNeverHappen);
     }
@@ -39,9 +38,9 @@ public class V1SearchHandler implements Handler<RoutingContext> {
 
   @Override
   public void handle(RoutingContext routingContext) {
-    readSearchQuery(routingContext)
-        .compose(r -> runSearch(r, routingContext))
-        .compose(r -> renderResult(r, routingContext))
+    readSearchQuery(routingContext, SearchQuery.class)
+        .compose(r -> runSearch((SearchQuery) r, routingContext))
+        .compose(Serializer::encodeAsync)
         .setHandler(
             ar -> {
               routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
@@ -51,20 +50,6 @@ public class V1SearchHandler implements Handler<RoutingContext> {
                 writeError(routingContext, ar.cause());
               }
             });
-  }
-
-  private Future<String> renderResult(
-      V1SearchResponse searchResponse, RoutingContext routingContext) {
-    return Future.future(
-        future -> {
-          try {
-            var serializedResult = Environment.getObjectMapper().writeValueAsString(searchResponse);
-            future.complete(serializedResult);
-          } catch (Exception exception) {
-            routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.OUTPUT_ENCODE_ERROR);
-            future.fail(exception);
-          }
-        });
   }
 
   private Future<V1SearchResponse> runSearch(
@@ -81,18 +66,15 @@ public class V1SearchHandler implements Handler<RoutingContext> {
         });
   }
 
-  private Future<SearchQuery> readSearchQuery(RoutingContext routingContext) {
-    return Future.future(
-        ar -> {
-          try {
-            ar.complete(
-                Environment.getObjectMapper()
-                    .readValue(routingContext.getBody().getBytes(), SearchQuery.class));
-          } catch (Exception exception) {
-            routingContext.put(CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INPUT_DECODE_ERROR);
-            ar.fail(exception);
-          }
-        });
+  private Future<?> readSearchQuery(RoutingContext routingContext, Class<?> clazz) {
+    return Serializer.decodeAsync(routingContext.getBodyAsString(), clazz)
+        .setHandler(
+            ar -> {
+              if (ar.failed()) {
+                routingContext.put(
+                    CONTEXT_ERROR_KEY, V1SearchResponse.ErrorCode.INPUT_DECODE_ERROR);
+              }
+            });
   }
 
   private void writeError(RoutingContext routingContext, Throwable cause) {
@@ -111,8 +93,7 @@ public class V1SearchHandler implements Handler<RoutingContext> {
 
   private String renderErrorResponse(V1SearchResponse.ErrorCode code) {
     try {
-      return Environment.getObjectMapper()
-          .writeValueAsString(V1SearchResponse.failure(code, errorCodeToMessage(code)));
+      return Serializer.encode(V1SearchResponse.failure(code, errorCodeToMessage(code)));
     } catch (Exception exception) {
       logger.error("Exception rendering error response", exception);
       return unknownFailureResponse;
