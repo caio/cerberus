@@ -1,10 +1,12 @@
 package co.caio.cerberus.service.api;
 
+import co.caio.cerberus.Environment;
 import co.caio.cerberus.model.SearchResult;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Optional;
 import org.immutables.value.Value;
+import org.slf4j.LoggerFactory;
 
 @Value.Style(
     strictBuilder = true,
@@ -78,6 +80,27 @@ public interface V1SearchResponse {
 
   static V1SearchResponse failure(ErrorCode code, String cause) {
     return new Builder().metadata(ResponseMetadata.errorMetadata(code, cause)).build();
+  }
+
+  static Optional<V1SearchResponse> fromJson(String serializedResponse) {
+    try {
+      return Optional.of(
+          Environment.getObjectMapper().readValue(serializedResponse, V1SearchResponse.class));
+    } catch (Exception e) {
+      LoggerFactory.getLogger(V1SearchResponse.class)
+          .error("Failed to read json <{}> as <{}>", serializedResponse, V1SearchResponse.class);
+      return Optional.empty();
+    }
+  }
+
+  static Optional<String> toJson(V1SearchResponse searchResponse) {
+    try {
+      return Optional.of(Environment.getObjectMapper().writeValueAsString(searchResponse));
+    } catch (Exception ignored) {
+      LoggerFactory.getLogger(V1SearchResponse.class)
+          .error("Failed to serialize {} to json", searchResponse);
+      return Optional.empty();
+    }
   }
 
   class Builder extends ImmutableV1SearchResponse.Builder {};

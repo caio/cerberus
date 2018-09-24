@@ -24,16 +24,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class MainVerticleTest {
 
   // Set to a real value at setUp()
-  static int portNumber = 0;
+  static int portNumber = -1;
 
   @Test
   void simpleSearch(Vertx vertx, VertxTestContext testContext) throws Exception {
     var searchQuery = new SearchQuery.Builder().fulltext("keto bacon").build();
-    var body = Serializer.encode(searchQuery);
+    var maybeBody = SearchQuery.toJson(searchQuery);
+    assertTrue(maybeBody.isPresent());
     searchRequest(
         vertx,
         testContext,
-        body,
+        maybeBody.get(),
         (response) -> {
           testContext.verify(
               () -> {
@@ -41,23 +42,18 @@ class MainVerticleTest {
                 assertEquals(response.getHeader("Content-type"), "application/json");
               });
 
-          Serializer.decodeAsync(response.bodyAsString(), V1SearchResponse.class)
-              .setHandler(
-                  ar -> {
-                    if (ar.succeeded()) {
-                      var sr = (V1SearchResponse) ar.result();
-                      testContext.verify(
-                          () -> {
-                            assertTrue(sr.metadata().success());
-                            assertFalse(sr.metadata().error().isPresent());
-                            assertTrue(sr.result().isPresent());
-                            assertTrue(sr.result().get().totalHits() > 0);
-                          });
-                      testContext.completeNow();
-                    } else {
-                      testContext.failNow(ar.cause());
-                    }
-                  });
+          var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
+          assertTrue(maybeSR.isPresent());
+          var sr = maybeSR.get();
+
+          testContext.verify(
+              () -> {
+                assertTrue(sr.metadata().success());
+                assertFalse(sr.metadata().error().isPresent());
+                assertTrue(sr.result().isPresent());
+                assertTrue(sr.result().get().totalHits() > 0);
+              });
+          testContext.completeNow();
         });
   }
 
@@ -73,23 +69,18 @@ class MainVerticleTest {
                 assertEquals(500, response.statusCode());
                 assertEquals("application/json", response.getHeader("Content-type"));
               });
-          Serializer.decodeAsync(response.bodyAsString(), V1SearchResponse.class)
-              .setHandler(
-                  ar -> {
-                    if (ar.succeeded()) {
-                      var sr = (V1SearchResponse) ar.result();
-                      testContext.verify(
-                          () -> {
-                            assertFalse(sr.metadata().success());
-                            assertTrue(sr.metadata().error().isPresent());
-                            assertEquals(
-                                sr.metadata().error().get().code(), ErrorCode.INPUT_DECODE_ERROR);
-                          });
-                      testContext.completeNow();
-                    } else {
-                      testContext.failNow(ar.cause());
-                    }
-                  });
+
+          var maybeSR = V1SearchResponse.fromJson(response.bodyAsString());
+          assertTrue(maybeSR.isPresent());
+          var sr = maybeSR.get();
+
+          testContext.verify(
+              () -> {
+                assertFalse(sr.metadata().success());
+                assertTrue(sr.metadata().error().isPresent());
+                assertEquals(sr.metadata().error().get().code(), ErrorCode.INPUT_DECODE_ERROR);
+              });
+          testContext.completeNow();
         });
   }
 
