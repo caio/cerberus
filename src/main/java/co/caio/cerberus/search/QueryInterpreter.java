@@ -104,18 +104,14 @@ public class QueryInterpreter {
   private Query textToTermQuery(String fieldName, String text) throws IOException {
     var builder = new BooleanQuery.Builder();
 
-    var stream = analyzer.tokenStream(fieldName, text);
-    var token = stream.addAttribute(CharTermAttribute.class);
-
-    try {
+    try (var stream = analyzer.tokenStream(fieldName, text)) {
+      var token = stream.addAttribute(CharTermAttribute.class);
       stream.reset();
       while (stream.incrementToken()) {
         builder.add(
             new TermQuery(new Term(fieldName, token.toString())), BooleanClause.Occur.SHOULD);
       }
       stream.end();
-    } finally {
-      stream.close();
     }
 
     return builder.build();
