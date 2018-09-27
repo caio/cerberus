@@ -9,7 +9,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.launcher.VertxLifecycleHooks;
 import io.vertx.core.net.SelfSignedCertificate;
-import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.nio.file.Paths;
@@ -100,18 +99,7 @@ public class MainVerticle extends AbstractVerticle {
   private Router getRouter(Configuration config) {
     var router = Router.router(vertx);
 
-    var healthChecks = HealthCheckHandler.create(vertx);
-    healthChecks.register(
-        "native-transport",
-        future -> {
-          if (vertx.isNativeTransportEnabled()) {
-            future.complete();
-          } else {
-            future.fail("native transport not enabled");
-          }
-        });
-
-    router.get("/health*").handler(healthChecks);
+    router.get("/health*").handler(HealthChecks.create(vertx));
     router
         .post("/api/v1/search")
         .consumes("application/json")
