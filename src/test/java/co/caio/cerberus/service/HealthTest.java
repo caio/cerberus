@@ -37,7 +37,7 @@ class HealthTest extends MainVerticleTestCase {
   private void healthRequest(
       String checkId, VertxTestContext testContext, Consumer<JsonObject> consumer) {
     client
-        .get("/health")
+        .get("/health/" + checkId)
         .send(
             ar -> {
               if (ar.succeeded()) {
@@ -48,16 +48,11 @@ class HealthTest extends MainVerticleTestCase {
                         assertTrue(
                             response.getHeader("Content-type").startsWith("application/json")));
 
-                var checkResult =
-                    response
-                        .bodyAsJsonObject()
-                        .getJsonArray("checks")
-                        .stream()
-                        .map(o -> (JsonObject) o)
-                        .filter(j -> j.getString("id").equals(checkId))
-                        .findFirst();
-                testContext.verify(() -> assertTrue(checkResult.isPresent()));
-                consumer.accept(checkResult.get());
+                var result = response.bodyAsJsonObject();
+                testContext.verify(() -> assertEquals(checkId, result.getString("id")));
+
+                consumer.accept(result);
+
               } else {
                 testContext.failNow(ar.cause());
               }
