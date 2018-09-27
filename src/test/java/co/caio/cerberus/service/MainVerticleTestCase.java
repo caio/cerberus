@@ -34,10 +34,12 @@ abstract class MainVerticleTestCase {
         new DeploymentOptions()
             .setConfig(
                 new JsonObject()
-                    .put(HealthChecks.CONFIG_HEALTH_NUM_DOCS, 100)
-                    .put(MainVerticle.CONFIG_SERVICE_SSL, false)
-                    .put(MainVerticle.CONFIG_SERVICE_PORT, portNumber)
-                    .put(MainVerticle.CONFIG_SERIVCE_DATA_DIR, Util.getTestDataDir().toString()));
+                    .put(ServiceConfiguration.CONFIG_HEALTH_NUM_DOCS, 100)
+                    .put(ServiceConfiguration.CONFIG_SERVICE_SSL, false)
+                    .put(ServiceConfiguration.CONFIG_SERVICE_PORT, portNumber)
+                    .put(
+                        ServiceConfiguration.CONFIG_SERVICE_DATA_DIR,
+                        Util.getTestDataDir().toString()));
 
     vertx.deployVerticle(
         new MainVerticle(), config, testContext.succeeding(fut -> testContext.completeNow()));

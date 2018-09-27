@@ -8,7 +8,6 @@ import io.vertx.core.Launcher;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.launcher.VertxLifecycleHooks;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -18,11 +17,8 @@ import org.slf4j.LoggerFactory;
 
 public class MainVerticle extends AbstractVerticle {
 
-  static final String CONFIG_SERVICE_PORT = "cerberus.service.port";
-  static final String CONFIG_SERIVCE_DATA_DIR = "cerberus.service.data_dir";
-  static final String CONFIG_SERVICE_SSL = "cerberus.service.ssl";
   private static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
-  private JsonObject retrievedConfiguration;
+  private ServiceConfiguration configuration;
 
   public static void main(String[] args) {
     new CustomLauncher().dispatch(new String[] {"run", MainVerticle.class.getCanonicalName()});
@@ -38,7 +34,7 @@ public class MainVerticle extends AbstractVerticle {
     logger.info("Service stopped");
   }
 
-  private Future<Void> startWebServer(Configuration config) {
+  private Future<Void> startWebServer(ServiceConfiguration config) {
     return Future.future(
         future -> {
           var options =
@@ -77,7 +73,7 @@ public class MainVerticle extends AbstractVerticle {
         });
   }
 
-  private Future<Configuration> readConfiguration() {
+  private Future<ServiceConfiguration> readConfiguration() {
 
     var configRetriever = ConfigRetriever.create(vertx);
 
@@ -86,19 +82,15 @@ public class MainVerticle extends AbstractVerticle {
             configRetriever.getConfig(
                 ar -> {
                   if (ar.succeeded()) {
-                    retrievedConfiguration = ar.result();
-                    fut.complete(
-                        new Configuration(
-                            retrievedConfiguration.getInteger(CONFIG_SERVICE_PORT, 0),
-                            retrievedConfiguration.getBoolean(CONFIG_SERVICE_SSL, false),
-                            retrievedConfiguration.getString(CONFIG_SERIVCE_DATA_DIR)));
+                    configuration = new ServiceConfiguration(ar.result());
+                    fut.complete(configuration);
                   } else {
                     fut.fail(ar.cause());
                   }
                 }));
   }
 
-  private Router getRouter(Configuration config) {
+  private Router getRouter(ServiceConfiguration config) {
     var router = Router.router(vertx);
     var v1handler = new V1SearchHandler(Paths.get(config.dataDirectory));
 
@@ -108,30 +100,9 @@ public class MainVerticle extends AbstractVerticle {
         .handler(BodyHandler.create())
         .handler(v1handler);
 
-    router.get("/health*").handler(HealthChecks.create(vertx, v1handler, retrievedConfiguration));
+    router.get("/health*").handler(HealthChecks.create(vertx, v1handler, configuration));
 
     return router;
-  }
-
-  private class Configuration {
-    int portNumber;
-    boolean useSsl;
-    String dataDirectory;
-
-    Configuration(int portNumber, boolean useSsl, String dataDirectory) {
-      this.portNumber = portNumber;
-      this.useSsl = useSsl;
-      this.dataDirectory = dataDirectory;
-
-      if (portNumber <= 0 || portNumber > 65535) {
-        throw new IllegalStateException(String.format("Invalid port number: %d", portNumber));
-      }
-
-      if (dataDirectory == null) {
-        throw new NullPointerException(
-            String.format("Configuration missing for %s", CONFIG_SERIVCE_DATA_DIR));
-      }
-    }
   }
 
   static class CustomLauncher extends Launcher implements VertxLifecycleHooks {
