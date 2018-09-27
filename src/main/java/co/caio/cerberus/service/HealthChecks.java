@@ -25,13 +25,13 @@ public class HealthChecks {
         future -> {
           var current = v1handler.numDocs();
 
-          if (v1handler.numDocs() > configuration.wantedNumDocs) {
+          if (v1handler.numDocs() > configuration.wantedNumDocs()) {
             future.complete();
           } else {
             future.fail(
                 String.format(
                     "Too few documents in index. Got %d, wanted > %d",
-                    current, configuration.wantedNumDocs));
+                    current, configuration.wantedNumDocs()));
           }
         });
 

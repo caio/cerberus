@@ -43,7 +43,7 @@ public class MainVerticle extends AbstractVerticle {
                   .setTcpNoDelay(true)
                   .setTcpFastOpen(true);
 
-          if (config.useSsl) {
+          if (config.useSsl()) {
             var certificate = SelfSignedCertificate.create();
             options
                 .setSsl(true)
@@ -58,13 +58,13 @@ public class MainVerticle extends AbstractVerticle {
               .createHttpServer(options)
               .requestHandler(router::accept)
               .listen(
-                  config.portNumber,
+                  config.portNumber(),
                   ar -> {
                     if (ar.succeeded()) {
                       logger.info(
                           "Service started at {}://localhost:{}",
-                          config.useSsl ? "https" : "http",
-                          config.portNumber);
+                          config.useSsl() ? "https" : "http",
+                          config.portNumber());
                       future.complete();
                     } else {
                       future.fail(future.cause());
@@ -82,7 +82,7 @@ public class MainVerticle extends AbstractVerticle {
             configRetriever.getConfig(
                 ar -> {
                   if (ar.succeeded()) {
-                    configuration = new ServiceConfiguration(ar.result());
+                    configuration = ServiceConfiguration.create(ar.result());
                     fut.complete(configuration);
                   } else {
                     fut.fail(ar.cause());
@@ -92,7 +92,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private Router getRouter(ServiceConfiguration config) {
     var router = Router.router(vertx);
-    var v1handler = new V1SearchHandler(Paths.get(config.dataDirectory));
+    var v1handler = new V1SearchHandler(Paths.get(config.dataDirectory()));
 
     router
         .post("/api/v1/search")

@@ -1,5 +1,7 @@
 package co.caio.cerberus.service;
 
+import static co.caio.cerberus.service.ServiceConfiguration.ServiceConfigurationImpl.*;
+
 import co.caio.cerberus.Util;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -34,12 +36,10 @@ abstract class MainVerticleTestCase {
         new DeploymentOptions()
             .setConfig(
                 new JsonObject()
-                    .put(ServiceConfiguration.CONFIG_HEALTH_NUM_DOCS, 100)
-                    .put(ServiceConfiguration.CONFIG_SERVICE_SSL, false)
-                    .put(ServiceConfiguration.CONFIG_SERVICE_PORT, portNumber)
-                    .put(
-                        ServiceConfiguration.CONFIG_SERVICE_DATA_DIR,
-                        Util.getTestDataDir().toString()));
+                    .put(CONFIG_HEALTH_NUM_DOCS, 100)
+                    .put(CONFIG_SERVICE_SSL, false)
+                    .put(CONFIG_SERVICE_PORT, portNumber)
+                    .put(CONFIG_SERVICE_DATA_DIR, Util.getTestDataDir().toString()));
 
     vertx.deployVerticle(
         new MainVerticle(), config, testContext.succeeding(fut -> testContext.completeNow()));
