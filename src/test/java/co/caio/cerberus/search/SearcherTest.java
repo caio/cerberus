@@ -12,8 +12,9 @@ class SearcherTest {
   private static Indexer tempDirIndexer;
 
   @BeforeAll
-  public static void prepare() throws Exception {
+  public static void prepare() {
     tempDirIndexer = Util.getTestIndexer();
+    assertEquals(225, tempDirIndexer.buildSearcher().numDocs());
   }
 
   @Test

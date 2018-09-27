@@ -34,6 +34,7 @@ abstract class MainVerticleTestCase {
         new DeploymentOptions()
             .setConfig(
                 new JsonObject()
+                    .put(HealthChecks.CONFIG_HEALTH_NUM_DOCS, 100)
                     .put(MainVerticle.CONFIG_SERVICE_SSL, false)
                     .put(MainVerticle.CONFIG_SERVICE_PORT, portNumber)
                     .put(MainVerticle.CONFIG_SERIVCE_DATA_DIR, Util.getTestDataDir().toString()));

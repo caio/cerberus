@@ -24,6 +24,17 @@ class HealthTest extends MainVerticleTestCase {
         });
   }
 
+  @Test
+  void numDocs(Vertx vertx, VertxTestContext testContext) {
+    healthRequest(
+        "num-docs",
+        testContext,
+        result -> {
+          assertEquals("UP", result.getString("status"));
+          testContext.completeNow();
+        });
+  }
+
   private void healthRequest(
       String checkId, VertxTestContext testContext, Consumer<JsonObject> consumer) {
     client

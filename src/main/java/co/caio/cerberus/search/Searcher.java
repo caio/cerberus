@@ -30,6 +30,10 @@ public class Searcher {
     }
   }
 
+  public int numDocs() {
+    return indexSearcher.getIndexReader().numDocs();
+  }
+
   private class SearcherException extends Exception {
     private SearcherException(Exception e) {
       super(e);

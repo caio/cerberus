@@ -8,6 +8,7 @@ import io.vertx.core.Launcher;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.launcher.VertxLifecycleHooks;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -21,6 +22,7 @@ public class MainVerticle extends AbstractVerticle {
   static final String CONFIG_SERIVCE_DATA_DIR = "cerberus.service.data_dir";
   static final String CONFIG_SERVICE_SSL = "cerberus.service.ssl";
   private static final Logger logger = LoggerFactory.getLogger(MainVerticle.class);
+  private JsonObject retrievedConfiguration;
 
   public static void main(String[] args) {
     new CustomLauncher().dispatch(new String[] {"run", MainVerticle.class.getCanonicalName()});
@@ -84,12 +86,12 @@ public class MainVerticle extends AbstractVerticle {
             configRetriever.getConfig(
                 ar -> {
                   if (ar.succeeded()) {
-                    var config = ar.result();
+                    retrievedConfiguration = ar.result();
                     fut.complete(
                         new Configuration(
-                            config.getInteger(CONFIG_SERVICE_PORT, 0),
-                            config.getBoolean(CONFIG_SERVICE_SSL, false),
-                            config.getString(CONFIG_SERIVCE_DATA_DIR)));
+                            retrievedConfiguration.getInteger(CONFIG_SERVICE_PORT, 0),
+                            retrievedConfiguration.getBoolean(CONFIG_SERVICE_SSL, false),
+                            retrievedConfiguration.getString(CONFIG_SERIVCE_DATA_DIR)));
                   } else {
                     fut.fail(ar.cause());
                   }
@@ -98,13 +100,15 @@ public class MainVerticle extends AbstractVerticle {
 
   private Router getRouter(Configuration config) {
     var router = Router.router(vertx);
+    var v1handler = new V1SearchHandler(Paths.get(config.dataDirectory));
 
-    router.get("/health*").handler(HealthChecks.create(vertx));
     router
         .post("/api/v1/search")
         .consumes("application/json")
         .handler(BodyHandler.create())
-        .handler(new V1SearchHandler(Paths.get(config.dataDirectory)));
+        .handler(v1handler);
+
+    router.get("/health*").handler(HealthChecks.create(vertx, v1handler, retrievedConfiguration));
 
     return router;
   }

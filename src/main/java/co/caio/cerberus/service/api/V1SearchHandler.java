@@ -32,6 +32,11 @@ public class V1SearchHandler implements Handler<RoutingContext> {
     searcher = new Searcher.Builder().dataDirectory(dataDirectory).build();
   }
 
+  // Used for health checks
+  public int numDocs() {
+    return searcher.numDocs();
+  }
+
   @Override
   public void handle(RoutingContext routingContext) {
     readSearchQuery(routingContext)
