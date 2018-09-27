@@ -2,7 +2,6 @@ package co.caio.cerberus.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.function.Consumer;
@@ -12,7 +11,7 @@ import org.junit.jupiter.api.Test;
 // endpoint is not broken
 class HealthTest extends MainVerticleTestCase {
   @Test
-  void nativeTransport(Vertx vertx, VertxTestContext testContext) {
+  void nativeTransport(VertxTestContext testContext) {
     healthRequest(
         "native-transport",
         testContext,
@@ -25,7 +24,7 @@ class HealthTest extends MainVerticleTestCase {
   }
 
   @Test
-  void numDocs(Vertx vertx, VertxTestContext testContext) {
+  void numDocs(VertxTestContext testContext) {
     healthRequest(
         "num-docs",
         testContext,
@@ -54,10 +53,11 @@ class HealthTest extends MainVerticleTestCase {
                         .bodyAsJsonObject()
                         .getJsonArray("checks")
                         .stream()
-                        .filter(j -> ((JsonObject) j).getString("id").equals(checkId))
+                        .map(o -> (JsonObject) o)
+                        .filter(j -> j.getString("id").equals(checkId))
                         .findFirst();
                 testContext.verify(() -> assertTrue(checkResult.isPresent()));
-                consumer.accept((JsonObject) checkResult.get());
+                consumer.accept(checkResult.get());
               } else {
                 testContext.failNow(ar.cause());
               }
