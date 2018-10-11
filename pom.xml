@@ -21,7 +21,7 @@
         <lucene.version>7.5.0</lucene.version>
         <netty.tcnative.version>2.0.17.Final</netty.tcnative.version>
         <netty.version>4.1.29.Final</netty.version>
-        <vertx.version>3.5.3</vertx.version>
+        <vertx.version>3.5.4</vertx.version>
     </properties>
 
     <dependencyManagement>
