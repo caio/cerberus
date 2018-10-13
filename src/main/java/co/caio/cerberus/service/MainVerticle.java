@@ -9,6 +9,8 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.launcher.VertxLifecycleHooks;
 import io.vertx.core.net.SelfSignedCertificate;
+import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
+import io.vertx.ext.dropwizard.MetricsService;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.nio.file.Paths;
@@ -102,6 +104,15 @@ public class MainVerticle extends AbstractVerticle {
 
     router.get("/health*").handler(HealthChecks.create(vertx, v1handler, configuration));
 
+    var metricsService = MetricsService.create(vertx);
+    router
+        .get("/metrics")
+        .handler(
+            context -> {
+              context.response().putHeader("Content-type", "application/json");
+              context.response().end(metricsService.getMetricsSnapshot(vertx).toBuffer());
+            });
+
     return router;
   }
 
@@ -110,6 +121,7 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void beforeStartingVertx(VertxOptions options) {
       options.setPreferNativeTransport(true);
+      options.setMetricsOptions(new DropwizardMetricsOptions().setEnabled(true));
     }
   }
 }
