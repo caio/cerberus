@@ -15,21 +15,24 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortField.Type;
 import org.apache.lucene.search.TermQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class QueryInterpreter {
+class QueryInterpreter {
   private final Analyzer analyzer;
   private final FacetsConfig facetsConfig;
   private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
 
-  public QueryInterpreter() {
+  QueryInterpreter() {
     analyzer = new StandardAnalyzer();
     facetsConfig = FacetConfiguration.getFacetsConfig();
   }
 
-  public Query toLuceneQuery(SearchQuery searchQuery) {
+  Query toLuceneQuery(SearchQuery searchQuery) {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
@@ -79,6 +82,44 @@ public class QueryInterpreter {
     return drillQuery;
   }
 
+  private static final Sort sortNumIngredients =
+      new Sort(new SortField(IndexField.NUM_INGREDIENTS, Type.INT), SortField.FIELD_SCORE);
+  private static final Sort sortPrepTime;
+  private static final Sort sortCookTime;
+  private static final Sort sortTotalTime;
+
+  static {
+    var field = new SortField(PREP_TIME, Type.INT);
+    field.setMissingValue(Integer.MAX_VALUE);
+    sortPrepTime = new Sort(field, SortField.FIELD_SCORE);
+
+    field = new SortField(COOK_TIME, Type.INT);
+    field.setMissingValue(Integer.MAX_VALUE);
+    sortCookTime = new Sort(field, SortField.FIELD_SCORE);
+
+    field = new SortField(TOTAL_TIME, Type.INT);
+    field.setMissingValue(Integer.MAX_VALUE);
+    sortTotalTime = new Sort(field, SortField.FIELD_SCORE);
+  }
+
+  Sort toLuceneSort(SearchQuery query) {
+    switch (query.sort()) {
+      case RELEVANCE:
+        return Sort.RELEVANCE;
+      case NUM_INGREDIENTS:
+        return sortNumIngredients;
+      case PREP_TIME:
+        return sortPrepTime;
+      case COOK_TIME:
+        return sortCookTime;
+      case TOTAL_TIME:
+        return sortTotalTime;
+      default:
+        throw new IllegalStateException(String.format("Unhandled sort order: %s", query.sort()));
+    }
+  }
+
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private void addFieldRangeQuery(
       BooleanQuery.Builder builder, String fieldName, Optional<SearchQuery.RangedSpec> maybeRange) {
     if (maybeRange.isPresent()) {

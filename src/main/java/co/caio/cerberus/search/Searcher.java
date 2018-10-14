@@ -51,7 +51,12 @@ public class Searcher {
     var fc = new FacetsCollector();
 
     var result =
-        FacetsCollector.search(indexSearcher, interpreter.toLuceneQuery(query), maxResults, fc);
+        FacetsCollector.search(
+            indexSearcher,
+            interpreter.toLuceneQuery(query),
+            maxResults,
+            interpreter.toLuceneSort(query),
+            fc);
     var builder = new SearchResult.Builder().totalHits(result.totalHits);
 
     var diets =

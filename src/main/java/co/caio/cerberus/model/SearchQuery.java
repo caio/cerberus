@@ -11,7 +11,6 @@ import org.immutables.value.Value;
 import org.slf4j.LoggerFactory;
 
 @Value.Style(
-    strictBuilder = true,
     visibility = Value.Style.ImplementationVisibility.PACKAGE,
     overshadowImplementation = true)
 @JsonSerialize(as = ImmutableSearchQuery.class)
@@ -43,6 +42,19 @@ public interface SearchQuery {
   List<String> matchDiet();
 
   List<String> matchKeyword();
+
+  enum SortOrder {
+    RELEVANCE,
+    NUM_INGREDIENTS,
+    PREP_TIME,
+    COOK_TIME,
+    TOTAL_TIME
+  }
+
+  @Value.Default
+  default SortOrder sort() {
+    return SortOrder.RELEVANCE;
+  }
 
   @Value.Immutable(builder = false)
   @JsonFormat(shape = JsonFormat.Shape.ARRAY)

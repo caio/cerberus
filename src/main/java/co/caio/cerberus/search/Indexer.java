@@ -136,6 +136,7 @@ public interface Indexer {
 
         recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
         doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
+        doc.add(new NumericDocValuesField(NUM_INGREDIENTS, recipe.ingredients().size()));
 
         // TODO make it a Map<String,float>
         recipe.diets().forEach(diet -> doc.add(new FacetField(FACET_DIM_DIET, diet)));
@@ -157,6 +158,7 @@ public interface Indexer {
       private void addOptionalIntField(Document doc, String fieldName, OptionalInt value) {
         if (value.isPresent()) {
           doc.add(new IntPoint(fieldName, value.getAsInt()));
+          doc.add(new NumericDocValuesField(fieldName, value.getAsInt()));
         }
       }
 

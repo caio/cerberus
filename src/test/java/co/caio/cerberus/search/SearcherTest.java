@@ -3,8 +3,13 @@ package co.caio.cerberus.search;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
+import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
+import co.caio.cerberus.model.SearchQuery.SortOrder;
+import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Paths;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +73,51 @@ class SearcherTest {
     // the expectation is that the more keywords are input,
     // more recipes are matched
     assertTrue(oilAndSaltResult.totalHits() >= justOilResult.totalHits());
+  }
+
+  @Test
+  public void basicSorting() throws Exception {
+    var queryBuilder = new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25));
+
+    // default sort order is relevance
+    assertEquals(queryBuilder.build(), queryBuilder.sort(SortOrder.RELEVANCE).build());
+
+    var searcher = tempDirIndexer.buildSearcher();
+    var idToRecipe =
+        Util.getSampleRecipes().collect(Collectors.toMap(Recipe::recipeId, Function.identity()));
+
+    var numIngredientsHits =
+        searcher.search(queryBuilder.sort(SortOrder.NUM_INGREDIENTS).build(), 50);
+    var lastNumIngredients = Integer.MIN_VALUE;
+    for (SearchResultRecipe r : numIngredientsHits.recipes()) {
+      var numIngredients = idToRecipe.get(r.recipeId()).ingredients().size();
+      assertTrue(lastNumIngredients <= numIngredients);
+      lastNumIngredients = numIngredients;
+    }
+
+    var cookTimeHits = searcher.search(queryBuilder.sort(SortOrder.COOK_TIME).build(), 50);
+    var lastCookTime = Integer.MIN_VALUE;
+    for (SearchResultRecipe r : cookTimeHits.recipes()) {
+      var cookTime = idToRecipe.get(r.recipeId()).cookTime().orElse(Integer.MAX_VALUE);
+      assertTrue(lastCookTime <= cookTime);
+      lastCookTime = cookTime;
+    }
+
+    var prepTimeHits = searcher.search(queryBuilder.sort(SortOrder.PREP_TIME).build(), 10);
+    var lastPrepTime = Integer.MIN_VALUE;
+    for (SearchResultRecipe r : prepTimeHits.recipes()) {
+      var prepTime = idToRecipe.get(r.recipeId()).prepTime().orElse(Integer.MAX_VALUE);
+      assertTrue(lastPrepTime <= prepTime);
+      lastPrepTime = prepTime;
+    }
+
+    var totalTimeHits = searcher.search(queryBuilder.sort(SortOrder.TOTAL_TIME).build(), 10);
+    var lastTotalTime = Integer.MIN_VALUE;
+    for (SearchResultRecipe r : totalTimeHits.recipes()) {
+      var totalTime = idToRecipe.get(r.recipeId()).totalTime().orElse(Integer.MAX_VALUE);
+      assertTrue(lastTotalTime <= totalTime);
+      lastTotalTime = totalTime;
+    }
   }
 
   @Test
