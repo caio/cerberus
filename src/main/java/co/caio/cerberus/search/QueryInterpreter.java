@@ -82,25 +82,16 @@ class QueryInterpreter {
     return drillQuery;
   }
 
-  private static final Sort sortNumIngredients =
-      new Sort(new SortField(IndexField.NUM_INGREDIENTS, Type.INT), SortField.FIELD_SCORE);
-  private static final Sort sortPrepTime;
-  private static final Sort sortCookTime;
-  private static final Sort sortTotalTime;
-
-  static {
-    var field = new SortField(PREP_TIME, Type.INT);
+  private static Sort integerSorterWithDefault(String fieldName) {
+    var field = new SortField(fieldName, Type.INT);
     field.setMissingValue(Integer.MAX_VALUE);
-    sortPrepTime = new Sort(field, SortField.FIELD_SCORE);
-
-    field = new SortField(COOK_TIME, Type.INT);
-    field.setMissingValue(Integer.MAX_VALUE);
-    sortCookTime = new Sort(field, SortField.FIELD_SCORE);
-
-    field = new SortField(TOTAL_TIME, Type.INT);
-    field.setMissingValue(Integer.MAX_VALUE);
-    sortTotalTime = new Sort(field, SortField.FIELD_SCORE);
+    return new Sort(field, SortField.FIELD_SCORE);
   }
+
+  private static final Sort sortNumIngredients = integerSorterWithDefault(NUM_INGREDIENTS);
+  private static final Sort sortPrepTime = integerSorterWithDefault(PREP_TIME);
+  private static final Sort sortCookTime = integerSorterWithDefault(COOK_TIME);
+  private static final Sort sortTotalTime = integerSorterWithDefault(TOTAL_TIME);
 
   Sort toLuceneSort(SearchQuery query) {
     switch (query.sort()) {
