@@ -8,6 +8,7 @@ import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Paths;
+import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
@@ -86,37 +87,36 @@ class SearcherTest {
     var idToRecipe =
         Util.getSampleRecipes().collect(Collectors.toMap(Recipe::recipeId, Function.identity()));
 
-    var numIngredientsHits =
-        searcher.search(queryBuilder.sort(SortOrder.NUM_INGREDIENTS).build(), 50);
-    var lastNumIngredients = Integer.MIN_VALUE;
-    for (SearchResultRecipe r : numIngredientsHits.recipes()) {
-      var numIngredients = idToRecipe.get(r.recipeId()).ingredients().size();
-      assertTrue(lastNumIngredients <= numIngredients);
-      lastNumIngredients = numIngredients;
-    }
+    checkOrdering(
+        searcher,
+        queryBuilder.sort(SortOrder.NUM_INGREDIENTS).build(),
+        r -> OptionalInt.of(idToRecipe.get(r.recipeId()).ingredients().size()));
 
-    var cookTimeHits = searcher.search(queryBuilder.sort(SortOrder.COOK_TIME).build(), 50);
-    var lastCookTime = Integer.MIN_VALUE;
-    for (SearchResultRecipe r : cookTimeHits.recipes()) {
-      var cookTime = idToRecipe.get(r.recipeId()).cookTime().orElse(Integer.MAX_VALUE);
-      assertTrue(lastCookTime <= cookTime);
-      lastCookTime = cookTime;
-    }
+    checkOrdering(
+        searcher,
+        queryBuilder.sort(SortOrder.COOK_TIME).build(),
+        r -> idToRecipe.get(r.recipeId()).cookTime());
 
-    var prepTimeHits = searcher.search(queryBuilder.sort(SortOrder.PREP_TIME).build(), 10);
-    var lastPrepTime = Integer.MIN_VALUE;
-    for (SearchResultRecipe r : prepTimeHits.recipes()) {
-      var prepTime = idToRecipe.get(r.recipeId()).prepTime().orElse(Integer.MAX_VALUE);
-      assertTrue(lastPrepTime <= prepTime);
-      lastPrepTime = prepTime;
-    }
+    checkOrdering(
+        searcher,
+        queryBuilder.sort(SortOrder.PREP_TIME).build(),
+        r -> idToRecipe.get(r.recipeId()).prepTime());
 
-    var totalTimeHits = searcher.search(queryBuilder.sort(SortOrder.TOTAL_TIME).build(), 10);
-    var lastTotalTime = Integer.MIN_VALUE;
-    for (SearchResultRecipe r : totalTimeHits.recipes()) {
-      var totalTime = idToRecipe.get(r.recipeId()).totalTime().orElse(Integer.MAX_VALUE);
-      assertTrue(lastTotalTime <= totalTime);
-      lastTotalTime = totalTime;
+    checkOrdering(
+        searcher,
+        queryBuilder.sort(SortOrder.TOTAL_TIME).build(),
+        r -> idToRecipe.get(r.recipeId()).totalTime());
+  }
+
+  private void checkOrdering(
+      Searcher searcher, SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
+      throws Exception {
+    var hits = searcher.search(query, 50);
+    var lastValue = Integer.MIN_VALUE;
+    for (SearchResultRecipe r : hits.recipes()) {
+      final var value = retriever.apply(r).orElse(Integer.MAX_VALUE);
+      assertTrue(lastValue <= value);
+      lastValue = value;
     }
   }
 
