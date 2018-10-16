@@ -15,12 +15,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class SearcherTest {
-  private static Indexer tempDirIndexer;
+  private static Searcher searcher;
 
   @BeforeAll
   public static void prepare() {
-    tempDirIndexer = Util.getTestIndexer();
-    assertEquals(225, tempDirIndexer.buildSearcher().numDocs());
+    searcher = Util.getTestIndexer().buildSearcher();
+    assertEquals(225, searcher.numDocs());
   }
 
   @Test
@@ -33,7 +33,6 @@ class SearcherTest {
 
   @Test
   public void facets() throws Exception {
-    var searcher = tempDirIndexer.buildSearcher();
     var query = new SearchQuery.Builder().fulltext("vegan").build();
     var result = searcher.search(query, 1);
 
@@ -66,7 +65,6 @@ class SearcherTest {
 
   @Test
   public void multipleFacetsAreOr() throws Exception {
-    var searcher = tempDirIndexer.buildSearcher();
     var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil");
     var justOilResult = searcher.search(queryBuilder.build(), 1);
     var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build(), 1);
@@ -83,33 +81,27 @@ class SearcherTest {
     // default sort order is relevance
     assertEquals(queryBuilder.build(), queryBuilder.sort(SortOrder.RELEVANCE).build());
 
-    var searcher = tempDirIndexer.buildSearcher();
     var idToRecipe =
         Util.getSampleRecipes().collect(Collectors.toMap(Recipe::recipeId, Function.identity()));
 
     checkOrdering(
-        searcher,
         queryBuilder.sort(SortOrder.NUM_INGREDIENTS).build(),
         r -> OptionalInt.of(idToRecipe.get(r.recipeId()).ingredients().size()));
 
     checkOrdering(
-        searcher,
         queryBuilder.sort(SortOrder.COOK_TIME).build(),
         r -> idToRecipe.get(r.recipeId()).cookTime());
 
     checkOrdering(
-        searcher,
         queryBuilder.sort(SortOrder.PREP_TIME).build(),
         r -> idToRecipe.get(r.recipeId()).prepTime());
 
     checkOrdering(
-        searcher,
         queryBuilder.sort(SortOrder.TOTAL_TIME).build(),
         r -> idToRecipe.get(r.recipeId()).totalTime());
   }
 
-  private void checkOrdering(
-      Searcher searcher, SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
+  private void checkOrdering(SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
       throws Exception {
     var hits = searcher.search(query, 50);
     var lastValue = Integer.MIN_VALUE;
@@ -122,8 +114,6 @@ class SearcherTest {
 
   @Test
   public void findRecipes() throws Exception {
-    var searcher = tempDirIndexer.buildSearcher();
-
     // Recipes with up to 3 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l
     var query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(0, 3)).build();
