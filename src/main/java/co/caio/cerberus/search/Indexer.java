@@ -138,9 +138,8 @@ public interface Indexer {
         doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
         doc.add(new NumericDocValuesField(NUM_INGREDIENTS, recipe.ingredients().size()));
 
-        // TODO make it a Map<String,float>
-        recipe.diets().forEach(diet -> doc.add(new FacetField(FACET_DIM_DIET, diet)));
-        // XXX is "keyword" a good name?
+        // TODO start using the score for faceting
+        recipe.diets().forEach((diet, score) -> doc.add(new FacetField(FACET_DIM_DIET, diet)));
         recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_DIM_KEYWORD, kw)));
 
         addOptionalIntField(doc, PREP_TIME, recipe.prepTime());

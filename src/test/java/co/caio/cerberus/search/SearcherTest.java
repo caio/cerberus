@@ -20,7 +20,7 @@ class SearcherTest {
   @BeforeAll
   public static void prepare() {
     searcher = Util.getTestIndexer().buildSearcher();
-    assertEquals(225, searcher.numDocs());
+    assertEquals(299, searcher.numDocs());
   }
 
   @Test
@@ -47,14 +47,15 @@ class SearcherTest {
     var veganData =
         dietFacet.get().children().stream().filter(x -> x.label().equals("vegan")).findFirst();
     assertTrue(veganData.isPresent());
-    assertEquals(5, veganData.get().count());
+    var nrVeganRecipes = veganData.get().count();
+    assertTrue(veganData.get().count() > 0);
 
     // now lets drill down the same query on the vegan facet.
-    //  it should give us just 5 results as verified above
+    //  it should give us just `nrVeganRecipes` results as verified above
     result =
         searcher.search(
             new SearchQuery.Builder().fulltext("vegan").addMatchDiet("vegan").build(), 1);
-    assertEquals(5, result.totalHits());
+    assertEquals(nrVeganRecipes, result.totalHits());
 
     // but only searching for the vegan diet facet (i.e. not searching for the term<vegan>
     // in the whole index would give us AT LEAST the same number as above, but maybe
@@ -114,20 +115,21 @@ class SearcherTest {
 
   @Test
   public void findRecipes() throws Exception {
+    // TODO make these numbers configurable / easy to regenerate (.properties maybe)
     // Recipes with up to 3 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l
     var query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(0, 3)).build();
-    assertEquals(12, searcher.search(query, 1).totalHits());
+    assertEquals(16, searcher.search(query, 1).totalHits());
 
     // Recipes with exactly 5 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. == 5'|grep true|wc -l
     query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(5, 5)).build();
-    assertEquals(14, searcher.search(query, 1).totalHits());
+    assertEquals(17, searcher.search(query, 1).totalHits());
 
     // Recipes that can be done between 10 and 25 minutes
-    // $ cat sample_recipes.jsonlines |jq '.totalTime| . >= 10 and . <= 25'|grep true|wc -l
+    // $
     query = new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).build();
-    assertEquals(44, searcher.search(query, 1).totalHits());
+    assertEquals(51, searcher.search(query, 1).totalHits());
 
     // Assumption: fulltext should match more items
     var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").build();

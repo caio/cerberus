@@ -4,6 +4,7 @@ import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -28,7 +29,7 @@ public interface Recipe {
 
   List<String> ingredients();
 
-  Set<String> diets();
+  Map<String, Float> diets();
 
   Set<String> keywords();
 
@@ -62,6 +63,16 @@ public interface Recipe {
       nonEmpty("crawlUrl", recipe.crawlUrl());
       nonEmpty("instructions", recipe.instructions());
       nonEmpty("ingredients", recipe.ingredients());
+
+      recipe
+          .diets()
+          .forEach(
+              (diet, score) -> {
+                if (score < 0 || score > 1) {
+                  throw new IllegalStateException(
+                      String.format("Score for diet `%s` (%f) should be [0,1]", diet, score));
+                }
+              });
     }
 
     static void nonEmpty(String fieldName, String fieldValue) {
