@@ -138,11 +138,15 @@ public interface Indexer {
         doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
         doc.add(new NumericDocValuesField(NUM_INGREDIENTS, recipe.ingredients().size()));
 
-        recipe.diets().forEach((diet, score) -> {
-          if (score == 1f) {
-            doc.add(new FacetField(FACET_DIET, diet));
-          }
-        });
+        recipe
+            .diets()
+            .forEach(
+                (diet, score) -> {
+                  if (score == 1f) {
+                    doc.add(new FacetField(FACET_DIET, diet));
+                  }
+                  doc.add(new FloatPoint(IndexField.getFieldNameForDiet(diet), score));
+                });
 
         recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
 

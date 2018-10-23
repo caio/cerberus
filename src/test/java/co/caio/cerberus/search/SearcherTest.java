@@ -102,7 +102,7 @@ class SearcherTest {
     // in the whole index would give us AT LEAST the same number as above, but maybe
     // more since a recipe can be vegan without having to call itself vegan
     result = searcher.search(new SearchQuery.Builder().addMatchDiet("vegan").maxResults(1).build());
-    assertTrue(result.totalHits() >= 5);
+    assertTrue(result.totalHits() >= nrVeganRecipes);
   }
 
   @Test

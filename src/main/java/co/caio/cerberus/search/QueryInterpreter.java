@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.FacetsConfig;
@@ -57,18 +58,24 @@ class QueryInterpreter {
     addFieldRangeQuery(queryBuilder, PROTEIN_CONTENT, searchQuery.proteinContent());
     addFieldRangeQuery(queryBuilder, CARBOHYDRATE_CONTENT, searchQuery.carbohydrateContent());
 
+    // TODO actually allow specifying the threshold in the query
+    searchQuery
+        .matchDiet()
+        .forEach(
+            diet ->
+                queryBuilder.add(
+                    FloatPoint.newExactQuery(IndexField.getFieldNameForDiet(diet), 1f),
+                    BooleanClause.Occur.MUST));
+
     var luceneQuery = queryBuilder.build();
     logger.debug("Interpreted query {} as {}", searchQuery, luceneQuery);
 
     // no need to drill down on facets, we're done
-    if (searchQuery.matchKeyword().isEmpty() && searchQuery.matchDiet().isEmpty()) {
+    if (searchQuery.matchKeyword().isEmpty()) {
       return luceneQuery;
     }
 
-    logger.debug(
-        "Drilling it down with diet={} keyword={}",
-        searchQuery.matchDiet(),
-        searchQuery.matchKeyword());
+    logger.debug("Drilling it down with keyword={}", searchQuery.matchKeyword());
 
     DrillDownQuery drillQuery;
     if (luceneQuery.clauses().isEmpty()) {
@@ -78,7 +85,6 @@ class QueryInterpreter {
     }
 
     searchQuery.matchKeyword().forEach(kw -> drillQuery.add(IndexField.FACET_KEYWORD, kw));
-    searchQuery.matchDiet().forEach(d -> drillQuery.add(IndexField.FACET_DIET, d));
     return drillQuery;
   }
 
