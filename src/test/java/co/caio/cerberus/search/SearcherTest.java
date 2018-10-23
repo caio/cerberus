@@ -3,6 +3,7 @@ package co.caio.cerberus.search;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
+import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
@@ -45,6 +46,26 @@ class SearcherTest {
     var builder = new SearchQuery.Builder().fulltext("garlic");
     assertEquals(1, searcher.search(builder.maxResults(1).build()).recipes().size());
     assertTrue(searcher.search(builder.maxResults(42).build()).recipes().size() <= 42);
+  }
+
+  @Test
+  public void facetCountsAreDistinct() throws Exception {
+    // Commit 2eaef6c8da caused a bug where all counts of the diet facet
+    // were the same - that's because the data model started emitting
+    // (float) values for all known diet types and the indexer was
+    // blindly accepting them as if they were all 1.0f's
+    // This test is just to prevent a regression
+    var result = searcher.search(new SearchQuery.Builder().fulltext("oil").maxFacets(50).build());
+    var nrDistinctPerDietCounts =
+        result
+            .facets()
+            .stream()
+            .filter(fd -> fd.dimension().equals("diet"))
+            .flatMap(fd -> fd.children().stream())
+            .map(LabelData::count)
+            .distinct()
+            .count();
+    assertTrue(nrDistinctPerDietCounts > 1);
   }
 
   @Test
