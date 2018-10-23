@@ -4,7 +4,6 @@ class IndexField {
   // TODO wrap these into a String subclass if we ever
   //      have to leave the package scope
   static final String RECIPE_ID = "recipeId";
-  static final String SITE_ID = "siteId";
   static final String CRAWL_URL = "crawlUrl";
   static final String NAME = "name";
   static final String NUM_INGREDIENTS = "numIngredients";
