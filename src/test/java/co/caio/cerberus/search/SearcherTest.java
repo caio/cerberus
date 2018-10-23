@@ -56,7 +56,7 @@ class SearcherTest {
         result
             .facets()
             .stream()
-            .filter(x -> x.dimension().equals(IndexField.FACET_DIM_DIET))
+            .filter(x -> x.dimension().equals(IndexField.FACET_DIET))
             .findFirst();
     assertTrue(dietFacet.isPresent());
     // make sure that when searching for vegan we actually get a count for Diet => vegan

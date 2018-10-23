@@ -10,11 +10,11 @@ public class FacetConfiguration {
   public static FacetsConfig getFacetsConfig() {
     if (facetsConfig == null) {
       facetsConfig = new FacetsConfig();
-      facetsConfig.setIndexFieldName(FACET_DIM_DIET, FACET_DIET);
-      facetsConfig.setMultiValued(FACET_DIM_DIET, true);
+      facetsConfig.setIndexFieldName(FACET_DIET, FACET_DIET);
+      facetsConfig.setMultiValued(FACET_DIET, true);
 
-      facetsConfig.setIndexFieldName(FACET_DIM_KEYWORD, FACET_KEYWORD);
-      facetsConfig.setMultiValued(FACET_DIM_KEYWORD, true);
+      facetsConfig.setIndexFieldName(FACET_KEYWORD, FACET_KEYWORD);
+      facetsConfig.setMultiValued(FACET_KEYWORD, true);
     }
     return facetsConfig;
   }

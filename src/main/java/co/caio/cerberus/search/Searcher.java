@@ -75,8 +75,8 @@ public class Searcher {
       var keywords =
           new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);
 
-      var topDiets = diets.getTopChildren(maxFacets, IndexField.FACET_DIM_DIET);
-      var topKeywords = keywords.getTopChildren(maxFacets, IndexField.FACET_DIM_KEYWORD);
+      var topDiets = diets.getTopChildren(maxFacets, IndexField.FACET_DIET);
+      var topKeywords = keywords.getTopChildren(maxFacets, IndexField.FACET_KEYWORD);
 
       addFacetData(builder, topDiets);
       addFacetData(builder, topKeywords);

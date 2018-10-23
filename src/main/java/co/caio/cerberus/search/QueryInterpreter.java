@@ -77,8 +77,8 @@ class QueryInterpreter {
       drillQuery = new DrillDownQuery(facetsConfig, luceneQuery);
     }
 
-    searchQuery.matchKeyword().forEach(kw -> drillQuery.add(IndexField.FACET_DIM_KEYWORD, kw));
-    searchQuery.matchDiet().forEach(d -> drillQuery.add(IndexField.FACET_DIM_DIET, d));
+    searchQuery.matchKeyword().forEach(kw -> drillQuery.add(IndexField.FACET_KEYWORD, kw));
+    searchQuery.matchDiet().forEach(d -> drillQuery.add(IndexField.FACET_DIET, d));
     return drillQuery;
   }
 

@@ -139,8 +139,8 @@ public interface Indexer {
         doc.add(new NumericDocValuesField(NUM_INGREDIENTS, recipe.ingredients().size()));
 
         // TODO start using the score for faceting
-        recipe.diets().forEach((diet, score) -> doc.add(new FacetField(FACET_DIM_DIET, diet)));
-        recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_DIM_KEYWORD, kw)));
+        recipe.diets().forEach((diet, score) -> doc.add(new FacetField(FACET_DIET, diet)));
+        recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
 
         addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
         addOptionalIntField(doc, COOK_TIME, recipe.cookTime());
