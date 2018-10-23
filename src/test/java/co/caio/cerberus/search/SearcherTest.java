@@ -32,9 +32,25 @@ class SearcherTest {
   }
 
   @Test
+  public void respectMaxFacets() throws Exception {
+    var builder = new SearchQuery.Builder().fulltext("egg");
+    assertTrue(searcher.search(builder.maxFacets(0).build()).facets().isEmpty());
+
+    var result = searcher.search(builder.maxFacets(100).build());
+    result.facets().forEach(facetData -> assertTrue(facetData.children().size() <= 100));
+  }
+
+  @Test
+  public void respectMaxResults() throws Exception {
+    var builder = new SearchQuery.Builder().fulltext("garlic");
+    assertEquals(1, searcher.search(builder.maxResults(1).build()).recipes().size());
+    assertTrue(searcher.search(builder.maxResults(42).build()).recipes().size() <= 42);
+  }
+
+  @Test
   public void facets() throws Exception {
-    var query = new SearchQuery.Builder().fulltext("vegan").build();
-    var result = searcher.search(query, 1);
+    var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).build();
+    var result = searcher.search(query);
 
     var dietFacet =
         result
@@ -54,21 +70,25 @@ class SearcherTest {
     //  it should give us just `nrVeganRecipes` results as verified above
     result =
         searcher.search(
-            new SearchQuery.Builder().fulltext("vegan").addMatchDiet("vegan").build(), 1);
+            new SearchQuery.Builder()
+                .fulltext("vegan")
+                .addMatchDiet("vegan")
+                .maxResults(1)
+                .build());
     assertEquals(nrVeganRecipes, result.totalHits());
 
     // but only searching for the vegan diet facet (i.e. not searching for the term<vegan>
     // in the whole index would give us AT LEAST the same number as above, but maybe
     // more since a recipe can be vegan without having to call itself vegan
-    result = searcher.search(new SearchQuery.Builder().addMatchDiet("vegan").build(), 1);
+    result = searcher.search(new SearchQuery.Builder().addMatchDiet("vegan").maxResults(1).build());
     assertTrue(result.totalHits() >= 5);
   }
 
   @Test
   public void multipleFacetsAreOr() throws Exception {
-    var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil");
-    var justOilResult = searcher.search(queryBuilder.build(), 1);
-    var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build(), 1);
+    var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil").maxResults(1);
+    var justOilResult = searcher.search(queryBuilder.build());
+    var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build());
     // since drilldown queries on same facets are OR'ed,
     // the expectation is that the more keywords are input,
     // more recipes are matched
@@ -77,7 +97,8 @@ class SearcherTest {
 
   @Test
   public void basicSorting() throws Exception {
-    var queryBuilder = new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25));
+    var queryBuilder =
+        new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).maxResults(50);
 
     // default sort order is relevance
     assertEquals(queryBuilder.build(), queryBuilder.sort(SortOrder.RELEVANCE).build());
@@ -104,7 +125,7 @@ class SearcherTest {
 
   private void checkOrdering(SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
       throws Exception {
-    var hits = searcher.search(query, 50);
+    var hits = searcher.search(query);
     var lastValue = Integer.MIN_VALUE;
     for (SearchResultRecipe r : hits.recipes()) {
       final var value = retriever.apply(r).orElse(Integer.MAX_VALUE);
@@ -118,32 +139,45 @@ class SearcherTest {
     // TODO make these numbers configurable / easy to regenerate (.properties maybe)
     // Recipes with up to 3 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l
-    var query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(0, 3)).build();
-    assertEquals(16, searcher.search(query, 1).totalHits());
+    var query =
+        new SearchQuery.Builder()
+            .numIngredients(SearchQuery.RangedSpec.of(0, 3))
+            .maxResults(1)
+            .build();
+    assertEquals(16, searcher.search(query).totalHits());
 
     // Recipes with exactly 5 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. == 5'|grep true|wc -l
-    query = new SearchQuery.Builder().numIngredients(SearchQuery.RangedSpec.of(5, 5)).build();
-    assertEquals(17, searcher.search(query, 1).totalHits());
+    query =
+        new SearchQuery.Builder()
+            .numIngredients(SearchQuery.RangedSpec.of(5, 5))
+            .maxResults(1)
+            .build();
+    assertEquals(17, searcher.search(query).totalHits());
 
     // Recipes that can be done between 10 and 25 minutes
     // $
-    query = new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).build();
-    assertEquals(51, searcher.search(query, 1).totalHits());
+    query =
+        new SearchQuery.Builder()
+            .totalTime(SearchQuery.RangedSpec.of(10, 25))
+            .maxResults(1)
+            .build();
+    assertEquals(51, searcher.search(query).totalHits());
 
     // Assumption: fulltext should match more items
-    var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").build();
+    var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").maxResults(1).build();
     // but drilling down on ingredients should be more precise
     var q2 =
         new SearchQuery.Builder()
             .fulltext("low carb")
             .addWithIngredients("bacon")
             .addWithIngredients("eggs")
+            .maxResults(1)
             .build();
 
-    var r1 = searcher.search(q1, 1);
+    var r1 = searcher.search(q1);
     assertTrue(r1.totalHits() > 0);
-    var r2 = searcher.search(q2, 1);
+    var r2 = searcher.search(q2);
     assertTrue(r2.totalHits() > 0 && r2.totalHits() <= r1.totalHits());
 
     // This particular query should have the same doc as the top one

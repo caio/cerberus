@@ -43,6 +43,16 @@ public interface SearchQuery {
 
   List<String> matchKeyword();
 
+  @Value.Default
+  default int maxResults() {
+    return 10;
+  };
+
+  @Value.Default
+  default int maxFacets() {
+    return 10;
+  };
+
   enum SortOrder {
     RELEVANCE,
     NUM_INGREDIENTS,
@@ -85,6 +95,12 @@ public interface SearchQuery {
 
   @Value.Check
   default void check() {
+    if (maxResults() < 1 || maxResults() > 100) {
+      throw new IllegalStateException("maxResults needs to be in [1,100]");
+    }
+    if (maxFacets() < 0 || maxFacets() > 100) {
+      throw new IllegalStateException("maxFacets needs to be in [0,100]");
+    }
     if (fulltext().isPresent()
         || !withIngredients().isEmpty()
         || !withoutIngredients().isEmpty()
@@ -124,5 +140,5 @@ public interface SearchQuery {
     }
   }
 
-  class Builder extends ImmutableSearchQuery.Builder {};
+  class Builder extends ImmutableSearchQuery.Builder {}
 }

@@ -57,8 +57,7 @@ public class V1SearchHandler implements Handler<RoutingContext> {
     return Future.future(
         future -> {
           try {
-            // XXX maybe get maxResults from the query instead
-            future.complete(V1SearchResponse.success(searcher.search(searchQuery, 10)));
+            future.complete(V1SearchResponse.success(searcher.search(searchQuery)));
           } catch (Exception wrapped) {
             future.fail(
                 new APIErrorMessage(

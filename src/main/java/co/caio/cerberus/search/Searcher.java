@@ -22,9 +22,9 @@ public class Searcher {
   private final QueryInterpreter interpreter;
   private final FacetsConfig facetsConfig;
 
-  public SearchResult search(SearchQuery query, int maxResults) throws SearcherException {
+  public SearchResult search(SearchQuery query) throws SearcherException {
     try {
-      return _search(query, maxResults);
+      return _search(query);
     } catch (Exception wrapped) {
       throw new SearcherException(wrapped);
     }
@@ -47,27 +47,17 @@ public class Searcher {
     facetsConfig = FacetConfiguration.getFacetsConfig();
   }
 
-  private SearchResult _search(SearchQuery query, int maxResults) throws Exception {
+  private SearchResult _search(SearchQuery query) throws Exception {
     var fc = new FacetsCollector();
 
     var result =
         FacetsCollector.search(
             indexSearcher,
             interpreter.toLuceneQuery(query),
-            maxResults,
+            query.maxResults(),
             interpreter.toLuceneSort(query),
             fc);
     var builder = new SearchResult.Builder().totalHits(result.totalHits);
-
-    var diets =
-        new FastTaxonomyFacetCounts(IndexField.FACET_DIET, taxonomyReader, facetsConfig, fc);
-
-    var keywords =
-        new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);
-
-    // TODO maybe allow changing how many facets to retrieve
-    var topDiets = diets.getTopChildren(10, IndexField.FACET_DIM_DIET);
-    var topKeywords = keywords.getTopChildren(10, IndexField.FACET_DIM_KEYWORD);
 
     for (int i = 0; i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
@@ -76,8 +66,22 @@ public class Searcher {
           doc.get(IndexField.NAME),
           doc.get(IndexField.CRAWL_URL));
     }
-    addFacetData(builder, topDiets);
-    addFacetData(builder, topKeywords);
+
+    var maxFacets = query.maxFacets();
+    if (maxFacets != 0) {
+      var diets =
+          new FastTaxonomyFacetCounts(IndexField.FACET_DIET, taxonomyReader, facetsConfig, fc);
+
+      var keywords =
+          new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);
+
+      var topDiets = diets.getTopChildren(maxFacets, IndexField.FACET_DIM_DIET);
+      var topKeywords = keywords.getTopChildren(maxFacets, IndexField.FACET_DIM_KEYWORD);
+
+      addFacetData(builder, topDiets);
+      addFacetData(builder, topKeywords);
+    }
+
     return builder.build();
   }
 

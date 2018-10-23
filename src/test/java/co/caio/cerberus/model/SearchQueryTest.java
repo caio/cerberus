@@ -21,6 +21,16 @@ class SearchQueryTest {
   }
 
   @Test
+  void searchOptions() {
+    var builder = new SearchQuery.Builder().fulltext("simplest buildable query");
+    assertThrows(IllegalStateException.class, () -> builder.maxResults(0).build());
+    assertThrows(IllegalStateException.class, () -> builder.maxResults(123123).build());
+    assertThrows(IllegalStateException.class, () -> builder.maxFacets(-1).build());
+    assertThrows(IllegalStateException.class, () -> builder.maxFacets(1232).build());
+    assertDoesNotThrow(() -> builder.maxResults(5).maxFacets(0).build());
+  }
+
+  @Test
   void jsonSerialization() {
     var query =
         new SearchQuery.Builder()
