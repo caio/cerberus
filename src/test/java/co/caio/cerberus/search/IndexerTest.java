@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class IndexerTest {
   @Test
-  public void badUsage() {
+  void badUsage() {
     var exc = Indexer.IndexBuilderException.class;
     var builder = new Indexer.Builder();
     assertThrows(exc, builder::build);
@@ -23,7 +23,7 @@ class IndexerTest {
   }
 
   @Test
-  public void simpleLocalIndexer() throws IOException {
+  void simpleLocalIndexer() throws IOException {
     var tempDir = Files.createTempDirectory("cerberus-test");
     var index = new Indexer.Builder().dataDirectory(tempDir).createOrAppendMode().build();
     assertEquals(0, index.numDocs());
