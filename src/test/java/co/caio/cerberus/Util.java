@@ -7,8 +7,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Util {
+
+  private static Logger logger = LoggerFactory.getLogger(Util.class);
+
   public static Recipe getBasicRecipe() {
     return new Recipe.Builder()
         .recipeId(1)
@@ -47,8 +52,8 @@ public class Util {
               recipe -> {
                 try {
                   indexer.addRecipe(recipe);
-                } catch (Exception ignored) {
-                  // pass
+                } catch (Exception logged) {
+                  logger.error(String.format("Failed to index recipe %s", recipe), logged);
                 }
               });
       try {
