@@ -2,6 +2,7 @@ package co.caio.cerberus.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import co.caio.cerberus.model.SearchQuery.Builder;
 import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
@@ -45,5 +46,26 @@ class SearchQueryTest {
     var numIngredientsQuery = maybeQuery.get();
     assertTrue(numIngredientsQuery.numIngredients().isPresent());
     assertEquals(SearchQuery.RangedSpec.of(0, 3), numIngredientsQuery.numIngredients().get());
+  }
+
+  @Test
+  void addMatchDietAlias() {
+    assertEquals(
+        new Builder().addMatchDiet("keto").build(),
+        new Builder().putDietThreshold("keto", 1f).build());
+  }
+
+  @Test
+  void dietThresholds() {
+    assertThrows(
+        IllegalStateException.class,
+        () -> new Builder().putDietThreshold("unknown diet", 1).build());
+    assertThrows(
+        IllegalStateException.class, () -> new Builder().putDietThreshold("paleo", 0).build());
+    assertThrows(
+        IllegalStateException.class, () -> new Builder().putDietThreshold("lowcarb", -1).build());
+    assertThrows(
+        IllegalStateException.class, () -> new Builder().putDietThreshold("vegan", 1.1f).build());
+    assertDoesNotThrow(() -> new Builder().putDietThreshold("paleo", 1.0f).build());
   }
 }

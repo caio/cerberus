@@ -58,13 +58,13 @@ class QueryInterpreter {
     addFieldRangeQuery(queryBuilder, PROTEIN_CONTENT, searchQuery.proteinContent());
     addFieldRangeQuery(queryBuilder, CARBOHYDRATE_CONTENT, searchQuery.carbohydrateContent());
 
-    // TODO actually allow specifying the threshold in the query
     searchQuery
-        .matchDiet()
+        .dietThreshold()
         .forEach(
-            diet ->
+            (diet, score) ->
                 queryBuilder.add(
-                    FloatPoint.newExactQuery(IndexField.getFieldNameForDiet(diet), 1f),
+                    FloatPoint.newRangeQuery(
+                        IndexField.getFieldNameForDiet(diet), score, Float.MAX_VALUE),
                     BooleanClause.Occur.MUST));
 
     var luceneQuery = queryBuilder.build();
@@ -75,7 +75,10 @@ class QueryInterpreter {
       return luceneQuery;
     }
 
-    logger.debug("Drilling it down with keyword={}", searchQuery.matchKeyword());
+    logger.debug(
+        "Drilling it down with keyword={} dietThreshold={}",
+        searchQuery.matchKeyword(),
+        searchQuery.dietThreshold());
 
     DrillDownQuery drillQuery;
     if (luceneQuery.clauses().isEmpty()) {

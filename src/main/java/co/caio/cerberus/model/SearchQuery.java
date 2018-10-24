@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public interface SearchQuery {
 
   Optional<RangedSpec> carbohydrateContent();
 
-  List<String> matchDiet();
+  Map<String, Float> dietThreshold();
 
   List<String> matchKeyword();
 
@@ -101,10 +102,20 @@ public interface SearchQuery {
     if (maxFacets() < 0 || maxFacets() > 100) {
       throw new IllegalStateException("maxFacets needs to be in [0,100]");
     }
+    dietThreshold()
+        .forEach(
+            (diet, score) -> {
+              if (score <= 0 || score > 1) {
+                throw new IllegalStateException("score must be in ]0,1]");
+              }
+              if (!Diet.isKnown(diet)) {
+                throw new IllegalStateException(String.format("Unknown diet `%s`", diet));
+              }
+            });
     if (fulltext().isPresent()
         || !withIngredients().isEmpty()
         || !withoutIngredients().isEmpty()
-        || !matchDiet().isEmpty()
+        || !dietThreshold().isEmpty()
         || !matchKeyword().isEmpty()
         || numIngredients().isPresent()
         || prepTime().isPresent()
@@ -140,5 +151,10 @@ public interface SearchQuery {
     }
   }
 
-  class Builder extends ImmutableSearchQuery.Builder {}
+  class Builder extends ImmutableSearchQuery.Builder {
+    public Builder addMatchDiet(String dietName) {
+      putDietThreshold(dietName, 1f);
+      return this;
+    }
+  }
 }

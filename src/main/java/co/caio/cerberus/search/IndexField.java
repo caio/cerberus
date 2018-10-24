@@ -1,14 +1,12 @@
 package co.caio.cerberus.search;
 
+import co.caio.cerberus.model.Diet;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class IndexField {
-  // TODO wrap these into a String subclass if we ever
-  //      have to leave the package scope
   static final String RECIPE_ID = "recipeId";
   static final String CRAWL_URL = "crawlUrl";
   static final String NAME = "name";
@@ -27,8 +25,9 @@ class IndexField {
 
   private static final Map<String, String> dietToFieldName =
       Collections.unmodifiableMap(
-          Stream.of("keto", "paleo", "lowcarb", "glutenfree", "vegan")
-              .collect(Collectors.toMap(Function.identity(), x -> String.format("$diet_%s", x))));
+          Diet.knownDiets
+              .stream()
+              .collect(Collectors.toMap(Function.identity(), d -> String.format("diet_%s", d))));
 
   static String getFieldNameForDiet(String diet) {
     if (dietToFieldName.containsKey(diet)) {

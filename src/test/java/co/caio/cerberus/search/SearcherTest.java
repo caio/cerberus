@@ -8,6 +8,7 @@ import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.OptionalInt;
 import java.util.function.Function;
@@ -19,13 +20,13 @@ class SearcherTest {
   private static Searcher searcher;
 
   @BeforeAll
-  public static void prepare() {
+  static void prepare() {
     searcher = Util.getTestIndexer().buildSearcher();
     assertEquals(299, searcher.numDocs());
   }
 
   @Test
-  public void builder() {
+  void builder() {
     assertThrows(IllegalStateException.class, () -> new Searcher.Builder().build());
     assertThrows(
         Searcher.Builder.SearcherBuilderException.class,
@@ -33,7 +34,7 @@ class SearcherTest {
   }
 
   @Test
-  public void respectMaxFacets() throws Exception {
+  void respectMaxFacets() throws Exception {
     var builder = new SearchQuery.Builder().fulltext("egg");
     assertTrue(searcher.search(builder.maxFacets(0).build()).facets().isEmpty());
 
@@ -42,14 +43,14 @@ class SearcherTest {
   }
 
   @Test
-  public void respectMaxResults() throws Exception {
+  void respectMaxResults() throws Exception {
     var builder = new SearchQuery.Builder().fulltext("garlic");
     assertEquals(1, searcher.search(builder.maxResults(1).build()).recipes().size());
     assertTrue(searcher.search(builder.maxResults(42).build()).recipes().size() <= 42);
   }
 
   @Test
-  public void facetCountsAreDistinct() throws Exception {
+  void facetCountsAreDistinct() throws Exception {
     // Commit 2eaef6c8da caused a bug where all counts of the diet facet
     // were the same - that's because the data model started emitting
     // (float) values for all known diet types and the indexer was
@@ -69,7 +70,7 @@ class SearcherTest {
   }
 
   @Test
-  public void facets() throws Exception {
+  void facets() throws Exception {
     var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).build();
     var result = searcher.search(query);
 
@@ -106,7 +107,44 @@ class SearcherTest {
   }
 
   @Test
-  public void multipleFacetsAreOr() throws Exception {
+  void dietThreshold() throws Exception {
+    var indexer =
+        new Indexer.Builder()
+            .dataDirectory(Files.createTempDirectory("threshold-test"))
+            .createMode()
+            .build();
+
+    var recipeBuilder =
+        new Recipe.Builder()
+            .recipeId(1)
+            .name("none")
+            .crawlUrl("https://who.cares")
+            .addIngredients("doesnt matter")
+            .instructions("nothing to do");
+    indexer.addRecipe(recipeBuilder.putDiets("keto", 0.8f).putDiets("paleo", 0.5f).build());
+    indexer.addRecipe(recipeBuilder.putDiets("keto", 0.6f).putDiets("paleo", 0.1f).build());
+    indexer.commit();
+
+    var searcher = indexer.buildSearcher();
+    var result = searcher.search(new SearchQuery.Builder().putDietThreshold("keto", 0.9f).build());
+    assertEquals(0, result.totalHits());
+
+    result =
+        searcher.search(
+            new SearchQuery.Builder()
+                .putDietThreshold("keto", 0.8f)
+                .putDietThreshold("paleo", 0.1f)
+                .build());
+    assertEquals(1, result.totalHits());
+    var dietFacets =
+        result.facets().stream().filter(fd -> fd.dimension().equals("diet")).findFirst();
+    assertTrue(dietFacets.isPresent());
+    // we get { "keto": 1, "paleo": 1 } since only one doc matched both criteria
+    assertTrue(dietFacets.get().children().stream().map(ld -> ld.count()).allMatch(l -> l == 1));
+  }
+
+  @Test
+  void multipleFacetsAreOr() throws Exception {
     var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil").maxResults(1);
     var justOilResult = searcher.search(queryBuilder.build());
     var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build());
@@ -117,7 +155,7 @@ class SearcherTest {
   }
 
   @Test
-  public void basicSorting() throws Exception {
+  void basicSorting() throws Exception {
     var queryBuilder =
         new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).maxResults(50);
 
@@ -156,7 +194,7 @@ class SearcherTest {
   }
 
   @Test
-  public void findRecipes() throws Exception {
+  void findRecipes() throws Exception {
     // TODO make these numbers configurable / easy to regenerate (.properties maybe)
     // Recipes with up to 3 ingredients
     // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l

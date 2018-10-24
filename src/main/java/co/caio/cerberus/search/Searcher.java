@@ -1,5 +1,6 @@
 package co.caio.cerberus.search;
 
+import co.caio.cerberus.lucene.FloatAssociationsThresholdCount;
 import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
@@ -70,7 +71,8 @@ public class Searcher {
     var maxFacets = query.maxFacets();
     if (maxFacets != 0) {
       var diets =
-          new FastTaxonomyFacetCounts(IndexField.FACET_DIET, taxonomyReader, facetsConfig, fc);
+          new FloatAssociationsThresholdCount(
+              IndexField.FACET_DIET, query.dietThreshold(), taxonomyReader, facetsConfig, fc);
 
       var keywords =
           new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);

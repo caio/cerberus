@@ -14,11 +14,6 @@ class RecipeTest {
   }
 
   @Test
-  void strictBuilder() {
-    assertThrows(IllegalStateException.class, () -> new Recipe.Builder().recipeId(1).recipeId(1));
-  }
-
-  @Test
   void preconditions() {
     assertThrows(
         IllegalStateException.class,

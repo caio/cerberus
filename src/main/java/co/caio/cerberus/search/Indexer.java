@@ -2,6 +2,7 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
+import co.caio.cerberus.lucene.FloatThresholdField;
 import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -142,10 +143,8 @@ public interface Indexer {
             .diets()
             .forEach(
                 (diet, score) -> {
-                  if (score == 1f) {
-                    doc.add(new FacetField(FACET_DIET, diet));
-                  }
                   doc.add(new FloatPoint(IndexField.getFieldNameForDiet(diet), score));
+                  doc.add(new FloatThresholdField(score, FACET_DIET, diet));
                 });
 
         recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
