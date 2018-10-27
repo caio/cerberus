@@ -4,12 +4,8 @@ import co.caio.cerberus.service.api.V1SearchHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Launcher;
-import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.impl.launcher.VertxLifecycleHooks;
 import io.vertx.core.net.SelfSignedCertificate;
-import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
 import io.vertx.ext.dropwizard.MetricsService;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -114,14 +110,5 @@ public class MainVerticle extends AbstractVerticle {
             });
 
     return router;
-  }
-
-  static class CustomLauncher extends Launcher implements VertxLifecycleHooks {
-
-    @Override
-    public void beforeStartingVertx(VertxOptions options) {
-      options.setPreferNativeTransport(true);
-      options.setMetricsOptions(new DropwizardMetricsOptions().setEnabled(true));
-    }
   }
 }
