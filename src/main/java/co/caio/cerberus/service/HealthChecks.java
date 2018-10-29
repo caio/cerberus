@@ -1,5 +1,6 @@
 package co.caio.cerberus.service;
 
+import co.caio.cerberus.Environment;
 import co.caio.cerberus.service.api.V1SearchHandler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
@@ -32,6 +33,17 @@ public class HealthChecks {
                 String.format(
                     "Too few documents in index. Got %d, wanted > %d",
                     current, configuration.wantedNumDocs()));
+          }
+        });
+
+    hc.register(
+        "build-status",
+        future -> {
+          var buildStatus = Environment.getBuildStatus();
+          if (buildStatus.isValid()) {
+            future.complete();
+          } else {
+            future.fail(String.join("; ", buildStatus.invalidReasons()));
           }
         });
 

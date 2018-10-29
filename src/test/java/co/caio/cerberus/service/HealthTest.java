@@ -2,6 +2,7 @@ package co.caio.cerberus.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import co.caio.cerberus.Environment;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.function.Consumer;
@@ -19,6 +20,18 @@ class HealthTest extends MainVerticleTestCase {
           // native-transport is only up when started with specific
           // vertx options, which we don't for tests
           assertEquals("DOWN", result.getString("status"));
+          testContext.completeNow();
+        });
+  }
+
+  @Test
+  void buildStatus(VertxTestContext testContext) {
+    healthRequest(
+        "build-status",
+        testContext,
+        result -> {
+          var wanted = Environment.getBuildStatus().isValid() ? "UP" : "DOWN";
+          assertEquals(wanted, result.getString("status"));
           testContext.completeNow();
         });
   }

@@ -1,8 +1,6 @@
 package co.caio.cerberus.service;
 
-import co.caio.cerberus.Environment;
 import co.caio.cerberus.service.api.V1SearchHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -101,22 +99,6 @@ public class MainVerticle extends AbstractVerticle {
         .handler(v1handler);
 
     router.get("/health*").handler(HealthChecks.create(vertx, v1handler, configuration));
-
-    router
-        .get("/buildinfo")
-        .handler(
-            rc -> {
-              try {
-                rc.response().putHeader("Content-type", "application/json");
-                rc.response()
-                    .end(
-                        Environment.getObjectMapper()
-                            .writeValueAsString(Environment.getBuildStatus()));
-              } catch (JsonProcessingException logged) {
-                logger.error("Exception writing response", logged);
-                rc.fail(logged);
-              }
-            });
 
     var metricsService = MetricsService.create(vertx);
     router
