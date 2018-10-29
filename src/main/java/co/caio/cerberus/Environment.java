@@ -33,7 +33,7 @@ public class Environment {
     buildStatus =
         new BuildStatus.Builder()
             .commitId(props.getProperty("git.commit.id"))
-            .descibedCommit(props.getProperty("git.commit.id.describe"))
+            .describedCommit(props.getProperty("git.commit.id.describe"))
             .isDirty(props.getProperty("git.dirty"))
             .commitTime(props.getProperty("git.commit.time"))
             .buildTime(props.getProperty("git.build.time"))
@@ -59,7 +59,7 @@ public class Environment {
   interface BuildStatus {
     String commitId();
 
-    String descibedCommit();
+    String describedCommit();
 
     String commitTime();
 
