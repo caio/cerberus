@@ -44,6 +44,13 @@ public interface SearchQuery {
 
   List<String> matchKeyword();
 
+  // XXX Having a flag to change behavior is reeeeally slippery
+  //     come up with a better solution if this grows
+  @Value.Default
+  default boolean moreLikeThis() {
+    return false;
+  }
+
   @Value.Default
   default int maxResults() {
     return 10;
@@ -112,6 +119,10 @@ public interface SearchQuery {
                 throw new IllegalStateException(String.format("Unknown diet `%s`", diet));
               }
             });
+    if (moreLikeThis() && fulltext().orElse("").strip().length() < 30) {
+      throw new IllegalStateException(
+          "moreLikeThis queries require fulltext set with at least 30 characters");
+    }
     if (fulltext().isPresent()
         || !withIngredients().isEmpty()
         || !withoutIngredients().isEmpty()

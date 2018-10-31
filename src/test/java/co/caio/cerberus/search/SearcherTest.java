@@ -8,7 +8,6 @@ import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
-import co.caio.cerberus.model.SimilarityQuery;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -245,7 +244,7 @@ class SearcherTest {
 
   @Test
   void similarityQueries() throws Exception {
-    var builder = new SimilarityQuery.Builder().maxResults(100);
+    var builder = new SearchQuery.Builder().moreLikeThis(true).maxResults(100).maxFacets(0);
 
     // very inefficiently pick 30 random recipes
     // (maybe make random seed stable later)

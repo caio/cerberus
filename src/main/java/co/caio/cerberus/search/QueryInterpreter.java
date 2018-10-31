@@ -4,6 +4,7 @@ import static co.caio.cerberus.search.IndexField.*;
 
 import co.caio.cerberus.model.SearchQuery;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Optional;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -13,6 +14,7 @@ import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -27,18 +29,26 @@ class QueryInterpreter {
   private final Analyzer analyzer;
   private final FacetsConfig facetsConfig;
   private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
+  private final MoreLikeThis moreLikeThis;
 
-  QueryInterpreter() {
+  QueryInterpreter(MoreLikeThis mlt) {
     analyzer = new StandardAnalyzer();
     facetsConfig = IndexConfiguration.getFacetsConfig();
+    moreLikeThis = mlt;
   }
 
-  Query toLuceneQuery(SearchQuery searchQuery) {
+  Query toLuceneQuery(SearchQuery searchQuery) throws IOException {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
-      addTermQueries(
-          queryBuilder, FULLTEXT, searchQuery.fulltext().get(), BooleanClause.Occur.MUST);
+      if (searchQuery.moreLikeThis()) {
+        queryBuilder.add(
+            moreLikeThis.like(IndexField.FULLTEXT, new StringReader(searchQuery.fulltext().get())),
+            BooleanClause.Occur.MUST);
+      } else {
+        addTermQueries(
+            queryBuilder, FULLTEXT, searchQuery.fulltext().get(), BooleanClause.Occur.MUST);
+      }
     }
 
     for (String ingredient : searchQuery.withIngredients()) {

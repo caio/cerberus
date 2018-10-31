@@ -68,4 +68,14 @@ class SearchQueryTest {
         IllegalStateException.class, () -> new Builder().putDietThreshold("vegan", 1.1f).build());
     assertDoesNotThrow(() -> new Builder().putDietThreshold("paleo", 1.0f).build());
   }
+
+  @Test
+  void moreLikeThisValidations() {
+    var mltBuilder = new Builder().moreLikeThis(true);
+    assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("").build());
+    assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("       ").build());
+    assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("short text").build());
+    var fulltext = "query with enough characters to pass the length restriction";
+    assertDoesNotThrow(() -> mltBuilder.fulltext(fulltext).build());
+  }
 }
