@@ -45,7 +45,7 @@ public class Searcher {
     indexSearcher = new IndexSearcher(builder.indexReader);
     taxonomyReader = builder.taxonomyReader;
     interpreter = new QueryInterpreter();
-    facetsConfig = FacetConfiguration.getFacetsConfig();
+    facetsConfig = IndexConfiguration.getFacetsConfig();
   }
 
   private SearchResult _search(SearchQuery query) throws Exception {

@@ -120,7 +120,7 @@ public interface Indexer {
       private IndexerImpl(IndexWriter writer, DirectoryTaxonomyWriter taxWriter) {
         indexWriter = writer;
         taxonomyWriter = taxWriter;
-        facetsConfig = FacetConfiguration.getFacetsConfig();
+        facetsConfig = IndexConfiguration.getFacetsConfig();
       }
 
       @Override

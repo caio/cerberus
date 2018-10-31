@@ -30,7 +30,7 @@ class QueryInterpreter {
 
   QueryInterpreter() {
     analyzer = new StandardAnalyzer();
-    facetsConfig = FacetConfiguration.getFacetsConfig();
+    facetsConfig = IndexConfiguration.getFacetsConfig();
   }
 
   Query toLuceneQuery(SearchQuery searchQuery) {
