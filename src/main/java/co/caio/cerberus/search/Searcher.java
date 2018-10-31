@@ -82,9 +82,6 @@ public class Searcher {
 
     moreLikeThis = new MoreLikeThis(builder.indexReader);
     moreLikeThis.setAnalyzer(IndexConfiguration.getAnalyzer());
-    // ingredient name, brands and all that are quite useful
-    // for finding similar/duplicate items
-    // moreLikeThis.setMinDocFreq(2);
   }
 
   private SearchResult _search(SearchQuery query) throws Exception {
@@ -115,6 +112,8 @@ public class Searcher {
 
       var keywords =
           new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);
+
+      //TODO add facets for every RangedSpec field
 
       var topDiets = diets.getTopChildren(maxFacets, IndexField.FACET_DIET);
       var topKeywords = keywords.getTopChildren(maxFacets, IndexField.FACET_KEYWORD);
