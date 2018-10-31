@@ -4,6 +4,8 @@ import co.caio.cerberus.lucene.FloatAssociationsThresholdCount;
 import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
+import co.caio.cerberus.model.SimilarityQuery;
+import java.io.StringReader;
 import java.nio.file.Path;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
@@ -14,6 +16,7 @@ import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 
@@ -22,6 +25,36 @@ public class Searcher {
   private final TaxonomyReader taxonomyReader;
   private final QueryInterpreter interpreter;
   private final FacetsConfig facetsConfig;
+  private final MoreLikeThis moreLikeThis;
+
+  // TODO Query superclass so this can be reused?
+  public SearchResult search(SimilarityQuery query) throws SearcherException {
+    try {
+      return _search(query);
+    } catch (Exception wrapped) {
+      throw new SearcherException(wrapped);
+    }
+  }
+
+  private SearchResult _search(SimilarityQuery query) throws Exception {
+    var luceneQuery = moreLikeThis.like(IndexField.FULLTEXT, new StringReader(query.fulltext()));
+    var result = indexSearcher.search(luceneQuery, query.maxResults());
+
+    // FIXME all this is duplicated code
+    var builder = new SearchResult.Builder().totalHits(result.totalHits);
+
+    for (int i = 0; i < result.scoreDocs.length; i++) {
+      Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
+      builder.addRecipe(
+          doc.getField(IndexField.RECIPE_ID).numericValue().longValue(),
+          doc.get(IndexField.NAME),
+          doc.get(IndexField.CRAWL_URL));
+    }
+
+    // TODO facets maybe
+
+    return builder.build();
+  }
 
   public SearchResult search(SearchQuery query) throws SearcherException {
     try {
@@ -46,6 +79,12 @@ public class Searcher {
     taxonomyReader = builder.taxonomyReader;
     interpreter = new QueryInterpreter();
     facetsConfig = IndexConfiguration.getFacetsConfig();
+
+    moreLikeThis = new MoreLikeThis(builder.indexReader);
+    moreLikeThis.setAnalyzer(IndexConfiguration.getAnalyzer());
+    // ingredient name, brands and all that are quite useful
+    // for finding similar/duplicate items
+    // moreLikeThis.setMinDocFreq(2);
   }
 
   private SearchResult _search(SearchQuery query) throws Exception {
