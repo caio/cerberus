@@ -5,6 +5,8 @@ import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -39,34 +41,37 @@ public class Util {
   private static Map<Long, Recipe> recipeMap;
   private static Path testDataDir;
 
-  public static synchronized Indexer getTestIndexer() {
-    if (indexer == null) {
-      assert recipeMap == null;
+  static {
+    var tmpRecipeMap = new HashMap<Long, Recipe>();
 
-      try {
-        testDataDir = Files.createTempDirectory("cerberus-test");
-      } catch (Exception rethrown) {
-        throw new RuntimeException(rethrown);
-      }
-
-      indexer = new Indexer.Builder().dataDirectory(testDataDir).createMode().build();
-
-      getSampleRecipes()
-          .forEach(
-              recipe -> {
-                try {
-                  indexer.addRecipe(recipe);
-                  recipeMap.put(recipe.recipeId(), recipe);
-                } catch (Exception logged) {
-                  logger.error(String.format("Failed to index recipe %s", recipe), logged);
-                }
-              });
-      try {
-        indexer.commit();
-      } catch (Exception rethrown) {
-        throw new RuntimeException(rethrown);
-      }
+    try {
+      testDataDir = Files.createTempDirectory("cerberus-test");
+    } catch (Exception rethrown) {
+      throw new RuntimeException(rethrown);
     }
+
+    indexer = new Indexer.Builder().dataDirectory(testDataDir).createMode().build();
+
+    getSampleRecipes()
+        .forEach(
+            recipe -> {
+              try {
+                indexer.addRecipe(recipe);
+                tmpRecipeMap.put(recipe.recipeId(), recipe);
+              } catch (Exception logged) {
+                logger.error(String.format("Failed to index recipe %s", recipe), logged);
+              }
+            });
+    try {
+      indexer.commit();
+    } catch (Exception rethrown) {
+      throw new RuntimeException(rethrown);
+    }
+
+    recipeMap = Collections.unmodifiableMap(tmpRecipeMap);
+  }
+
+  public static Indexer getTestIndexer() {
     return indexer;
   }
 
@@ -74,10 +79,11 @@ public class Util {
     return recipeMap.get(recipeId);
   }
 
-  public static synchronized Path getTestDataDir() {
-    if (indexer == null) {
-      getTestIndexer();
-    }
+  public static Map<Long, Recipe> getRecipeMap() {
+    return recipeMap;
+  }
+
+  public static Path getTestDataDir() {
     return testDataDir;
   }
 }
