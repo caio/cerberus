@@ -5,6 +5,7 @@ import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -35,10 +36,13 @@ public class Util {
   }
 
   private static Indexer indexer;
+  private static Map<Long, Recipe> recipeMap;
   private static Path testDataDir;
 
   public static synchronized Indexer getTestIndexer() {
     if (indexer == null) {
+      assert recipeMap == null;
+
       try {
         testDataDir = Files.createTempDirectory("cerberus-test");
       } catch (Exception rethrown) {
@@ -52,6 +56,7 @@ public class Util {
               recipe -> {
                 try {
                   indexer.addRecipe(recipe);
+                  recipeMap.put(recipe.recipeId(), recipe);
                 } catch (Exception logged) {
                   logger.error(String.format("Failed to index recipe %s", recipe), logged);
                 }
@@ -63,6 +68,10 @@ public class Util {
       }
     }
     return indexer;
+  }
+
+  public static Recipe getRecipe(long recipeId) {
+    return recipeMap.get(recipeId);
   }
 
   public static synchronized Path getTestDataDir() {

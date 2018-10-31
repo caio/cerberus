@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.OptionalInt;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -162,24 +161,21 @@ class SearcherTest {
     // default sort order is relevance
     assertEquals(queryBuilder.build(), queryBuilder.sort(SortOrder.RELEVANCE).build());
 
-    var idToRecipe =
-        Util.getSampleRecipes().collect(Collectors.toMap(Recipe::recipeId, Function.identity()));
-
     checkOrdering(
         queryBuilder.sort(SortOrder.NUM_INGREDIENTS).build(),
-        r -> OptionalInt.of(idToRecipe.get(r.recipeId()).ingredients().size()));
+        r -> OptionalInt.of(Util.getRecipe(r.recipeId()).ingredients().size()));
 
     checkOrdering(
         queryBuilder.sort(SortOrder.COOK_TIME).build(),
-        r -> idToRecipe.get(r.recipeId()).cookTime());
+        r -> Util.getRecipe(r.recipeId()).cookTime());
 
     checkOrdering(
         queryBuilder.sort(SortOrder.PREP_TIME).build(),
-        r -> idToRecipe.get(r.recipeId()).prepTime());
+        r -> Util.getRecipe(r.recipeId()).prepTime());
 
     checkOrdering(
         queryBuilder.sort(SortOrder.TOTAL_TIME).build(),
-        r -> idToRecipe.get(r.recipeId()).totalTime());
+        r -> Util.getRecipe(r.recipeId()).totalTime());
   }
 
   private void checkOrdering(SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
