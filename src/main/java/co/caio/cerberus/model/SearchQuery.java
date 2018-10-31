@@ -136,7 +136,7 @@ public interface SearchQuery {
           Environment.getObjectMapper().readValue(serializedQuery, SearchQuery.class));
     } catch (Exception e) {
       LoggerFactory.getLogger(SearchQuery.class)
-          .error("Failed to read json <{}> as <{}>", serializedQuery, SearchQuery.class);
+          .error("Failed to read json <{}>", serializedQuery);
       return Optional.empty();
     }
   }
