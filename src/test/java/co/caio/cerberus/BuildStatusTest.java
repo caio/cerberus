@@ -80,6 +80,9 @@ class BuildStatusTest {
     assertFalse(buildStatus.isValid());
     assertFalse(buildStatus.invalidReasons().stream().anyMatch(s -> s.contains("git.build.time")));
     assertFalse(buildStatus.invalidReasons().stream().anyMatch(s -> s.contains("git.commit.time")));
+
+    assertEquals(validTimeString, buildStatus.buildTime());
+    assertEquals(validTimeString, buildStatus.commitTime());
   }
 
   @Test
@@ -90,6 +93,9 @@ class BuildStatusTest {
     props.setProperty("git.commit.time", validTimeString);
     props.setProperty("git.build.time", validTimeString);
     props.setProperty("git.commit.id", "valid commit id");
-    assertTrue(Environment.BuildStatus.fromProperties(props).isValid());
+
+    var buildStatus = Environment.BuildStatus.fromProperties(props);
+    assertEquals("valid commit id", buildStatus.commitId());
+    assertTrue(buildStatus.isValid());
   }
 }
