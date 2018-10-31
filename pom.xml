@@ -160,6 +160,7 @@
                     <target>${java.version}</target>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
+                    <compilerArgs>-implicit:class</compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
