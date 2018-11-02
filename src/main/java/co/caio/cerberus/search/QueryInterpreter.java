@@ -2,6 +2,7 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
+import co.caio.cerberus.model.DrillDown;
 import co.caio.cerberus.model.SearchQuery;
 import java.io.IOException;
 import java.io.StringReader;
@@ -81,16 +82,15 @@ class QueryInterpreter {
     logger.debug("Interpreted query {} as {}", searchQuery, luceneQuery);
 
     // no need to drill down on facets, we're done
-    if (searchQuery.matchKeyword().isEmpty()) {
+    if (searchQuery.matchKeyword().isEmpty() && searchQuery.drillDown().isEmpty()) {
       return luceneQuery;
     }
 
+    // TODO verify if matchKeyword really needs a drilldown (instead of filter)
     logger.debug(
-        "Drilling it down with keyword={} dietThreshold={}",
+        "Drilling it down with keyword={}, drillDown={}",
         searchQuery.matchKeyword(),
-        searchQuery.dietThreshold());
-
-    // TODO drill down (and sideways?) for the ranged facets
+        searchQuery.drillDown());
 
     DrillDownQuery drillQuery;
     if (luceneQuery.clauses().isEmpty()) {
@@ -100,6 +100,16 @@ class QueryInterpreter {
     }
 
     searchQuery.matchKeyword().forEach(kw -> drillQuery.add(IndexField.FACET_KEYWORD, kw));
+
+    // TODO drill sideways
+    searchQuery
+        .drillDown()
+        .forEach(
+            dds -> {
+              var range = DrillDown.getRange(dds.field(), dds.label());
+              drillQuery.add(dds.field(), IntPoint.newRangeQuery(dds.field(), range[0], range[1]));
+            });
+
     return drillQuery;
   }
 

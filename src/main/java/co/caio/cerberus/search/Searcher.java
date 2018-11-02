@@ -1,6 +1,7 @@
 package co.caio.cerberus.search;
 
 import co.caio.cerberus.lucene.FloatAssociationsThresholdCount;
+import co.caio.cerberus.model.DrillDown;
 import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
@@ -33,33 +34,23 @@ public class Searcher {
   static final Map<String, LongRange[]> fieldToRanges;
 
   static {
-    var tmp = new HashMap<String, LongRange[]>();
+    var tmpFieldToRanges = new HashMap<String, LongRange[]>();
 
-    tmp.put(
-        IndexField.NUM_INGREDIENTS,
-        new LongRange[] {
-          new LongRange("1-4", 1, true, 4, true),
-          new LongRange("5-10", 5, true, 10, true),
-          new LongRange("10+", 1, true, Long.MAX_VALUE, true)
-        });
+    DrillDown.getFieldToRanges()
+        .forEach(
+            (field, labelToRanges) -> {
+              var longRanges = new LongRange[labelToRanges.size()];
+              var idx = 0;
+              for (Entry<String, int[]> entry : labelToRanges.entrySet()) {
+                var label = entry.getKey();
+                var value = entry.getValue();
+                longRanges[idx] = new LongRange(label, value[0], true, value[1], true);
+                idx++;
+              }
+              tmpFieldToRanges.put(field, longRanges);
+            });
 
-    // Note that the ranges are interleaving and that's ok
-    var timeRanges =
-        new LongRange[] {
-          new LongRange("0-15", 0, true, 15, true),
-          new LongRange("15-30", 15, true, 30, true),
-          new LongRange("30-60", 30, true, 60, true),
-          new LongRange("60+", 60, true, Long.MAX_VALUE, true)
-        };
-
-    tmp.put(IndexField.PREP_TIME, timeRanges);
-    tmp.put(IndexField.COOK_TIME, timeRanges);
-    tmp.put(IndexField.TOTAL_TIME, timeRanges);
-
-    // XXX doesn't seem to make much sense to count ranges for nutrition data
-    //     (calories, protein, etc)... or does it?
-
-    fieldToRanges = Collections.unmodifiableMap(tmp);
+    fieldToRanges = Collections.unmodifiableMap(tmpFieldToRanges);
   }
 
   public SearchResult search(SearchQuery query) throws SearcherException {

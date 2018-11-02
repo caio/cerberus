@@ -3,9 +3,11 @@ package co.caio.cerberus.search;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
+import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
+import co.caio.cerberus.model.SearchQuery.Builder;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.lucene.facet.range.LongRange;
@@ -175,7 +178,7 @@ class SearcherTest {
   }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  void incFieldRange(String field, OptionalInt value, Map<String, Long> accumulator) {
+  private void incFieldRange(String field, OptionalInt value, Map<String, Long> accumulator) {
     if (value.isEmpty()) {
       return;
     }
@@ -352,6 +355,50 @@ class SearcherTest {
       // Quality assertion: we should be able to find the original
       // recipe in the top 10% of all the documents that matched
       assertTrue(foundIndex / results.totalHits() <= 0.1);
+    }
+  }
+
+  @Test
+  void simpleRangeDrillDown() throws Exception {
+    var result = searcher.search(new SearchQuery.Builder().fulltext("salt").maxResults(1).build());
+
+    var notARange = Set.of(IndexField.FACET_DIET, IndexField.FACET_KEYWORD);
+    for (FacetData fd : result.facets()) {
+      if (notARange.contains(fd.dimension())) {
+        continue;
+      }
+
+      // Drilling down on a single <field,label> pair should yield the same
+      // number of items as the original result facet data result
+      for (LabelData ld : fd.children()) {
+        var drilledResult =
+            searcher.search(
+                new Builder()
+                    .fulltext("salt")
+                    .maxResults(1)
+                    .addDrillDown(fd.dimension(), ld.label())
+                    .build());
+        assertEquals(ld.count(), drilledResult.totalHits());
+
+        for (FacetData fd2 : drilledResult.facets()) {
+          if (notARange.contains(fd2.dimension()) || fd2.dimension().equals(fd.dimension())) {
+            continue;
+          }
+
+          // The same should be valid for multiple drill downs on *distinct* fields
+          for (LabelData ld2 : fd2.children()) {
+            var drilledDrilledResult =
+                searcher.search(
+                    new Builder()
+                        .fulltext("salt")
+                        .maxResults(1)
+                        .addDrillDown(fd.dimension(), ld.label())
+                        .addDrillDown(fd2.dimension(), ld2.label())
+                        .build());
+            assertEquals(ld2.count(), drilledDrilledResult.totalHits());
+          }
+        }
+      }
     }
   }
 }

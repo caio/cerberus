@@ -42,6 +42,8 @@ public interface SearchQuery {
 
   Map<String, Float> dietThreshold();
 
+  List<DrillDownSpec> drillDown();
+
   List<String> matchKeyword();
 
   // XXX Having a flag to change behavior is reeeeally slippery
@@ -97,6 +99,31 @@ public interface SearchQuery {
       }
       if (start() < 0 || end() < 0) {
         throw new IllegalStateException("Range must not contain negative numbers");
+      }
+    }
+  }
+
+  @Value.Immutable(builder = false)
+  @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+  @JsonPropertyOrder({"field", "label"})
+  @JsonSerialize(as = ImmutableDrillDownSpec.class)
+  @JsonDeserialize(as = ImmutableDrillDownSpec.class)
+  interface DrillDownSpec {
+    @Value.Parameter
+    String field();
+
+    @Value.Parameter
+    String label();
+
+    static DrillDownSpec of(String field, String label) {
+      return ImmutableDrillDownSpec.of(field, label);
+    }
+
+    @Value.Check
+    default void check() {
+      if (!DrillDown.isValidRangeLabel(field(), label())) {
+        throw new IllegalStateException(
+            String.format("Invalid label `%s` for field `%s`", label(), field()));
       }
     }
   }
@@ -164,6 +191,11 @@ public interface SearchQuery {
   class Builder extends ImmutableSearchQuery.Builder {
     public Builder addMatchDiet(String dietName) {
       putDietThreshold(dietName, 1f);
+      return this;
+    }
+
+    public Builder addDrillDown(String field, String label) {
+      addDrillDown(DrillDownSpec.of(field, label));
       return this;
     }
   }

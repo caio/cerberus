@@ -3,6 +3,7 @@ package co.caio.cerberus.model;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.model.SearchQuery.Builder;
+import co.caio.cerberus.model.SearchQuery.DrillDownSpec;
 import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
@@ -77,5 +78,14 @@ class SearchQueryTest {
     assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("short text").build());
     var fulltext = "query with enough characters to pass the length restriction";
     assertDoesNotThrow(() -> mltBuilder.fulltext(fulltext).build());
+  }
+
+  @Test
+  void drillDownSpecValidation() {
+    assertThrows(
+        IllegalStateException.class, () -> DrillDownSpec.of("unknown field", "unknown label"));
+    assertThrows(
+        IllegalStateException.class, () -> DrillDownSpec.of(DrillDown.COOK_TIME, "unknown label"));
+    assertDoesNotThrow(() -> DrillDownSpec.of(DrillDown.NUM_INGREDIENTS, "5-10"));
   }
 }
