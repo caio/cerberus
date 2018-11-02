@@ -5,10 +5,16 @@ import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.range.LongRange;
+import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
@@ -23,6 +29,38 @@ public class Searcher {
   private final TaxonomyReader taxonomyReader;
   private final QueryInterpreter interpreter;
   private final FacetsConfig facetsConfig;
+
+  static final Map<String, LongRange[]> fieldToRanges;
+
+  static {
+    var tmp = new HashMap<String, LongRange[]>();
+
+    tmp.put(
+        IndexField.NUM_INGREDIENTS,
+        new LongRange[] {
+          new LongRange("1-4", 1, true, 4, true),
+          new LongRange("5-10", 5, true, 10, true),
+          new LongRange("10+", 1, true, Long.MAX_VALUE, true)
+        });
+
+    // Note that the ranges are interleaving and that's ok
+    var timeRanges =
+        new LongRange[] {
+          new LongRange("0-15", 0, true, 15, true),
+          new LongRange("15-30", 15, true, 30, true),
+          new LongRange("30-60", 30, true, 60, true),
+          new LongRange("60+", 60, true, Long.MAX_VALUE, true)
+        };
+
+    tmp.put(IndexField.PREP_TIME, timeRanges);
+    tmp.put(IndexField.COOK_TIME, timeRanges);
+    tmp.put(IndexField.TOTAL_TIME, timeRanges);
+
+    // XXX doesn't seem to make much sense to count ranges for nutrition data
+    //     (calories, protein, etc)... or does it?
+
+    fieldToRanges = Collections.unmodifiableMap(tmp);
+  }
 
   public SearchResult search(SearchQuery query) throws SearcherException {
     try {
@@ -77,18 +115,22 @@ public class Searcher {
     if (maxFacets != 0) {
       var diets =
           new FloatAssociationsThresholdCount(
-              IndexField.FACET_DIET, query.dietThreshold(), taxonomyReader, facetsConfig, fc);
+                  IndexField.FACET_DIET, query.dietThreshold(), taxonomyReader, facetsConfig, fc)
+              .getTopChildren(maxFacets, IndexField.FACET_DIET);
+      addFacetData(builder, diets);
 
       var keywords =
-          new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc);
+          new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc)
+              .getTopChildren(maxFacets, IndexField.FACET_KEYWORD);
+      addFacetData(builder, keywords);
 
-      // TODO add facets for every RangedSpec field
-
-      var topDiets = diets.getTopChildren(maxFacets, IndexField.FACET_DIET);
-      var topKeywords = keywords.getTopChildren(maxFacets, IndexField.FACET_KEYWORD);
-
-      addFacetData(builder, topDiets);
-      addFacetData(builder, topKeywords);
+      // XXX maybe extend LongRangeFacetCounts and make it reusable if garbage becomes a problem
+      for (Entry<String, LongRange[]> entry : fieldToRanges.entrySet()) {
+        var topK =
+            new LongRangeFacetCounts(entry.getKey(), fc, entry.getValue())
+                .getTopChildren(maxFacets, entry.getKey());
+        addFacetData(builder, topK);
+      }
     }
 
     return builder.build();

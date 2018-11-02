@@ -10,11 +10,14 @@ import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.lucene.facet.range.LongRange;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -106,6 +109,82 @@ class SearcherTest {
     // more since a recipe can be vegan without having to call itself vegan
     result = searcher.search(new SearchQuery.Builder().addMatchDiet("vegan").maxResults(1).build());
     assertTrue(result.totalHits() >= nrVeganRecipes);
+  }
+
+  @Test
+  void rangeFacets() throws Exception {
+
+    // capture the maximum range length so that if this ever grows
+    // too big we can fail querying (due to maxFacets() validation)
+    // and then figure out what to do
+    var maxRangeLength =
+        Searcher.fieldToRanges.values().stream().mapToInt(lr -> lr.length).max().getAsInt();
+
+    var results =
+        searcher.search(
+            new SearchQuery.Builder()
+                .fulltext("garlic")
+                .maxResults(100)
+                .maxFacets(maxRangeLength)
+                .build());
+
+    // So that we can verify the counts correctly
+    assertEquals(results.totalHits(), results.recipes().size());
+    // Just so we get a diverse set of recipes
+    assertTrue(results.totalHits() > 50);
+
+    var recipeData =
+        results
+            .recipes()
+            .stream()
+            .map(srr -> Util.getRecipe(srr.recipeId()))
+            .collect(Collectors.toList());
+
+    assertEquals(results.totalHits(), recipeData.size());
+
+    // assemble fake facet data
+    var fieldRangeToManualCount = new HashMap<String, Long>();
+    recipeData.forEach(
+        recipe -> {
+          incFieldRange(IndexField.COOK_TIME, recipe.cookTime(), fieldRangeToManualCount);
+          incFieldRange(IndexField.PREP_TIME, recipe.prepTime(), fieldRangeToManualCount);
+          incFieldRange(IndexField.TOTAL_TIME, recipe.totalTime(), fieldRangeToManualCount);
+          incFieldRange(
+              IndexField.NUM_INGREDIENTS,
+              OptionalInt.of(recipe.ingredients().size()),
+              fieldRangeToManualCount);
+        });
+
+    Searcher.fieldToRanges.forEach(
+        (field, ranges) -> {
+          var maybeFacetData =
+              results.facets().stream().filter(fd -> fd.dimension().equals(field)).findFirst();
+          assertTrue(maybeFacetData.isPresent());
+          var facetData = maybeFacetData.get();
+          assertEquals(facetData.dimension(), field);
+
+          facetData
+              .children()
+              .forEach(
+                  ld -> {
+                    var key = String.format("%s_%s", field, ld.label());
+                    assertTrue(fieldRangeToManualCount.containsKey(key));
+                    assertEquals((long) fieldRangeToManualCount.get(key), ld.count());
+                  });
+        });
+  }
+
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+  void incFieldRange(String field, OptionalInt value, Map<String, Long> accumulator) {
+    if (value.isEmpty()) {
+      return;
+    }
+    for (LongRange range : Searcher.fieldToRanges.get(field)) {
+      if (range.accept(value.getAsInt())) {
+        var key = String.format("%s_%s", field, range.label);
+        accumulator.put(key, accumulator.getOrDefault(key, 0L) + 1);
+      }
+    }
   }
 
   @Test

@@ -135,10 +135,6 @@ public interface Indexer {
         doc.add(new TextField(FULLTEXT, recipe.description(), Field.Store.NO));
         doc.add(new TextField(FULLTEXT, recipe.instructions(), Field.Store.NO));
 
-        recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
-        doc.add(new IntPoint(NUM_INGREDIENTS, recipe.ingredients().size()));
-        doc.add(new NumericDocValuesField(NUM_INGREDIENTS, recipe.ingredients().size()));
-
         recipe
             .diets()
             .forEach(
@@ -148,6 +144,9 @@ public interface Indexer {
                 });
 
         recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
+
+        recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
+        addOptionalIntField(doc, NUM_INGREDIENTS, OptionalInt.of(recipe.ingredients().size()));
 
         addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
         addOptionalIntField(doc, COOK_TIME, recipe.cookTime());
@@ -163,7 +162,9 @@ public interface Indexer {
 
       private void addOptionalIntField(Document doc, String fieldName, OptionalInt value) {
         if (value.isPresent()) {
+          // For filtering
           doc.add(new IntPoint(fieldName, value.getAsInt()));
+          // For sorting and range-facets
           doc.add(new NumericDocValuesField(fieldName, value.getAsInt()));
         }
       }

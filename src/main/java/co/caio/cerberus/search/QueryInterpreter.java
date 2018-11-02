@@ -90,6 +90,8 @@ class QueryInterpreter {
         searchQuery.matchKeyword(),
         searchQuery.dietThreshold());
 
+    // TODO drill down (and sideways?) for the ranged facets
+
     DrillDownQuery drillQuery;
     if (luceneQuery.clauses().isEmpty()) {
       drillQuery = new DrillDownQuery(facetsConfig);
