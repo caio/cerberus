@@ -14,7 +14,7 @@
         <cerberus.launcher>co.caio.cerberus.service.CustomLauncher</cerberus.launcher>
         <cerberus.main.verticle>co.caio.cerberus.service.MainVerticle</cerberus.main.verticle>
         <os.classifier>linux-x86_64</os.classifier>
-        <immutables.version>2.7.1</immutables.version>
+        <immutables.version>2.7.2</immutables.version>
         <jackson.version>2.9.7</jackson.version>
         <java.version>11</java.version>
         <junit.version>5.3.1</junit.version>
