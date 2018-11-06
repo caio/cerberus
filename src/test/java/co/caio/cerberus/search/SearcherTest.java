@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -26,11 +27,20 @@ import org.junit.jupiter.api.Test;
 
 class SearcherTest {
   private static Searcher searcher;
+  private static Properties testCounts;
 
   @BeforeAll
-  static void prepare() {
+  static void prepare() throws Exception {
     searcher = Util.getTestIndexer().buildSearcher();
     assertEquals(299, searcher.numDocs());
+
+    testCounts = new Properties();
+    testCounts.load(
+        SearcherTest.class.getClassLoader().getResource("assertions.properties").openStream());
+  }
+
+  private static int getAssertionNumber(String propertyName) {
+    return Integer.parseInt(testCounts.getProperty(propertyName));
   }
 
   @Test
@@ -276,33 +286,30 @@ class SearcherTest {
 
   @Test
   void findRecipes() throws Exception {
-    // TODO make these numbers configurable / easy to regenerate (.properties maybe)
     // Recipes with up to 3 ingredients
-    // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. <= 3'|grep true|wc -l
     var query =
         new SearchQuery.Builder()
             .numIngredients(SearchQuery.RangedSpec.of(0, 3))
             .maxResults(1)
             .build();
-    assertEquals(16, searcher.search(query).totalHits());
+    assertEquals(
+        getAssertionNumber("test.up_to_three_ingredients"), searcher.search(query).totalHits());
 
     // Recipes with exactly 5 ingredients
-    // $ cat sample_recipes.jsonlines |jq '.ingredients|length|. == 5'|grep true|wc -l
     query =
         new SearchQuery.Builder()
             .numIngredients(SearchQuery.RangedSpec.of(5, 5))
             .maxResults(1)
             .build();
-    assertEquals(17, searcher.search(query).totalHits());
+    assertEquals(getAssertionNumber("test.five_ingredients"), searcher.search(query).totalHits());
 
     // Recipes that can be done between 10 and 25 minutes
-    // $
     query =
         new SearchQuery.Builder()
             .totalTime(SearchQuery.RangedSpec.of(10, 25))
             .maxResults(1)
             .build();
-    assertEquals(51, searcher.search(query).totalHits());
+    assertEquals(getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
 
     // Assumption: fulltext should match more items
     var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").maxResults(1).build();
