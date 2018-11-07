@@ -90,7 +90,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private Router getRouter(ServiceConfiguration config) {
     var router = Router.router(vertx);
-    var v1handler = new V1SearchHandler(Paths.get(config.dataDirectory()));
+    var v1handler = new V1SearchHandler(Paths.get(config.dataDirectory()), vertx);
 
     router
         .post("/api/v1/search")

@@ -1,10 +1,12 @@
 package co.caio.cerberus.service.api;
 
 import co.caio.cerberus.model.SearchQuery;
+import co.caio.cerberus.model.SearchResult;
 import co.caio.cerberus.search.Searcher;
 import co.caio.cerberus.service.api.V1SearchResponse.ErrorCode;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import java.nio.file.Path;
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 public class V1SearchHandler implements Handler<RoutingContext> {
   private final Searcher searcher;
+  private final Vertx vertx;
 
   private static final Logger logger = LoggerFactory.getLogger(V1SearchHandler.class);
 
@@ -28,8 +31,9 @@ public class V1SearchHandler implements Handler<RoutingContext> {
             .orElseThrow();
   }
 
-  public V1SearchHandler(Path dataDirectory) {
+  public V1SearchHandler(Path dataDirectory, Vertx _vertx) {
     searcher = new Searcher.Builder().dataDirectory(dataDirectory).build();
+    vertx = _vertx;
   }
 
   // Used for health checks
@@ -43,27 +47,38 @@ public class V1SearchHandler implements Handler<RoutingContext> {
         .compose(this::runSearch)
         .setHandler(
             ar -> {
-              routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
               if (ar.succeeded()) {
                 var maybeResult = V1SearchResponse.toJson(ar.result());
+                routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
                 routingContext.response().end(maybeResult.orElse(unknownFailureResponse));
               } else {
+                routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
                 writeError(routingContext, ar.cause());
               }
             });
   }
 
   private Future<V1SearchResponse> runSearch(SearchQuery searchQuery) {
-    return Future.future(
-        future -> {
+    Future<V1SearchResponse> future = Future.future();
+    // TODO verify this is actually doing what it should
+    vertx.<SearchResult>executeBlocking(
+        fut -> {
           try {
-            future.complete(V1SearchResponse.success(searcher.search(searchQuery)));
+            fut.complete(searcher.search(searchQuery));
           } catch (Exception wrapped) {
-            future.fail(
+            fut.fail(
                 new APIErrorMessage(
                     ErrorCode.INTERNAL_SEARCH_ERROR, "An error occurred during search", wrapped));
           }
+        },
+        res -> {
+          if (res.succeeded()) {
+            future.complete(V1SearchResponse.success(res.result()));
+          } else {
+            future.fail(res.cause());
+          }
         });
+    return future;
   }
 
   private Future<SearchQuery> readSearchQuery(RoutingContext routingContext) {
