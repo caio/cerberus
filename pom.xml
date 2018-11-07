@@ -138,6 +138,28 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>-Xmx256m</argument>
+                        <argument>-Xms256m</argument>
+                        <argument>-Xlog:gc</argument>
+                        <argument>-Dcerberus.service.port=8080</argument>
+                        <argument>-Dcerberus.service.data_dir=/tmp/hue</argument>
+                        <argument>-Dcerberus.health.num_docs=200</argument>
+                        <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
+                        <argument>${cerberus.launcher}</argument>
+                        <argument>run</argument>
+                        <argument>${cerberus.main.verticle}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>3.0.0-M2</version>
