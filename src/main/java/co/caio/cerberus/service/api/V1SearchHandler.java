@@ -4,9 +4,9 @@ import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import co.caio.cerberus.search.Searcher;
 import co.caio.cerberus.service.api.V1SearchResponse.ErrorCode;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import java.nio.file.Path;
 import org.slf4j.Logger;
@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 public class V1SearchHandler implements Handler<RoutingContext> {
   private final Searcher searcher;
-  private final Vertx vertx;
 
   private static final Logger logger = LoggerFactory.getLogger(V1SearchHandler.class);
 
@@ -31,9 +30,8 @@ public class V1SearchHandler implements Handler<RoutingContext> {
             .orElseThrow();
   }
 
-  public V1SearchHandler(Path dataDirectory, Vertx _vertx) {
+  public V1SearchHandler(Path dataDirectory) {
     searcher = new Searcher.Builder().dataDirectory(dataDirectory).build();
-    vertx = _vertx;
   }
 
   // Used for health checks
@@ -44,40 +42,60 @@ public class V1SearchHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext routingContext) {
     readSearchQuery(routingContext)
-        .compose(this::runSearch)
+        .compose(searchQuery -> runSearch(searchQuery, routingContext))
         .setHandler(
             ar -> {
-              if (ar.succeeded()) {
-                var maybeResult = V1SearchResponse.toJson(ar.result());
-                routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
-                routingContext.response().end(maybeResult.orElse(unknownFailureResponse));
-              } else {
-                routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
-                writeError(routingContext, ar.cause());
+              try {
+                writeResponse(ar, routingContext);
+              } catch (Exception logged) {
+                if (logged.getMessage().endsWith("Response is closed")) {
+                  logger.debug("Connection closed before sending response. Exception ignored");
+                } else {
+                  logger.error("Failure writing response", logged);
+                }
               }
             });
   }
 
-  private Future<V1SearchResponse> runSearch(SearchQuery searchQuery) {
+  private void writeResponse(AsyncResult<V1SearchResponse> ar, RoutingContext routingContext) {
+    // It's pointless to check for the response state here since
+    // it may be closed right after the check anyway, so we handle
+    // this in the caller
+    if (ar.succeeded()) {
+      var maybeResult = V1SearchResponse.toJson(ar.result());
+      routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
+      routingContext.response().end(maybeResult.orElse(unknownFailureResponse));
+    } else {
+      routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_JSON);
+      writeError(routingContext, ar.cause());
+    }
+  }
+
+  private Future<V1SearchResponse> runSearch(
+      SearchQuery searchQuery, RoutingContext routingContext) {
     Future<V1SearchResponse> future = Future.future();
     // TODO verify this is actually doing what it should
-    vertx.<SearchResult>executeBlocking(
-        fut -> {
-          try {
-            fut.complete(searcher.search(searchQuery));
-          } catch (Exception wrapped) {
-            fut.fail(
-                new APIErrorMessage(
-                    ErrorCode.INTERNAL_SEARCH_ERROR, "An error occurred during search", wrapped));
-          }
-        },
-        res -> {
-          if (res.succeeded()) {
-            future.complete(V1SearchResponse.success(res.result()));
-          } else {
-            future.fail(res.cause());
-          }
-        });
+    routingContext
+        .vertx()
+        .<SearchResult>executeBlocking(
+            fut -> {
+              try {
+                fut.complete(searcher.search(searchQuery));
+              } catch (Exception wrapped) {
+                fut.fail(
+                    new APIErrorMessage(
+                        ErrorCode.INTERNAL_SEARCH_ERROR,
+                        "An error occurred during search",
+                        wrapped));
+              }
+            },
+            res -> {
+              if (res.succeeded()) {
+                future.complete(V1SearchResponse.success(res.result()));
+              } else {
+                future.fail(res.cause());
+              }
+            });
     return future;
   }
 
