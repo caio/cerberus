@@ -149,6 +149,7 @@
                         <argument>-Xmx256m</argument>
                         <argument>-Xms256m</argument>
                         <argument>-Xlog:gc</argument>
+                        <argument>-verbose:gc</argument>
                         <argument>-Dcerberus.service.port=8080</argument>
                         <argument>-Dcerberus.service.data_dir=/tmp/hue</argument>
                         <argument>-Dcerberus.health.num_docs=200</argument>
@@ -156,6 +157,8 @@
                         <argument>${cerberus.launcher}</argument>
                         <argument>run</argument>
                         <argument>${cerberus.main.verticle}</argument>
+                        <argument>-instances</argument>
+                        <argument>4</argument>
                     </arguments>
                 </configuration>
             </plugin>
