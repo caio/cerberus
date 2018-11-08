@@ -72,6 +72,7 @@ public class Searcher {
   }
 
   private Searcher(Searcher.Builder builder) {
+    // XXX create a worker pool to assign for the searcher maybe
     indexSearcher = new IndexSearcher(builder.indexReader);
     taxonomyReader = builder.taxonomyReader;
     facetsConfig = IndexConfiguration.getFacetsConfig();
