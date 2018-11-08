@@ -74,7 +74,6 @@ public class V1SearchHandler implements Handler<RoutingContext> {
   private Future<V1SearchResponse> runSearch(
       SearchQuery searchQuery, RoutingContext routingContext) {
     Future<V1SearchResponse> future = Future.future();
-    // TODO verify this is actually doing what it should
     routingContext
         .vertx()
         .<SearchResult>executeBlocking(
@@ -89,6 +88,8 @@ public class V1SearchHandler implements Handler<RoutingContext> {
                         wrapped));
               }
             },
+            // Do not execute every runSearch call serially
+            false,
             res -> {
               if (res.succeeded()) {
                 future.complete(V1SearchResponse.success(res.result()));
