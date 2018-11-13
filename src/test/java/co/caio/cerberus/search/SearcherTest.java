@@ -333,7 +333,7 @@ class SearcherTest {
 
   @Test
   void similarityQueries() throws Exception {
-    var builder = new SearchQuery.Builder().moreLikeThis(true).maxResults(100).maxFacets(0);
+    var builder = new SearchQuery.Builder().maxResults(100).maxFacets(0);
 
     // very inefficiently pick 30 random recipes
     // (maybe make random seed stable later)
@@ -345,10 +345,10 @@ class SearcherTest {
             .collect(Collectors.toList());
 
     for (Recipe r : pickedRecipes) {
-      var fulltext =
+      var text =
           String.format(
               "%s\n%s\n%s", r.name(), String.join("\n", r.ingredients()), r.instructions());
-      var results = searcher.search(builder.fulltext(fulltext).build());
+      var results = searcher.search(builder.similarity(text).build());
 
       var foundIndex = -1;
       for (SearchResultRecipe rr : results.recipes()) {

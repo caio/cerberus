@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 public interface SearchQuery {
   Optional<String> fulltext();
 
+  Optional<String> similarity();
+
   List<String> withIngredients();
 
   List<String> withoutIngredients();
@@ -45,13 +47,6 @@ public interface SearchQuery {
   List<DrillDownSpec> drillDown();
 
   List<String> matchKeyword();
-
-  // XXX Having a flag to change behavior is reeeeally slippery
-  //     come up with a better solution if this grows
-  @Value.Default
-  default boolean moreLikeThis() {
-    return false;
-  }
 
   @Value.Default
   default int maxResults() {
@@ -146,11 +141,13 @@ public interface SearchQuery {
                 throw new IllegalStateException(String.format("Unknown diet `%s`", diet));
               }
             });
-    if (moreLikeThis() && fulltext().orElse("").strip().length() < 30) {
-      throw new IllegalStateException(
-          "moreLikeThis queries require fulltext set with at least 30 characters");
+    if (fulltext().isPresent() && similarity().isPresent()) {
+      throw new IllegalStateException("Can't use fulltext and similarity at the same time");
     }
-    if (fulltext().isPresent()
+    if (similarity().isPresent() && similarity().get().strip().length() < 30) {
+      throw new IllegalStateException("similarity queries requires at least 30 characters");
+    }
+    if ((fulltext().isPresent() || similarity().isPresent())
         || !withIngredients().isEmpty()
         || !withoutIngredients().isEmpty()
         || !dietThreshold().isEmpty()

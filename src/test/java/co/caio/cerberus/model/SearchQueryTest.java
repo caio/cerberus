@@ -72,12 +72,15 @@ class SearchQueryTest {
 
   @Test
   void moreLikeThisValidations() {
-    var mltBuilder = new Builder().moreLikeThis(true);
-    assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("").build());
-    assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("       ").build());
-    assertThrows(IllegalStateException.class, () -> mltBuilder.fulltext("short text").build());
-    var fulltext = "query with enough characters to pass the length restriction";
-    assertDoesNotThrow(() -> mltBuilder.fulltext(fulltext).build());
+    var mltBuilder = new Builder();
+    assertThrows(IllegalStateException.class, () -> mltBuilder.similarity("").build());
+    assertThrows(IllegalStateException.class, () -> mltBuilder.similarity("       ").build());
+    assertThrows(IllegalStateException.class, () -> mltBuilder.similarity("short text").build());
+    var text = "query with enough characters to pass the length restriction";
+    assertDoesNotThrow(() -> mltBuilder.similarity(text).build());
+    // can't build with similarity and fulltext set
+    assertThrows(
+        IllegalStateException.class, () -> mltBuilder.similarity(text).fulltext(text).build());
   }
 
   @Test

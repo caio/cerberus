@@ -42,14 +42,12 @@ class QueryInterpreter {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
-      if (searchQuery.moreLikeThis()) {
-        queryBuilder.add(
-            moreLikeThis.like(IndexField.FULLTEXT, new StringReader(searchQuery.fulltext().get())),
-            BooleanClause.Occur.MUST);
-      } else {
-        addTermQueries(
-            queryBuilder, FULLTEXT, searchQuery.fulltext().get(), BooleanClause.Occur.MUST);
-      }
+      addTermQueries(
+          queryBuilder, FULLTEXT, searchQuery.fulltext().get(), BooleanClause.Occur.MUST);
+    } else if (searchQuery.similarity().isPresent()) {
+      queryBuilder.add(
+          moreLikeThis.like(IndexField.FULLTEXT, new StringReader(searchQuery.similarity().get())),
+          BooleanClause.Occur.MUST);
     }
 
     for (String ingredient : searchQuery.withIngredients()) {
