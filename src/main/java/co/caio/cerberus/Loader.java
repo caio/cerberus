@@ -29,6 +29,7 @@ public class Loader {
     Files.lines(Paths.get(recipesFilename))
         .map(Recipe::fromJson)
         .flatMap(Optional::stream)
+        .parallel()
         .forEach(
             recipe -> {
               try {

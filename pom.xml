@@ -151,7 +151,7 @@
                         <argument>-Xlog:gc</argument>
                         <argument>-verbose:gc</argument>
                         <argument>-Dcerberus.service.port=8080</argument>
-                        <argument>-Dcerberus.service.data_dir=/tmp/hue</argument>
+                        <argument>-Dcerberus.service.data_dir=tmp/hue</argument>
                         <argument>-Dcerberus.health.num_docs=200</argument>
                         <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
                         <argument>${cerberus.launcher}</argument>
