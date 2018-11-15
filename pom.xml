@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>co.caio.cerberus</groupId>
@@ -259,4 +259,34 @@
             </resource>
         </resources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>index</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <configuration>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>-Xmx256m</argument>
+                                <argument>-Xms256m</argument>
+                                <argument>-Xlog:gc</argument>
+                                <argument>-verbose:gc</argument>
+                                <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
+                                <argument>-Dcerberus.recipes.filename=tmp/document.jsonlines</argument>
+                                <argument>-Dcerberus.recipes.datadir=tmp/hue</argument>
+                                <argument>co.caio.cerberus.Loader</argument>
+                            </arguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
