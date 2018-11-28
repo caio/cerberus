@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class Util {
 
-  private static Logger logger = LoggerFactory.getLogger(Util.class);
+  private static final Logger logger = LoggerFactory.getLogger(Util.class);
 
   public static Recipe getBasicRecipe() {
     return new Recipe.Builder()
@@ -37,9 +37,9 @@ public class Util {
     }
   }
 
-  private static Indexer indexer;
-  private static Map<Long, Recipe> recipeMap;
-  private static Path testDataDir;
+  private static final Indexer indexer;
+  private static final Map<Long, Recipe> recipeMap;
+  private static final Path testDataDir;
 
   static {
     var tmpRecipeMap = new HashMap<Long, Recipe>();

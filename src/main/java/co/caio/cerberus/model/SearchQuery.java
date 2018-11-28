@@ -51,12 +51,12 @@ public interface SearchQuery {
   @Value.Default
   default int maxResults() {
     return 10;
-  };
+  }
 
   @Value.Default
   default int maxFacets() {
     return 10;
-  };
+  }
 
   enum SortOrder {
     RELEVANCE,

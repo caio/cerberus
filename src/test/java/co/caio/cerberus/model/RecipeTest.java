@@ -3,7 +3,6 @@ package co.caio.cerberus.model;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
-import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class RecipeTest {
@@ -76,7 +75,7 @@ class RecipeTest {
   }
 
   @Test
-  void loadAllSamples() throws IOException {
+  void loadAllSamples() {
     assertEquals(299, Util.getSampleRecipes().count());
   }
 }

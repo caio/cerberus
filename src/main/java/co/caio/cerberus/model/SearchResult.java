@@ -30,7 +30,7 @@ public interface SearchResult {
     public Builder addRecipe(long recipeId, String name, String crawlUrl) {
       return addRecipes(SearchResultRecipe.of(recipeId, name, crawlUrl));
     }
-  };
+  }
 
   @Value.Check
   default void check() {

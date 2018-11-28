@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FileSystem {
-  private static Logger logger = LoggerFactory.getLogger(FileSystem.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileSystem.class);
 
-  static String INDEX_DIR_NAME = "index";
-  static String TAXONOMY_DIR_NAME = "taxonomy";
+  static final String INDEX_DIR_NAME = "index";
+  static final String TAXONOMY_DIR_NAME = "taxonomy";
 
   static Directory openDirectory(Path dir) throws Exception {
     return openDirectory(dir, false);

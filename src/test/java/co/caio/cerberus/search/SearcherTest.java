@@ -234,7 +234,7 @@ class SearcherTest {
         result.facets().stream().filter(fd -> fd.dimension().equals("diet")).findFirst();
     assertTrue(dietFacets.isPresent());
     // we get { "keto": 1, "paleo": 1 } since only one doc matched both criteria
-    assertTrue(dietFacets.get().children().stream().map(ld -> ld.count()).allMatch(l -> l == 1));
+    assertTrue(dietFacets.get().children().stream().map(LabelData::count).allMatch(l -> l == 1));
   }
 
   @Test

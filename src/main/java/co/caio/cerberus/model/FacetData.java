@@ -24,7 +24,7 @@ public interface FacetData {
       addChildren(LabelData.of(label, count));
       return this;
     }
-  };
+  }
 
   @Value.Immutable(builder = false)
   @JsonFormat(shape = JsonFormat.Shape.ARRAY)

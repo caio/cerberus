@@ -23,8 +23,7 @@ public interface V1SearchResponse {
   enum ErrorCode {
     UNKNOWN_ERROR,
     INPUT_DECODE_ERROR,
-    INTERNAL_SEARCH_ERROR,
-    OUTPUT_ENCODE_ERROR
+    INTERNAL_SEARCH_ERROR
   }
 
   @Value.Immutable(builder = false)
@@ -103,5 +102,5 @@ public interface V1SearchResponse {
     }
   }
 
-  class Builder extends ImmutableV1SearchResponse.Builder {};
+  class Builder extends ImmutableV1SearchResponse.Builder {}
 }
