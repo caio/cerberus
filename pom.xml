@@ -14,15 +14,15 @@
         <cerberus.launcher>co.caio.cerberus.service.CustomLauncher</cerberus.launcher>
         <cerberus.main.verticle>co.caio.cerberus.service.MainVerticle</cerberus.main.verticle>
         <os.classifier>linux-x86_64</os.classifier>
-        <immutables.version>2.7.2</immutables.version>
+        <immutables.version>2.7.3</immutables.version>
         <jackson.version>2.9.7</jackson.version>
         <java.version>11</java.version>
-        <junit.version>5.3.1</junit.version>
+        <junit.version>5.3.2</junit.version>
         <logback.version>1.2.3</logback.version>
         <lucene.version>7.5.0</lucene.version>
-        <netty.tcnative.version>2.0.19.Final</netty.tcnative.version>
-        <netty.version>4.1.29.Final</netty.version>
-        <vertx.version>3.5.4</vertx.version>
+        <netty.tcnative.version>2.0.20.Final</netty.tcnative.version>
+        <netty.version>4.1.30.Final</netty.version>
+        <vertx.version>3.6.0</vertx.version>
     </properties>
 
     <dependencyManagement>
