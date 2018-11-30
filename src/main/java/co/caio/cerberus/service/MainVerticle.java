@@ -54,7 +54,7 @@ public class MainVerticle extends AbstractVerticle {
 
           vertx
               .createHttpServer(options)
-              .requestHandler(router::accept)
+              .requestHandler(router)
               .listen(
                   config.portNumber(),
                   ar -> {
