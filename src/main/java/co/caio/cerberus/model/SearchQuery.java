@@ -147,6 +147,9 @@ public interface SearchQuery {
     if (similarity().isPresent() && similarity().get().strip().length() < 30) {
       throw new IllegalStateException("similarity queries requires at least 30 characters");
     }
+    if (fulltext().isPresent() && fulltext().get().strip().length() < 3) {
+      throw new IllegalStateException("fulltext queries require at least 2 characters");
+    }
     if ((fulltext().isPresent() || similarity().isPresent())
         || !withIngredients().isEmpty()
         || !withoutIngredients().isEmpty()
