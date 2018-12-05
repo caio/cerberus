@@ -96,8 +96,7 @@ public interface Recipe {
     try {
       return Optional.of(Environment.getObjectMapper().readValue(json, Recipe.class));
     } catch (Exception e) {
-      LoggerFactory.getLogger(Recipe.class)
-          .error("Failed to read json <{}>", json, e);
+      LoggerFactory.getLogger(Recipe.class).error("Failed to read json <{}>", json, e);
       return Optional.empty();
     }
   }
