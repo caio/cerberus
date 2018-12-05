@@ -11,6 +11,7 @@ if len(sys.argv) > 1:
     input_filename = sys.argv[1]
 
 property_to_test = {
+    'index_size': lambda r: True,
     'up_to_three_ingredients': lambda r: len(r["ingredients"]) <= 3,
     'five_ingredients': lambda r: len(r["ingredients"]) == 5,
     'total_time_10_15': lambda r: 10 <= r.get("totalTime", 0) <= 25,

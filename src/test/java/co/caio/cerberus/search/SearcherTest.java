@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -27,20 +26,11 @@ import org.junit.jupiter.api.Test;
 
 class SearcherTest {
   private static Searcher searcher;
-  private static Properties testCounts;
 
   @BeforeAll
-  static void prepare() throws Exception {
+  static void prepare() {
     searcher = Util.getTestIndexer().buildSearcher();
-    assertEquals(299, searcher.numDocs());
-
-    testCounts = new Properties();
-    testCounts.load(
-        SearcherTest.class.getClassLoader().getResource("assertions.properties").openStream());
-  }
-
-  private static int getAssertionNumber(String propertyName) {
-    return Integer.parseInt(testCounts.getProperty(propertyName));
+    assertEquals(Util.expectedIndexSize(), searcher.numDocs());
   }
 
   @Test
@@ -293,7 +283,8 @@ class SearcherTest {
             .maxResults(1)
             .build();
     assertEquals(
-        getAssertionNumber("test.up_to_three_ingredients"), searcher.search(query).totalHits());
+        Util.getAssertionNumber("test.up_to_three_ingredients"),
+        searcher.search(query).totalHits());
 
     // Recipes with exactly 5 ingredients
     query =
@@ -301,7 +292,8 @@ class SearcherTest {
             .numIngredients(SearchQuery.RangedSpec.of(5, 5))
             .maxResults(1)
             .build();
-    assertEquals(getAssertionNumber("test.five_ingredients"), searcher.search(query).totalHits());
+    assertEquals(
+        Util.getAssertionNumber("test.five_ingredients"), searcher.search(query).totalHits());
 
     // Recipes that can be done between 10 and 25 minutes
     query =
@@ -309,7 +301,8 @@ class SearcherTest {
             .totalTime(SearchQuery.RangedSpec.of(10, 25))
             .maxResults(1)
             .build();
-    assertEquals(getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
+    assertEquals(
+        Util.getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
 
     // Assumption: fulltext should match more items
     var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").maxResults(1).build();
@@ -420,12 +413,12 @@ class SearcherTest {
     // matching a term PLUS the results of searching for docs
     // that do NOT match the same term ends up hitting every
     // document in the index
-    assertEquals(299, withOil.totalHits() + withoutOil.totalHits());
+    assertEquals(Util.expectedIndexSize(), withOil.totalHits() + withoutOil.totalHits());
 
     // Same for phrases
     var withYam = searcher.search(builder.fulltext("\"sweet potato\"").build());
     var withoutYam = searcher.search(builder.fulltext("-\"sweet potato\"").build());
-    assertEquals(299, withOil.totalHits() + withoutOil.totalHits());
+    assertEquals(Util.expectedIndexSize(), withOil.totalHits() + withoutOil.totalHits());
   }
 
   @Test

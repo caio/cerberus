@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ public class Util {
   private static final Indexer indexer;
   private static final Map<Long, Recipe> recipeMap;
   private static final Path testDataDir;
+  private static final Properties assertionNumbers;
 
   static {
     var tmpRecipeMap = new HashMap<Long, Recipe>();
@@ -69,6 +71,21 @@ public class Util {
     }
 
     recipeMap = Collections.unmodifiableMap(tmpRecipeMap);
+
+    assertionNumbers = new Properties();
+    try {
+      assertionNumbers.load(Util.class.getResource("/assertions.properties").openStream());
+    } catch (Exception rethrown) {
+      throw new RuntimeException(rethrown);
+    }
+  }
+
+  public static int getAssertionNumber(String propertyName) {
+    return Integer.parseInt(assertionNumbers.getProperty(propertyName));
+  }
+
+  public static int expectedIndexSize() {
+    return getAssertionNumber("test.index_size");
   }
 
   public static Indexer getTestIndexer() {
