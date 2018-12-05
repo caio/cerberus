@@ -52,7 +52,7 @@ class SearcherTest {
   }
 
   @Test
-  void respectMaxFacets() throws Exception {
+  void respectMaxFacets() {
     var builder = new SearchQuery.Builder().fulltext("egg");
     assertTrue(searcher.search(builder.maxFacets(0).build()).facets().isEmpty());
 
@@ -61,14 +61,14 @@ class SearcherTest {
   }
 
   @Test
-  void respectMaxResults() throws Exception {
+  void respectMaxResults() {
     var builder = new SearchQuery.Builder().fulltext("garlic");
     assertEquals(1, searcher.search(builder.maxResults(1).build()).recipes().size());
     assertTrue(searcher.search(builder.maxResults(42).build()).recipes().size() <= 42);
   }
 
   @Test
-  void facetCountsAreDistinct() throws Exception {
+  void facetCountsAreDistinct() {
     // Commit 2eaef6c8da caused a bug where all counts of the diet facet
     // were the same - that's because the data model started emitting
     // (float) values for all known diet types and the indexer was
@@ -88,7 +88,7 @@ class SearcherTest {
   }
 
   @Test
-  void facets() throws Exception {
+  void facets() {
     var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).build();
     var result = searcher.search(query);
 
@@ -125,7 +125,7 @@ class SearcherTest {
   }
 
   @Test
-  void rangeFacets() throws Exception {
+  void rangeFacets() {
 
     // capture the maximum range length so that if this ever grows
     // too big we can fail querying (due to maxFacets() validation)
@@ -238,7 +238,7 @@ class SearcherTest {
   }
 
   @Test
-  void multipleFacetsAreOr() throws Exception {
+  void multipleFacetsAreOr() {
     var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil").maxResults(1);
     var justOilResult = searcher.search(queryBuilder.build());
     var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build());
@@ -273,8 +273,8 @@ class SearcherTest {
         r -> Util.getRecipe(r.recipeId()).totalTime());
   }
 
-  private void checkOrdering(SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
-      throws Exception {
+  private void checkOrdering(
+      SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever) {
     var hits = searcher.search(query);
     var lastValue = Integer.MIN_VALUE;
     for (SearchResultRecipe r : hits.recipes()) {
@@ -285,7 +285,7 @@ class SearcherTest {
   }
 
   @Test
-  void findRecipes() throws Exception {
+  void findRecipes() {
     // Recipes with up to 3 ingredients
     var query =
         new SearchQuery.Builder()
@@ -332,7 +332,7 @@ class SearcherTest {
   }
 
   @Test
-  void similarityQueries() throws Exception {
+  void similarityQueries() {
     var builder = new SearchQuery.Builder().maxResults(100).maxFacets(0);
 
     // very inefficiently pick 30 random recipes
@@ -366,7 +366,7 @@ class SearcherTest {
   }
 
   @Test
-  void simpleRangeDrillDown() throws Exception {
+  void simpleRangeDrillDown() {
     var result = searcher.search(new SearchQuery.Builder().fulltext("salt").maxResults(1).build());
 
     var notARange = Set.of(IndexField.FACET_DIET, IndexField.FACET_KEYWORD);
