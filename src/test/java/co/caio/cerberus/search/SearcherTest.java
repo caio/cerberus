@@ -249,7 +249,7 @@ class SearcherTest {
   }
 
   @Test
-  void basicSorting() throws Exception {
+  void basicSorting() {
     var queryBuilder =
         new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).maxResults(50);
 
@@ -407,5 +407,42 @@ class SearcherTest {
         }
       }
     }
+  }
+
+  @Test
+  void fulltextWithNotQuery() {
+    var builder = new SearchQuery.Builder();
+
+    var withOil = searcher.search(builder.fulltext("oil").build());
+    var withoutOil = searcher.search(builder.fulltext("-oil").build());
+
+    // We expect that the result of searching for documents
+    // matching a term PLUS the results of searching for docs
+    // that do NOT match the same term ends up hitting every
+    // document in the index
+    assertEquals(299, withOil.totalHits() + withoutOil.totalHits());
+
+    // Same for phrases
+    var withYam = searcher.search(builder.fulltext("\"sweet potato\"").build());
+    var withoutYam = searcher.search(builder.fulltext("-\"sweet potato\"").build());
+    assertEquals(299, withOil.totalHits() + withoutOil.totalHits());
+  }
+
+  @Test
+  void phraseQuery() {
+    var builder = new SearchQuery.Builder();
+
+    var termResult = searcher.search(builder.fulltext("sweet potato").build());
+    var phraseResult = searcher.search(builder.fulltext("\"sweet potato\"").build());
+
+    // A phrase query is a LOT more specific than a term-based one
+    assertTrue(termResult.totalHits() > phraseResult.totalHits());
+
+    var termAndPhraseResult =
+        searcher.search(builder.fulltext("sweet \"sweet potato\" potato").build());
+
+    // But querying for a phrase and its terms should match the name
+    // number of documents as just querying for its terms
+    assertEquals(termResult.totalHits(), termAndPhraseResult.totalHits());
   }
 }

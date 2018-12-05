@@ -27,26 +27,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class QueryInterpreter {
+  private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
   private final Analyzer analyzer;
   private final FacetsConfig facetsConfig;
-  private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
   private final MoreLikeThis moreLikeThis;
+  private final FulltextQueryParser queryParser;
 
   QueryInterpreter(MoreLikeThis mlt) {
     analyzer = new StandardAnalyzer();
     facetsConfig = IndexConfiguration.getFacetsConfig();
     moreLikeThis = mlt;
+
+    queryParser = new FulltextQueryParser(analyzer);
   }
 
   Query toLuceneQuery(SearchQuery searchQuery) throws IOException {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
-      addTermQueries(
-          queryBuilder, FULLTEXT, searchQuery.fulltext().get(), BooleanClause.Occur.MUST);
+      queryBuilder.add(queryParser.parse(searchQuery.fulltext().get()), BooleanClause.Occur.MUST);
     } else if (searchQuery.similarity().isPresent()) {
       queryBuilder.add(
-          moreLikeThis.like(IndexField.FULLTEXT, new StringReader(searchQuery.similarity().get())),
+          moreLikeThis.like(FULLTEXT, new StringReader(searchQuery.similarity().get())),
           BooleanClause.Occur.MUST);
     }
 
