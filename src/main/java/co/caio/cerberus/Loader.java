@@ -39,6 +39,9 @@ public class Loader {
               }
             });
     indexer.commit();
+    logger.info("Optimizing index for read-only usage");
+    indexer.mergeSegments();
     logger.info("Done!");
+    indexer.close();
   }
 }

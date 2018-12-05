@@ -186,10 +186,8 @@
                             <arguments>
                                 <argument>-classpath</argument>
                                 <classpath/>
-                                <argument>-Xmx256m</argument>
-                                <argument>-Xms256m</argument>
-                                <argument>-Xlog:gc</argument>
-                                <argument>-verbose:gc</argument>
+                                <argument>-Xmx512m</argument>
+                                <argument>-Xms512m</argument>
                                 <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
                                 <argument>-Dcerberus.recipes.filename=tmp/document.jsonlines</argument>
                                 <argument>-Dcerberus.recipes.datadir=tmp/hue</argument>
