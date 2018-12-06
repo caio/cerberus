@@ -26,6 +26,8 @@ public interface Indexer {
 
   void commit() throws IOException;
 
+  void mergeSegments() throws IOException;
+
   Searcher buildSearcher();
 
   class Builder {
@@ -172,6 +174,11 @@ public interface Indexer {
       @Override
       public int numDocs() {
         return indexWriter.numDocs();
+      }
+
+      @Override
+      public void mergeSegments() throws IOException {
+        indexWriter.forceMerge(1, true);
       }
 
       @Override

@@ -96,8 +96,7 @@ public interface Recipe {
     try {
       return Optional.of(Environment.getObjectMapper().readValue(json, Recipe.class));
     } catch (Exception e) {
-      LoggerFactory.getLogger(Recipe.class)
-          .error("Failed to read json <{}> as <{}>", json, Recipe.class);
+      LoggerFactory.getLogger(Recipe.class).error("Failed to read json <{}>", json, e);
       return Optional.empty();
     }
   }
@@ -106,7 +105,7 @@ public interface Recipe {
     try {
       return Optional.of(Environment.getObjectMapper().writeValueAsString(recipe));
     } catch (Exception e) {
-      LoggerFactory.getLogger(Recipe.class).error("Failed to serialize {} to json", recipe);
+      LoggerFactory.getLogger(Recipe.class).error("Failed to serialize {} to json", recipe, e);
       return Optional.empty();
     }
   }

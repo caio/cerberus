@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -27,20 +26,11 @@ import org.junit.jupiter.api.Test;
 
 class SearcherTest {
   private static Searcher searcher;
-  private static Properties testCounts;
 
   @BeforeAll
-  static void prepare() throws Exception {
+  static void prepare() {
     searcher = Util.getTestIndexer().buildSearcher();
-    assertEquals(299, searcher.numDocs());
-
-    testCounts = new Properties();
-    testCounts.load(
-        SearcherTest.class.getClassLoader().getResource("assertions.properties").openStream());
-  }
-
-  private static int getAssertionNumber(String propertyName) {
-    return Integer.parseInt(testCounts.getProperty(propertyName));
+    assertEquals(Util.expectedIndexSize(), searcher.numDocs());
   }
 
   @Test
@@ -52,7 +42,7 @@ class SearcherTest {
   }
 
   @Test
-  void respectMaxFacets() throws Exception {
+  void respectMaxFacets() {
     var builder = new SearchQuery.Builder().fulltext("egg");
     assertTrue(searcher.search(builder.maxFacets(0).build()).facets().isEmpty());
 
@@ -61,14 +51,14 @@ class SearcherTest {
   }
 
   @Test
-  void respectMaxResults() throws Exception {
+  void respectMaxResults() {
     var builder = new SearchQuery.Builder().fulltext("garlic");
     assertEquals(1, searcher.search(builder.maxResults(1).build()).recipes().size());
     assertTrue(searcher.search(builder.maxResults(42).build()).recipes().size() <= 42);
   }
 
   @Test
-  void facetCountsAreDistinct() throws Exception {
+  void facetCountsAreDistinct() {
     // Commit 2eaef6c8da caused a bug where all counts of the diet facet
     // were the same - that's because the data model started emitting
     // (float) values for all known diet types and the indexer was
@@ -88,7 +78,7 @@ class SearcherTest {
   }
 
   @Test
-  void facets() throws Exception {
+  void facets() {
     var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).build();
     var result = searcher.search(query);
 
@@ -125,7 +115,7 @@ class SearcherTest {
   }
 
   @Test
-  void rangeFacets() throws Exception {
+  void rangeFacets() {
 
     // capture the maximum range length so that if this ever grows
     // too big we can fail querying (due to maxFacets() validation)
@@ -238,7 +228,7 @@ class SearcherTest {
   }
 
   @Test
-  void multipleFacetsAreOr() throws Exception {
+  void multipleFacetsAreOr() {
     var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil").maxResults(1);
     var justOilResult = searcher.search(queryBuilder.build());
     var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build());
@@ -249,7 +239,7 @@ class SearcherTest {
   }
 
   @Test
-  void basicSorting() throws Exception {
+  void basicSorting() {
     var queryBuilder =
         new SearchQuery.Builder().totalTime(SearchQuery.RangedSpec.of(10, 25)).maxResults(50);
 
@@ -273,8 +263,8 @@ class SearcherTest {
         r -> Util.getRecipe(r.recipeId()).totalTime());
   }
 
-  private void checkOrdering(SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever)
-      throws Exception {
+  private void checkOrdering(
+      SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever) {
     var hits = searcher.search(query);
     var lastValue = Integer.MIN_VALUE;
     for (SearchResultRecipe r : hits.recipes()) {
@@ -285,7 +275,7 @@ class SearcherTest {
   }
 
   @Test
-  void findRecipes() throws Exception {
+  void findRecipes() {
     // Recipes with up to 3 ingredients
     var query =
         new SearchQuery.Builder()
@@ -293,7 +283,8 @@ class SearcherTest {
             .maxResults(1)
             .build();
     assertEquals(
-        getAssertionNumber("test.up_to_three_ingredients"), searcher.search(query).totalHits());
+        Util.getAssertionNumber("test.up_to_three_ingredients"),
+        searcher.search(query).totalHits());
 
     // Recipes with exactly 5 ingredients
     query =
@@ -301,7 +292,8 @@ class SearcherTest {
             .numIngredients(SearchQuery.RangedSpec.of(5, 5))
             .maxResults(1)
             .build();
-    assertEquals(getAssertionNumber("test.five_ingredients"), searcher.search(query).totalHits());
+    assertEquals(
+        Util.getAssertionNumber("test.five_ingredients"), searcher.search(query).totalHits());
 
     // Recipes that can be done between 10 and 25 minutes
     query =
@@ -309,30 +301,12 @@ class SearcherTest {
             .totalTime(SearchQuery.RangedSpec.of(10, 25))
             .maxResults(1)
             .build();
-    assertEquals(getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
-
-    // Assumption: fulltext should match more items
-    var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").maxResults(1).build();
-    // but drilling down on ingredients should be more precise
-    var q2 =
-        new SearchQuery.Builder()
-            .fulltext("low carb")
-            .addWithIngredients("bacon")
-            .addWithIngredients("eggs")
-            .maxResults(1)
-            .build();
-
-    var r1 = searcher.search(q1);
-    assertTrue(r1.totalHits() > 0);
-    var r2 = searcher.search(q2);
-    assertTrue(r2.totalHits() > 0 && r2.totalHits() <= r1.totalHits());
-
-    // This particular query should have the same doc as the top one
-    assertEquals(r1.recipes().get(0), r2.recipes().get(0));
+    assertEquals(
+        Util.getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
   }
 
   @Test
-  void similarityQueries() throws Exception {
+  void similarityQueries() {
     var builder = new SearchQuery.Builder().maxResults(100).maxFacets(0);
 
     // very inefficiently pick 30 random recipes
@@ -366,7 +340,7 @@ class SearcherTest {
   }
 
   @Test
-  void simpleRangeDrillDown() throws Exception {
+  void simpleRangeDrillDown() {
     var result = searcher.search(new SearchQuery.Builder().fulltext("salt").maxResults(1).build());
 
     var notARange = Set.of(IndexField.FACET_DIET, IndexField.FACET_KEYWORD);
@@ -407,5 +381,42 @@ class SearcherTest {
         }
       }
     }
+  }
+
+  @Test
+  void fulltextWithNotQuery() {
+    var builder = new SearchQuery.Builder();
+
+    var withOil = searcher.search(builder.fulltext("oil").build());
+    var withoutOil = searcher.search(builder.fulltext("-oil").build());
+
+    // We expect that the result of searching for documents
+    // matching a term PLUS the results of searching for docs
+    // that do NOT match the same term ends up hitting every
+    // document in the index
+    assertEquals(Util.expectedIndexSize(), withOil.totalHits() + withoutOil.totalHits());
+
+    // Same for phrases
+    var withYam = searcher.search(builder.fulltext("\"sweet potato\"").build());
+    var withoutYam = searcher.search(builder.fulltext("-\"sweet potato\"").build());
+    assertEquals(Util.expectedIndexSize(), withOil.totalHits() + withoutOil.totalHits());
+  }
+
+  @Test
+  void phraseQuery() {
+    var builder = new SearchQuery.Builder();
+
+    var termResult = searcher.search(builder.fulltext("sweet potato").build());
+    var phraseResult = searcher.search(builder.fulltext("\"sweet potato\"").build());
+
+    // A phrase query is a LOT more specific than a term-based one
+    assertTrue(termResult.totalHits() > phraseResult.totalHits());
+
+    var termAndPhraseResult =
+        searcher.search(builder.fulltext("sweet \"sweet potato\" potato").build());
+
+    // But querying for a phrase and its terms should match the name
+    // number of documents as just querying for its terms
+    assertEquals(termResult.totalHits(), termAndPhraseResult.totalHits());
   }
 }
