@@ -22,10 +22,6 @@ public interface SearchQuery {
 
   Optional<String> similarity();
 
-  List<String> withIngredients();
-
-  List<String> withoutIngredients();
-
   Optional<RangedSpec> numIngredients();
 
   Optional<RangedSpec> prepTime();
@@ -151,8 +147,6 @@ public interface SearchQuery {
       throw new IllegalStateException("fulltext queries require at least 2 characters");
     }
     if ((fulltext().isPresent() || similarity().isPresent())
-        || !withIngredients().isEmpty()
-        || !withoutIngredients().isEmpty()
         || !dietThreshold().isEmpty()
         || !matchKeyword().isEmpty()
         || numIngredients().isPresent()

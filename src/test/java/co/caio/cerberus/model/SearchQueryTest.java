@@ -37,7 +37,6 @@ class SearchQueryTest {
     var query =
         new SearchQuery.Builder()
             .fulltext("keto cheese")
-            .addWithoutIngredients("egg")
             .calories(SearchQuery.RangedSpec.of(0, 200))
             .build();
     assertEquals(query, SearchQuery.fromJson(SearchQuery.toJson(query).get()).get());

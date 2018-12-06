@@ -303,25 +303,6 @@ class SearcherTest {
             .build();
     assertEquals(
         Util.getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
-
-    // Assumption: fulltext should match more items
-    var q1 = new SearchQuery.Builder().fulltext("low carb bacon eggs").maxResults(1).build();
-    // but drilling down on ingredients should be more precise
-    var q2 =
-        new SearchQuery.Builder()
-            .fulltext("low carb")
-            .addWithIngredients("bacon")
-            .addWithIngredients("eggs")
-            .maxResults(1)
-            .build();
-
-    var r1 = searcher.search(q1);
-    assertTrue(r1.totalHits() > 0);
-    var r2 = searcher.search(q2);
-    assertTrue(r2.totalHits() > 0 && r2.totalHits() <= r1.totalHits());
-
-    // This particular query should have the same doc as the top one
-    assertEquals(r1.recipes().get(0), r2.recipes().get(0));
   }
 
   @Test
