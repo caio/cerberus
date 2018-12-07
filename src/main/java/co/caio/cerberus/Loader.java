@@ -4,7 +4,7 @@ import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.IndexConfiguration;
 import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +22,11 @@ public class Loader {
     var indexer =
         new Indexer.Builder()
             .analyzer(IndexConfiguration.getAnalyzer())
-            .dataDirectory(Paths.get(dataDir))
+            .dataDirectory(Path.of(dataDir))
             .createMode()
             .build();
     logger.info("Initialized indexer", indexer);
-    Files.lines(Paths.get(recipesFilename))
+    Files.lines(Path.of(recipesFilename))
         .map(Recipe::fromJson)
         .flatMap(Optional::stream)
         .parallel()

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import co.caio.cerberus.Util;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +19,7 @@ class IndexerTest {
     assertThrows(exc, () -> builder.reset().analyzer(new StandardAnalyzer()).build());
     assertThrows(
         exc,
-        () -> builder.reset().dataDirectory(Paths.get("/this/doesnt/exist")).createMode().build());
+        () -> builder.reset().dataDirectory(Path.of("/this/doesnt/exist")).createMode().build());
   }
 
   @Test

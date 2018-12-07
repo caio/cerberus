@@ -4,7 +4,6 @@ import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +31,7 @@ public class Util {
   public static Stream<Recipe> getSampleRecipes() {
     var samplesFile = Util.class.getResource("/sample_recipes.jsonlines").getFile();
     try {
-      return Files.lines(Paths.get(samplesFile)).map(Recipe::fromJson).flatMap(Optional::stream);
+      return Files.lines(Path.of(samplesFile)).map(Recipe::fromJson).flatMap(Optional::stream);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

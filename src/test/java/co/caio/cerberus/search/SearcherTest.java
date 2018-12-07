@@ -11,7 +11,7 @@ import co.caio.cerberus.model.SearchQuery.Builder;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ class SearcherTest {
     assertThrows(IllegalStateException.class, () -> new Searcher.Builder().build());
     assertThrows(
         Searcher.Builder.SearcherBuilderException.class,
-        () -> new Searcher.Builder().dataDirectory(Paths.get("/this/doesnt/exist")).build());
+        () -> new Searcher.Builder().dataDirectory(Path.of("/this/doesnt/exist")).build());
   }
 
   @Test
