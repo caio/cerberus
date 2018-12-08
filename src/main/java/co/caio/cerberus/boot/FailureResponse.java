@@ -1,7 +1,6 @@
 package co.caio.cerberus.boot;
 
 class FailureResponse extends BaseResponse {
-  public final String path;
   public final String message;
   public final ErrorKind error;
 
@@ -10,22 +9,26 @@ class FailureResponse extends BaseResponse {
     return false;
   }
 
-  FailureResponse(ErrorKind error, String requestPath, String message) {
+  private FailureResponse(ErrorKind error, String message) {
     this.error = error;
-    this.path = requestPath;
     this.message = message;
   }
 
-  public static FailureResponse queryError(String path, String message) {
-    return new FailureResponse(ErrorKind.QUERY_ERROR, path, message);
+  static FailureResponse queryError(String message) {
+    return new FailureResponse(ErrorKind.QUERY_ERROR, message);
   }
 
-  public static FailureResponse unknownError(String path, String message) {
-    return new FailureResponse(ErrorKind.UNKNOWN_ERROR, path, message);
+  static FailureResponse unknownError(String message) {
+    return new FailureResponse(ErrorKind.UNKNOWN_ERROR, message);
+  }
+
+  static FailureResponse timeoutError(String message) {
+    return new FailureResponse(ErrorKind.TIMEOUT_ERROR, message);
   }
 
   enum ErrorKind {
     QUERY_ERROR,
     UNKNOWN_ERROR,
+    TIMEOUT_ERROR,
   }
 }

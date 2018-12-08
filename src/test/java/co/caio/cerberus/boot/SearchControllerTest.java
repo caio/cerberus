@@ -3,68 +3,47 @@ package co.caio.cerberus.boot;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import co.caio.cerberus.boot.FailureResponse.ErrorKind;
 import co.caio.cerberus.model.SearchResult;
-import co.caio.cerberus.search.Searcher;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 
-@WebMvcTest(SearchController.class)
-class SearchControllerTest {
+class SearchControllerTest extends BaseSearchControllerTest {
 
-  @Autowired private MockMvc mvc;
-
-  @MockBean Searcher searcher;
-
-  @Test
-  void badInputReturnsJson() throws Exception {
-    // too short of a query
-    mvc.perform(get("/search?q=oi"))
-        .andExpect(status().is4xxClientError())
-        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.success").value(Boolean.FALSE))
-        .andExpect(jsonPath("$.path").value("/search"))
-        .andExpect(jsonPath("$.error").value("QUERY_ERROR"));
-
-    // too big of an n
-    mvc.perform(get("/search?q=oil&n=200"))
-        .andExpect(status().is4xxClientError())
-        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.success").value(Boolean.FALSE))
-        .andExpect(jsonPath("$.path").value("/search"))
-        .andExpect(jsonPath("$.error").value("QUERY_ERROR"));
-
-    // empty query
-    mvc.perform(get("/search"))
-        .andExpect(status().is4xxClientError())
-        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.success").value(Boolean.FALSE))
-        .andExpect(jsonPath("$.path").value("/search"))
-        .andExpect(jsonPath("$.error").value("QUERY_ERROR"));
+  @TestConfiguration
+  static class TestConfig {
+    @Bean("searchTimeout")
+    public Duration timeout() {
+      // No timeout
+      return Duration.ofMillis(Long.MAX_VALUE);
+    }
   }
 
   @Test
-  void apiReturnsJsonOnInternalError() throws Exception {
+  void badInputReturnsJson() {
+
+    // Missing required params
+    expectFailure("/search", HttpStatus.UNPROCESSABLE_ENTITY, ErrorKind.QUERY_ERROR);
+
+    // Required parameter is too short
+    expectFailure("/search?q=oi", HttpStatus.UNPROCESSABLE_ENTITY, ErrorKind.QUERY_ERROR);
+
+    // `n` is too big
+    expectFailure("/search?q=oil&n=200", HttpStatus.UNPROCESSABLE_ENTITY, ErrorKind.QUERY_ERROR);
+  }
+
+  @Test
+  void apiReturnsJsonOnInternalError() {
     given(searcher.search(any())).willThrow(RuntimeException.class);
-
-    mvc.perform(get("/search?q=salt"))
-        .andExpect(status().is5xxServerError())
-        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.success").value(Boolean.FALSE))
-        .andExpect(jsonPath("$.path").value("/search"))
-        .andExpect(jsonPath("$.error").value("UNKNOWN_ERROR"));
+    expectFailure("/search?q=salt", HttpStatus.INTERNAL_SERVER_ERROR, ErrorKind.UNKNOWN_ERROR);
   }
 
   @Test
-  void apiReturnsJsonOnSuccess() throws Exception {
+  void apiReturnsJsonOnSuccess() {
     var searchResult =
         new SearchResult.Builder()
             .addRecipe(42, "the answer", "https://nowhere.here")
@@ -73,14 +52,18 @@ class SearchControllerTest {
 
     given(searcher.search(any())).willReturn(searchResult);
 
-    mvc.perform(get("/search?q=keto"))
-        .andExpect(status().isOk())
-        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.success").value(Boolean.TRUE))
-        .andExpect(jsonPath("$.error").doesNotExist())
-        .andExpect(jsonPath("$.result").exists())
-        .andExpect(jsonPath("$.result.totalHits").value(100))
-        .andExpect(jsonPath("$.result.recipes").isArray())
-        .andExpect(jsonPath("$.result.recipes[0].recipeId").value(42));
+    var response =
+        testClient
+            .get()
+            .uri("/search?q=a valid query")
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .expectBody(SuccessResponse.class)
+            .returnResult()
+            .getResponseBody();
+
+    assertTrue(response.isSuccess());
+    assertEquals(searchResult, response.result);
   }
 }
