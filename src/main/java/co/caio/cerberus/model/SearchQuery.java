@@ -192,5 +192,21 @@ public interface SearchQuery {
       addDrillDown(DrillDownSpec.of(field, label));
       return this;
     }
+
+    public Builder sort(String order) {
+      switch (order) {
+        case "cook_time":
+          return sort(SortOrder.COOK_TIME);
+        case "total_time":
+          return sort(SortOrder.TOTAL_TIME);
+        case "prep_time":
+          return sort(SortOrder.PREP_TIME);
+        case "relevance":
+          return sort(SortOrder.RELEVANCE);
+        case "num_ingredients":
+          return sort(SortOrder.NUM_INGREDIENTS);
+      }
+      throw new IllegalStateException("Invalid SortOrder " + order);
+    }
   }
 }
