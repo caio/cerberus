@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Scanner;
 import org.immutables.value.Value;
 import org.slf4j.LoggerFactory;
 
@@ -82,19 +81,6 @@ public interface SearchQuery {
 
     static RangedSpec of(int start, int end) {
       return ImmutableRangedSpec.of(start, end);
-    }
-
-    static RangedSpec fromString(String input) {
-      if (input.contains(",")) {
-        var scanner = new Scanner(input).useDelimiter(",");
-        var spec = RangedSpec.of(scanner.nextInt(), scanner.nextInt());
-        if (scanner.hasNext()) {
-          throw new IllegalStateException("Invalid range spec: " + input);
-        }
-        return spec;
-      } else {
-        return RangedSpec.of(0, Integer.parseInt(input));
-      }
     }
 
     @Value.Check
@@ -205,22 +191,6 @@ public interface SearchQuery {
     public Builder addDrillDown(String field, String label) {
       addDrillDown(DrillDownSpec.of(field, label));
       return this;
-    }
-
-    public Builder sort(String order) {
-      switch (order) {
-        case "cook_time":
-          return sort(SortOrder.COOK_TIME);
-        case "total_time":
-          return sort(SortOrder.TOTAL_TIME);
-        case "prep_time":
-          return sort(SortOrder.PREP_TIME);
-        case "relevance":
-          return sort(SortOrder.RELEVANCE);
-        case "num_ingredients":
-          return sort(SortOrder.NUM_INGREDIENTS);
-      }
-      throw new IllegalStateException("Invalid SortOrder " + order);
     }
   }
 }
