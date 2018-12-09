@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.model.SearchQuery.Builder;
 import co.caio.cerberus.model.SearchQuery.DrillDownSpec;
+import co.caio.cerberus.model.SearchQuery.RangedSpec;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
+import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
@@ -105,5 +108,28 @@ class SearchQueryTest {
 
     // Any other value should throw
     assertThrows(IllegalStateException.class, () -> builder.sort("invalid sort"));
+  }
+
+  @Test
+  void rangedSpecStringParsing() {
+    // Plain numbers are treated as [0,number]
+    assertEquals(RangedSpec.of(0, 10), RangedSpec.fromString("10"));
+    // Ranges are encoded as "numberA,numberB"
+    assertEquals(RangedSpec.of(1, 10), RangedSpec.fromString("1,10"));
+
+    assertThrows(NumberFormatException.class, () -> RangedSpec.fromString("asd"));
+
+    assertThrows(NoSuchElementException.class, () -> RangedSpec.fromString(",10"));
+    assertThrows(NoSuchElementException.class, () -> RangedSpec.fromString("10,"));
+
+    assertThrows(InputMismatchException.class, () -> RangedSpec.fromString("1,notANumber"));
+    assertThrows(InputMismatchException.class, () -> RangedSpec.fromString("1,10hue"));
+    assertThrows(InputMismatchException.class, () -> RangedSpec.fromString("10,10 "));
+    assertThrows(InputMismatchException.class, () -> RangedSpec.fromString("  10,10"));
+
+    // Verify that we throw when there's still stuff after the range spec
+    assertThrows(IllegalStateException.class, () -> RangedSpec.fromString("10,10,10"));
+    // And that inverted ranges are handled as errors
+    assertThrows(IllegalStateException.class, () -> RangedSpec.fromString("5,1"));
   }
 }

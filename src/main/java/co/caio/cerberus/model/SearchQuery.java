@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Scanner;
 import org.immutables.value.Value;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +82,19 @@ public interface SearchQuery {
 
     static RangedSpec of(int start, int end) {
       return ImmutableRangedSpec.of(start, end);
+    }
+
+    static RangedSpec fromString(String input) {
+      if (input.contains(",")) {
+        var scanner = new Scanner(input).useDelimiter(",");
+        var spec = RangedSpec.of(scanner.nextInt(), scanner.nextInt());
+        if (scanner.hasNext()) {
+          throw new IllegalStateException("Invalid range spec: " + input);
+        }
+        return spec;
+      } else {
+        return RangedSpec.of(0, Integer.parseInt(input));
+      }
     }
 
     @Value.Check
