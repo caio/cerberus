@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.model.SearchQuery.Builder;
 import co.caio.cerberus.model.SearchQuery.DrillDownSpec;
+import co.caio.cerberus.model.SearchQuery.SortOrder;
 import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
@@ -89,5 +90,20 @@ class SearchQueryTest {
     assertThrows(
         IllegalStateException.class, () -> DrillDownSpec.of(DrillDown.COOK_TIME, "unknown label"));
     assertDoesNotThrow(() -> DrillDownSpec.of(DrillDown.NUM_INGREDIENTS, "5-10"));
+  }
+
+  @Test
+  void builderSortAcceptsString() {
+    var builder = new SearchQuery.Builder().fulltext("generic query");
+
+    for (SortOrder order : SortOrder.values()) {
+      assertDoesNotThrow(() -> builder.sort(order.name().toLowerCase()));
+
+      var query = builder.build();
+      assertEquals(order, query.sort());
+    }
+
+    // Any other value should throw
+    assertThrows(IllegalStateException.class, () -> builder.sort("invalid sort"));
   }
 }
