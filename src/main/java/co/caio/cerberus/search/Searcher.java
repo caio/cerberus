@@ -5,6 +5,7 @@ import co.caio.cerberus.model.DrillDown;
 import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,10 +54,10 @@ public class Searcher {
     fieldToRanges = Collections.unmodifiableMap(tmpFieldToRanges);
   }
 
-  public SearchResult search(SearchQuery query) throws SearcherException {
+  public SearchResult search(SearchQuery query) {
     try {
       return _search(query);
-    } catch (Exception wrapped) {
+    } catch (IOException wrapped) {
       throw new SearcherException(wrapped);
     }
   }
@@ -83,7 +84,7 @@ public class Searcher {
     interpreter = new QueryInterpreter(moreLikeThis);
   }
 
-  private SearchResult _search(SearchQuery query) throws Exception {
+  private SearchResult _search(SearchQuery query) throws IOException {
     var fc = new FacetsCollector();
 
     var result =
