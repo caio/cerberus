@@ -1,6 +1,5 @@
 package co.caio.cerberus.model;
 
-import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
-import org.slf4j.LoggerFactory;
 
 @Value.Style(
     visibility = Value.Style.ImplementationVisibility.PACKAGE,
@@ -160,26 +158,6 @@ public interface SearchQuery {
       return;
     }
     throw new IllegalStateException("At least one field must be set");
-  }
-
-  static Optional<SearchQuery> fromJson(String serializedQuery) {
-    try {
-      return Optional.of(
-          Environment.getObjectMapper().readValue(serializedQuery, SearchQuery.class));
-    } catch (Exception e) {
-      LoggerFactory.getLogger(SearchQuery.class).error("Failed to read json <{}>", serializedQuery);
-      return Optional.empty();
-    }
-  }
-
-  static Optional<String> toJson(SearchQuery searchQuery) {
-    try {
-      return Optional.of(Environment.getObjectMapper().writeValueAsString(searchQuery));
-    } catch (Exception e) {
-      LoggerFactory.getLogger(SearchQuery.class)
-          .error("Failed to serialize {} to json", searchQuery);
-      return Optional.empty();
-    }
   }
 
   class Builder extends ImmutableSearchQuery.Builder {

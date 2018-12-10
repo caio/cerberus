@@ -69,12 +69,6 @@ class RecipeTest {
   }
 
   @Test
-  void jsonSerialization() {
-    var recipe = Util.getBasicRecipe();
-    assertEquals(recipe, Recipe.fromJson(Recipe.toJson(recipe).get()).get());
-  }
-
-  @Test
   void loadAllSamples() {
     assertEquals(299, Util.getSampleRecipes().count());
   }

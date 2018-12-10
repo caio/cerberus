@@ -31,7 +31,9 @@ public class Util {
   public static Stream<Recipe> getSampleRecipes() {
     var samplesFile = Util.class.getResource("/sample_recipes.jsonlines").getFile();
     try {
-      return Files.lines(Path.of(samplesFile)).map(Recipe::fromJson).flatMap(Optional::stream);
+      return Files.lines(Path.of(samplesFile))
+          .map(serializer::readRecipe)
+          .flatMap(Optional::stream);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -41,6 +43,7 @@ public class Util {
   private static final Map<Long, Recipe> recipeMap;
   private static final Path testDataDir;
   private static final Properties assertionNumbers;
+  private static final Serializer serializer = new Serializer();
 
   static {
     var tmpRecipeMap = new HashMap<Long, Recipe>();
@@ -97,9 +100,5 @@ public class Util {
 
   public static Map<Long, Recipe> getRecipeMap() {
     return recipeMap;
-  }
-
-  public static Path getTestDataDir() {
-    return testDataDir;
   }
 }

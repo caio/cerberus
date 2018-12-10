@@ -1,12 +1,9 @@
 package co.caio.cerberus.model;
 
-import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
-import java.util.Optional;
 import org.immutables.value.Value;
-import org.slf4j.LoggerFactory;
 
 @Value.Style(
     strictBuilder = true,
@@ -39,25 +36,6 @@ public interface SearchResult {
     }
     if (recipes().size() > totalHits()) {
       throw new IllegalStateException("totalHits must be >= recipes().length");
-    }
-  }
-
-  static Optional<SearchResult> fromJson(String json) {
-    try {
-      return Optional.of(Environment.getObjectMapper().readValue(json, SearchResult.class));
-    } catch (Exception ignored) {
-      LoggerFactory.getLogger(SearchResult.class)
-          .error("Failed to read json <{}> as <{}>", json, SearchResult.class);
-      return Optional.empty();
-    }
-  }
-
-  static Optional<String> toJson(SearchResult sr) {
-    try {
-      return Optional.of(Environment.getObjectMapper().writeValueAsString(sr));
-    } catch (Exception ignored) {
-      LoggerFactory.getLogger(SearchResult.class).error("Failed to serialize {} to json", sr);
-      return Optional.empty();
     }
   }
 }

@@ -1,15 +1,12 @@
 package co.caio.cerberus.model;
 
-import co.caio.cerberus.Environment;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import org.immutables.value.Value;
-import org.slf4j.LoggerFactory;
 
 @Value.Style(
     visibility = Value.Style.ImplementationVisibility.PACKAGE,
@@ -91,22 +88,4 @@ public interface Recipe {
   }
 
   class Builder extends ImmutableRecipe.Builder {}
-
-  static Optional<Recipe> fromJson(String json) {
-    try {
-      return Optional.of(Environment.getObjectMapper().readValue(json, Recipe.class));
-    } catch (Exception e) {
-      LoggerFactory.getLogger(Recipe.class).error("Failed to read json <{}>", json, e);
-      return Optional.empty();
-    }
-  }
-
-  static Optional<String> toJson(Recipe recipe) {
-    try {
-      return Optional.of(Environment.getObjectMapper().writeValueAsString(recipe));
-    } catch (Exception e) {
-      LoggerFactory.getLogger(Recipe.class).error("Failed to serialize {} to json", recipe, e);
-      return Optional.empty();
-    }
-  }
 }

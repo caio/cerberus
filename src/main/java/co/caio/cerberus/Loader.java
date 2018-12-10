@@ -1,6 +1,5 @@
 package co.caio.cerberus;
 
-import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.IndexConfiguration;
 import co.caio.cerberus.search.Indexer;
 import java.nio.file.Files;
@@ -15,6 +14,7 @@ public class Loader {
   public static void main(String[] args) throws Exception {
     var recipesFilename = System.getProperty("cerberus.recipes.filename");
     var dataDir = System.getProperty("cerberus.recipes.datadir");
+    var serializer = new Serializer();
 
     logger.info("Starting with recipes at {} and data at {}", recipesFilename, dataDir);
     assert dataDir != null && recipesFilename != null;
@@ -27,7 +27,7 @@ public class Loader {
             .build();
     logger.info("Initialized indexer", indexer);
     Files.lines(Path.of(recipesFilename))
-        .map(Recipe::fromJson)
+        .map(serializer::readRecipe)
         .flatMap(Optional::stream)
         .parallel()
         .forEach(

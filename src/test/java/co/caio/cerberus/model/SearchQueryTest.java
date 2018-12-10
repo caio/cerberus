@@ -33,22 +33,6 @@ class SearchQueryTest {
   }
 
   @Test
-  void jsonSerialization() {
-    var query =
-        new SearchQuery.Builder()
-            .fulltext("keto cheese")
-            .calories(SearchQuery.RangedSpec.of(0, 200))
-            .build();
-    assertEquals(query, SearchQuery.fromJson(SearchQuery.toJson(query).get()).get());
-
-    var maybeQuery = SearchQuery.fromJson("{\"numIngredients\": [0,3]}");
-    assertTrue(maybeQuery.isPresent());
-    var numIngredientsQuery = maybeQuery.get();
-    assertTrue(numIngredientsQuery.numIngredients().isPresent());
-    assertEquals(SearchQuery.RangedSpec.of(0, 3), numIngredientsQuery.numIngredients().get());
-  }
-
-  @Test
   void addMatchDietAlias() {
     assertEquals(
         new Builder().addMatchDiet("keto").build(),

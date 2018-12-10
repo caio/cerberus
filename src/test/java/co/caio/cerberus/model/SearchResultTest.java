@@ -38,11 +38,4 @@ class SearchResultTest {
         .addRecipe(2, "recipe 2", "https://nowhere.local/2")
         .build();
   }
-
-  @Test
-  void jsonSerialization() {
-    var sr = simple();
-    assertDoesNotThrow(
-        () -> assertEquals(sr, SearchResult.fromJson(SearchResult.toJson(sr).get()).get()));
-  }
 }
