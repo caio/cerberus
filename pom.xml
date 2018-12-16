@@ -31,7 +31,7 @@
         <immutables.version>2.7.3</immutables.version>
         <jackson.version>2.9.7</jackson.version>
         <logback.version>1.2.3</logback.version>
-        <lucene.version>7.5.0</lucene.version>
+        <lucene.version>7.6.0</lucene.version>
         <junit.jupiter.version>5.3.2</junit.jupiter.version>
         <resilience4j.version>0.13.2</resilience4j.version>
         <rocker.version>1.2.0</rocker.version>
