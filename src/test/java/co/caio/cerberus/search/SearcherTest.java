@@ -79,7 +79,7 @@ class SearcherTest {
 
   @Test
   void facets() {
-    var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).build();
+    var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).maxFacets(10).build();
     var result = searcher.search(query);
 
     var dietFacet =
@@ -218,6 +218,7 @@ class SearcherTest {
             new SearchQuery.Builder()
                 .putDietThreshold("keto", 0.8f)
                 .putDietThreshold("paleo", 0.1f)
+                .maxFacets(10)
                 .build());
     assertEquals(1, result.totalHits());
     var dietFacets =

@@ -49,7 +49,7 @@ public interface SearchQuery {
 
   @Value.Default
   default int maxFacets() {
-    return 10;
+    return 0;
   }
 
   enum SortOrder {
