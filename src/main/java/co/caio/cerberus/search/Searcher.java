@@ -91,12 +91,12 @@ public class Searcher {
         FacetsCollector.search(
             indexSearcher,
             interpreter.toLuceneQuery(query),
-            query.maxResults(),
+            query.offset() + query.maxResults(),
             interpreter.toLuceneSort(query),
             fc);
     var builder = new SearchResult.Builder().totalHits(result.totalHits);
 
-    for (int i = 0; i < result.scoreDocs.length; i++) {
+    for (int i = query.offset(); i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
       builder.addRecipe(
           doc.getField(IndexField.RECIPE_ID).numericValue().longValue(),

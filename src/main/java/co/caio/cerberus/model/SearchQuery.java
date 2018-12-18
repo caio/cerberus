@@ -52,6 +52,11 @@ public interface SearchQuery {
     return 0;
   }
 
+  @Value.Default
+  default int offset() {
+    return 0;
+  }
+
   enum SortOrder {
     RELEVANCE,
     NUM_INGREDIENTS,
@@ -124,6 +129,9 @@ public interface SearchQuery {
     }
     if (maxFacets() < 0 || maxFacets() > 100) {
       throw new IllegalStateException("maxFacets needs to be in [0,100]");
+    }
+    if (offset() < 0) {
+      throw new IllegalStateException("offset must be >= 0");
     }
     dietThreshold()
         .forEach(

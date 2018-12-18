@@ -13,6 +13,12 @@ class SearchQueryTest {
   }
 
   @Test
+  void defaults() {
+    var builder = new Builder().fulltext("oil");
+    assertEquals(builder.build(), builder.offset(0).maxResults(10).maxFacets(0).build());
+  }
+
+  @Test
   void rangedSpecValidation() {
     assertThrows(IllegalStateException.class, () -> SearchQuery.RangedSpec.of(3, 2));
     assertThrows(IllegalStateException.class, () -> SearchQuery.RangedSpec.of(-1, 2));
@@ -29,7 +35,8 @@ class SearchQueryTest {
     assertThrows(IllegalStateException.class, () -> builder.maxResults(123123).build());
     assertThrows(IllegalStateException.class, () -> builder.maxFacets(-1).build());
     assertThrows(IllegalStateException.class, () -> builder.maxFacets(1232).build());
-    assertDoesNotThrow(() -> builder.maxResults(5).maxFacets(0).build());
+    assertThrows(IllegalStateException.class, () -> builder.offset(-1).build());
+    assertDoesNotThrow(() -> builder.offset(0).maxResults(5).maxFacets(0).build());
   }
 
   @Test
