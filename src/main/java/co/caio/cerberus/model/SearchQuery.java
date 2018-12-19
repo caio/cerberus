@@ -57,6 +57,8 @@ public interface SearchQuery {
     return 0;
   }
 
+  Optional<String> after();
+
   enum SortOrder {
     RELEVANCE,
     NUM_INGREDIENTS,

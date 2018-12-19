@@ -6,7 +6,10 @@ import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +26,9 @@ import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
+import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.Directory;
 
 public class Searcher {
@@ -84,24 +89,43 @@ public class Searcher {
     interpreter = new QueryInterpreter(moreLikeThis);
   }
 
+  private FieldDoc afterFromQuery(SearchQuery query) {
+    if (query.after().isPresent()) {
+      var decoded = ByteBuffer.wrap(Base64.getDecoder().decode(query.after().get()));
+      return new FieldDoc(decoded.getInt(), decoded.getFloat());
+    }
+    return null;
+  }
+
   private SearchResult _search(SearchQuery query) throws IOException {
     var fc = new FacetsCollector();
 
     var result =
-        FacetsCollector.search(
+        FacetsCollector.searchAfter(
             indexSearcher,
+            afterFromQuery(query),
             interpreter.toLuceneQuery(query),
-            query.offset() + query.maxResults(),
+            query.maxResults(),
             interpreter.toLuceneSort(query),
+            true,
+            true,
             fc);
     var builder = new SearchResult.Builder().totalHits(result.totalHits);
 
+    ScoreDoc lastDoc = null;
     for (int i = query.offset(); i < result.scoreDocs.length; i++) {
-      Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
+      lastDoc = result.scoreDocs[i];
+      Document doc = indexSearcher.doc(lastDoc.doc);
       builder.addRecipe(
           doc.getField(IndexField.RECIPE_ID).numericValue().longValue(),
           doc.get(IndexField.NAME),
           doc.get(IndexField.CRAWL_URL));
+    }
+
+    if (lastDoc != null) {
+      var bytes = ByteBuffer.allocate(8).putInt(lastDoc.doc).putFloat(lastDoc.score).array();
+      var afterReference = Base64.getEncoder().encodeToString(bytes);
+      builder.after(afterReference);
     }
 
     var maxFacets = query.maxFacets();

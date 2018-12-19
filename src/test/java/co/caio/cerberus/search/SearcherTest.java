@@ -342,6 +342,21 @@ class SearcherTest {
   }
 
   @Test
+  void afterPaginatesThroughWholeResult() {
+    var builder = new SearchQuery.Builder().fulltext("salt").maxResults(10);
+    var result = searcher.search(builder.build());
+    var totalHits = result.totalHits();
+
+    var seenRecipes = result.recipes().size();
+    while (result.after().isPresent()) {
+      result = searcher.search(builder.after(result.after().get()).build());
+      seenRecipes += result.recipes().size();
+    }
+
+    assertEquals(totalHits, seenRecipes);
+  }
+
+  @Test
   void simpleRangeDrillDown() {
     var result = searcher.search(new SearchQuery.Builder().fulltext("salt").maxResults(1).build());
 
