@@ -8,6 +8,7 @@ import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.Builder;
+import co.caio.cerberus.model.SearchQuery.RangedSpec;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
@@ -419,5 +420,46 @@ class SearcherTest {
     // But querying for a phrase and its terms should match the name
     // number of documents as just querying for its terms
     assertEquals(termResult.totalHits(), termAndPhraseResult.totalHits());
+  }
+
+  @Test
+  void offsetChangesResultSizeOnBoundary() {
+    var builder = new SearchQuery.Builder().fulltext("apple");
+    var totalHits = (int) searcher.search(builder.build()).totalHits();
+
+    var wantedRecipesSize = 3;
+    assert totalHits > wantedRecipesSize;
+    var result = searcher.search(builder.offset(totalHits - wantedRecipesSize).build());
+
+    assertEquals(totalHits, result.totalHits());
+    assertEquals(wantedRecipesSize, result.recipes().size());
+  }
+
+  @Test
+  void offsetAfterMatchesYieldEmptyResults() {
+    var builder = new SearchQuery.Builder().fulltext("sweet potato");
+    var result = searcher.search(builder.build());
+
+    var testQuery = builder.offset((int) result.totalHits()).build();
+    var testResult = searcher.search(testQuery);
+    assertEquals(0, testResult.recipes().size());
+    assertEquals(result.totalHits(), testResult.totalHits());
+  }
+
+  @Test
+  void offsetDoesNotChangeOrder() {
+    var builder = new SearchQuery.Builder().fulltext("flour").maxResults(30);
+    var results = searcher.search(builder.build()).recipes().toArray();
+
+    var offset = 1;
+    while (offset < 30) {
+      var offsetResult = searcher.search(builder.offset(offset).build());
+
+      for (int i = offset; i < results.length; i++) {
+        assertEquals(results[i], offsetResult.recipes().get(i - offset));
+      }
+
+      offset++;
+    }
   }
 }
