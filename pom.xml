@@ -35,7 +35,7 @@
         <junit.jupiter.version>5.3.2</junit.jupiter.version>
         <resilience4j.version>0.13.2</resilience4j.version>
         <rocker.version>1.2.0</rocker.version>
-
+        <rocker.javaVersion>${java.version}</rocker.javaVersion>
         <rocker.optimize>true</rocker.optimize>
     </properties>
 
