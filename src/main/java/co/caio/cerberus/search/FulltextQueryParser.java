@@ -3,6 +3,7 @@ package co.caio.cerberus.search;
 import java.util.Collections;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.Query;
 
@@ -12,6 +13,7 @@ class FulltextQueryParser extends SimpleQueryParser {
 
   FulltextQueryParser(Analyzer analyzer) {
     super(analyzer, Collections.singletonMap(IndexField.FULLTEXT, 1f), FEATURES);
+    setDefaultOperator(Occur.MUST);
   }
 
   @Override

@@ -8,7 +8,6 @@ import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.Builder;
-import co.caio.cerberus.model.SearchQuery.RangedSpec;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
@@ -402,24 +401,6 @@ class SearcherTest {
     var withYam = searcher.search(builder.fulltext("\"sweet potato\"").build());
     var withoutYam = searcher.search(builder.fulltext("-\"sweet potato\"").build());
     assertEquals(Util.expectedIndexSize(), withOil.totalHits() + withoutOil.totalHits());
-  }
-
-  @Test
-  void phraseQuery() {
-    var builder = new SearchQuery.Builder();
-
-    var termResult = searcher.search(builder.fulltext("sweet potato").build());
-    var phraseResult = searcher.search(builder.fulltext("\"sweet potato\"").build());
-
-    // A phrase query is a LOT more specific than a term-based one
-    assertTrue(termResult.totalHits() > phraseResult.totalHits());
-
-    var termAndPhraseResult =
-        searcher.search(builder.fulltext("sweet \"sweet potato\" potato").build());
-
-    // But querying for a phrase and its terms should match the name
-    // number of documents as just querying for its terms
-    assertEquals(termResult.totalHits(), termAndPhraseResult.totalHits());
   }
 
   @Test

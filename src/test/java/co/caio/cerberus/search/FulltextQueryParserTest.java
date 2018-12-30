@@ -45,7 +45,7 @@ class FulltextQueryParserTest {
   @Test
   void implicitGrouping() {
     var query = parser.parse("-oil salt"); // with salt, without oil
-    assertEquals("(-fulltext:oil *:*) fulltext:salt", query.toString());
+    assertEquals("+(-fulltext:oil *:*) +fulltext:salt", query.toString());
   }
 
   @Test
