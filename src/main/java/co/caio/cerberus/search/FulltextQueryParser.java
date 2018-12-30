@@ -4,6 +4,7 @@ import java.util.Collections;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.simple.SimpleQueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.Query;
 
@@ -18,9 +19,11 @@ class FulltextQueryParser extends SimpleQueryParser {
 
   @Override
   public Query parse(String input) {
-    if (input.equals("*")) {
+    var query = super.parse(input);
+    if (query instanceof MatchAllDocsQuery) {
       return new MatchNoDocsQuery("MatchAllDocsQuery() not allowed");
+    } else {
+      return query;
     }
-    return super.parse(input);
   }
 }
