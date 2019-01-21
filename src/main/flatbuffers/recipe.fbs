@@ -5,6 +5,7 @@ table FlatRecipe {
   name:string;
   source:string;
   ingredients:[string];
+  instructions:string;
   total_time:int = 0;
   calories:int = 0;
 }

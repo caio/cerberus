@@ -99,6 +99,8 @@ public class LMDBFlatBuffersExperiment {
         recipe.ingredients().stream().mapToInt(builder::createString).toArray();
     var ingredientsVectorOffset = FlatRecipe.createIngredientsVector(builder, ingredientsOffsets);
 
+    var descriptionOffset = builder.createString(recipe.instructions());
+
     var rootTable =
         FlatRecipe.createFlatRecipe(
             builder,
@@ -106,6 +108,7 @@ public class LMDBFlatBuffersExperiment {
             nameOffset,
             sourceOffset,
             ingredientsVectorOffset,
+            descriptionOffset,
             recipe.totalTime().orElse(0),
             recipe.calories().orElse(0));
 
@@ -148,7 +151,7 @@ public class LMDBFlatBuffersExperiment {
   }
 
   public static void main(String[] args) throws Exception {
-    //lmdbLoop();
+    lmdbLoop();
     stats(new File("tmp/lmdb-test"));
   }
 }
