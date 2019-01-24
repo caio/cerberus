@@ -54,7 +54,7 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   @Override
   public String getSiteName() {
     // FIXME implement
-    return null;
+    return "nowhere.local";
   }
 
   @Override
@@ -65,6 +65,11 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   @Override
   public List<String> getIngredients() {
     return ingredients;
+  }
+
+  @Override
+  public int getNumIngredients() {
+    return ingredients.size();
   }
 
   @Override

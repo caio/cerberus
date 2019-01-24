@@ -7,15 +7,21 @@ import java.util.OptionalInt;
 
 public interface RecipeMetadata {
   long getRecipeId();
+
   String getName();
+
   String getCrawlUrl();
+
   String getSiteName();
 
   String getInstructions();
 
   List<String> getIngredients();
 
+  int getNumIngredients();
+
   OptionalInt getTotalTime();
+
   OptionalInt getCalories();
 
   static RecipeMetadata fromRecipe(Recipe recipe) {

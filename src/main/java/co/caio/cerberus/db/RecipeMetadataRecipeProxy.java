@@ -43,6 +43,11 @@ class RecipeMetadataRecipeProxy implements RecipeMetadata {
   }
 
   @Override
+  public int getNumIngredients() {
+    return recipe.ingredients().size();
+  }
+
+  @Override
   public OptionalInt getTotalTime() {
     return recipe.totalTime();
   }

@@ -21,7 +21,8 @@ public interface RecipeMetadataDatabase {
   }
 
   class Builder {
-    public static RecipeMetadataDatabase open(Path databasePath, int maxSizeInMb, boolean isReadOnly) {
+    public static RecipeMetadataDatabase open(
+        Path databasePath, int maxSizeInMb, boolean isReadOnly) {
       return new LMDBRecipeMetadataDatabase(databasePath, maxSizeInMb, isReadOnly);
     }
   }
