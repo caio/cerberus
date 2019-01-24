@@ -23,6 +23,6 @@ public interface RecipeMetadata {
   }
 
   static RecipeMetadata fromFlatRecipe(FlatRecipe recipe) {
-    return new RecipeMetadataFlatRecipeProxy(recipe);
+    return new RecipeMetadataFlatRecipeCopy(recipe);
   }
 }

@@ -27,7 +27,6 @@ public class LMDBFlatBuffersExperiment {
     recipeStream()
         .forEach(
             recipe -> {
-              System.out.println("Looking at " + recipe);
               var recipeMetadata = db.findById(recipe.recipeId()).orElseThrow();
 
               if (recipeMetadata.getRecipeId() != recipe.recipeId()) {
@@ -79,12 +78,6 @@ public class LMDBFlatBuffersExperiment {
 
   public static void main(String[] args) throws Exception {
     var path = Path.of("tmp/lmdb-fancy-test");
-    //lmdbLoop(path);
-
-    //var path = Path.of("tmp/lmdb-test");
-
-    var db = RecipeMetadataDatabase.Builder.open(path, DB_SIZE_MB, true);
-    var r = db.findById(179759L);
-    System.out.println(r.orElseThrow().getName());
+    lmdbLoop(path);
   }
 }
