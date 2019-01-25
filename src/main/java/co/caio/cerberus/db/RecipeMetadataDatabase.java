@@ -10,7 +10,7 @@ public interface RecipeMetadataDatabase {
 
   Iterable<RecipeMetadata> findAllById(Iterable<Long> recipeIds);
 
-  void saveAll(List<RecipeMetadata> recipes);
+  void saveAll(Iterable<RecipeMetadata> recipes);
 
   void close();
 

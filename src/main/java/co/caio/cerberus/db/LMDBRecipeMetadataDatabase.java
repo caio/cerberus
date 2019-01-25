@@ -13,18 +13,43 @@ import org.lmdbjava.DbiFlags;
 import org.lmdbjava.Env;
 import org.lmdbjava.EnvFlags;
 
-// FIXME write tests
 class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
   private final Env<ByteBuffer> env;
   private final Dbi<ByteBuffer> recipeTableDbi;
 
   LMDBRecipeMetadataDatabase(Path databasePath, int maxSizeInMb, boolean isReadOnly) {
+    if (!databasePath.toFile().isDirectory()) {
+      throw new RecipeDatabaseConfigurationError("databasePath must be an existing directory");
+    }
+
+    if (isReadOnly && !databasePath.resolve("data.mdb").toFile().exists()) {
+      throw new RecipeDatabaseDoesNotExist(databasePath.toString());
+    }
+
     if (isReadOnly) {
       env = Env.open(databasePath.toFile(), maxSizeInMb, EnvFlags.MDB_RDONLY_ENV);
       recipeTableDbi = env.openDbi("recipe");
     } else {
       env = Env.open(databasePath.toFile(), maxSizeInMb);
       recipeTableDbi = env.openDbi("recipe", DbiFlags.MDB_CREATE);
+    }
+  }
+
+  class RecipeDatabaseConfigurationError extends RecipeMetadataDbException {
+    RecipeDatabaseConfigurationError(String message) {
+      super(message);
+    }
+  }
+
+  class RecipeDatabaseDoesNotExist extends RecipeMetadataDbException {
+    RecipeDatabaseDoesNotExist(String message) {
+      super(message);
+    }
+  }
+
+  class RecipeDatabaseIsReadOnly extends RecipeMetadataDbException {
+    RecipeDatabaseIsReadOnly(String message) {
+      super(message);
     }
   }
 
@@ -42,7 +67,6 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
       }
 
       var flatRecipe = FlatRecipe.getRootAsFlatRecipe(buffer);
-      // FIXME copy-it or drop-it!
       // The buffer is not valid after the transaction ends
       return Optional.of(RecipeMetadata.fromFlatRecipe(flatRecipe));
     }
@@ -79,9 +103,9 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public void saveAll(List<RecipeMetadata> recipes) {
+  public void saveAll(Iterable<RecipeMetadata> recipes) {
     if (env.isReadOnly()) {
-      throw new RecipeMetadataDbException("Database is Read-Only");
+      throw new RecipeDatabaseIsReadOnly("Illegal operation on read-only db");
     }
 
     var bbKey = allocateKeyBuffer();
