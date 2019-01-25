@@ -288,8 +288,8 @@
                                 <argument>-Xmx512m</argument>
                                 <argument>-Xms512m</argument>
                                 <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
-                                <argument>-Dcerberus.recipes.filename=tmp/document.jsonlines</argument>
-                                <argument>-Dcerberus.recipes.datadir=tmp/hue</argument>
+                                <argument>-Dcerberus.recipes.filename=${project.basedir}/tmp/document.jsonlines</argument>
+                                <argument>-Dcerberus.recipes.datadir=${project.basedir}/tmp/hue</argument>
                                 <argument>co.caio.cerberus.Loader</argument>
                             </arguments>
                         </configuration>
