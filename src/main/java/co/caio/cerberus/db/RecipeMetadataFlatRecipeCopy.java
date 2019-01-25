@@ -14,6 +14,7 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   private final OptionalInt totalTime;
   private final OptionalInt calories;
 
+  // FIXME Write tests
   RecipeMetadataFlatRecipeCopy(FlatRecipe recipe) {
     id = recipe.id();
     name = recipe.name();

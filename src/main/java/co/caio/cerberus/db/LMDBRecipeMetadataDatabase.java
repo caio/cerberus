@@ -13,6 +13,7 @@ import org.lmdbjava.DbiFlags;
 import org.lmdbjava.Env;
 import org.lmdbjava.EnvFlags;
 
+// FIXME write tests
 class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
   private final Env<ByteBuffer> env;
   private final Dbi<ByteBuffer> recipeTableDbi;

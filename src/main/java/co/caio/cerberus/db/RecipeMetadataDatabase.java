@@ -20,6 +20,7 @@ public interface RecipeMetadataDatabase {
     }
   }
 
+  // XXX weird
   class Builder {
     public static RecipeMetadataDatabase open(
         Path databasePath, int maxSizeInMb, boolean isReadOnly) {

@@ -4,6 +4,7 @@ import co.caio.cerberus.model.Recipe;
 import java.util.List;
 import java.util.OptionalInt;
 
+// FIXME write tests
 class RecipeMetadataRecipeProxy implements RecipeMetadata {
   private final Recipe recipe;
 
