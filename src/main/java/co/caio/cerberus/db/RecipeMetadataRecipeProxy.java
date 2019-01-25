@@ -29,7 +29,7 @@ class RecipeMetadataRecipeProxy implements RecipeMetadata {
   @Override
   public String getSiteName() {
     // FIXME implement this
-    return null;
+    return "please.fix.me";
   }
 
   @Override

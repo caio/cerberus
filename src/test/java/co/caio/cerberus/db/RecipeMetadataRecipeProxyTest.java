@@ -21,6 +21,6 @@ class RecipeMetadataRecipeProxyTest {
     assertEquals(sample.totalTime(), proxied.getTotalTime());
 
     // FIXME need to add to the data model
-    assertEquals(null, proxied.getSiteName());
+    assertEquals("please.fix.me", proxied.getSiteName());
   }
 }

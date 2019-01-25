@@ -27,6 +27,6 @@ class RecipeMetadataFlatRecipeCopyTest {
     assertEquals(sample.totalTime(), copied.getTotalTime());
 
     // FIXME need to add to the data model
-    assertEquals(null, copied.getSiteName());
+    assertEquals("please.fix.me", copied.getSiteName());
   }
 }

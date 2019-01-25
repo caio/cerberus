@@ -59,7 +59,7 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   @Override
   public String getSiteName() {
     // FIXME implement
-    return null;
+    return "please.fix.me";
   }
 
   @Override
