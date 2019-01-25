@@ -22,11 +22,16 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
     // XXX rarely used
     instructions = recipe.instructions();
 
-    // FIXME ehh this "zero as default" will bite me in the future i'm sure
     var tt = recipe.totalTime();
-    totalTime = tt == 0 ? OptionalInt.empty() : OptionalInt.of(tt);
+    totalTime =
+        tt == LMDBRecipeMetadataDatabase.NON_EXISTENT_OPTIONAL_INT
+            ? OptionalInt.empty()
+            : OptionalInt.of(tt);
     var cal = recipe.calories();
-    calories = cal == 0 ? OptionalInt.empty() : OptionalInt.of(cal);
+    calories =
+        cal == LMDBRecipeMetadataDatabase.NON_EXISTENT_OPTIONAL_INT
+            ? OptionalInt.empty()
+            : OptionalInt.of(cal);
 
     var numIngredients = recipe.ingredientsLength();
     var ings = new ArrayList<String>(numIngredients);

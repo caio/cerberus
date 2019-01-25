@@ -13,6 +13,9 @@ import org.lmdbjava.Env;
 import org.lmdbjava.EnvFlags;
 
 class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
+
+  static final int NON_EXISTENT_OPTIONAL_INT = 0;
+
   private final Env<ByteBuffer> env;
   private final Dbi<ByteBuffer> recipeTableDbi;
 
@@ -140,8 +143,8 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
             sourceOffset,
             ingredientsVectorOffset,
             descriptionOffset,
-            recipe.getTotalTime().orElse(0),
-            recipe.getCalories().orElse(0));
+            recipe.getTotalTime().orElse(NON_EXISTENT_OPTIONAL_INT),
+            recipe.getCalories().orElse(NON_EXISTENT_OPTIONAL_INT));
 
     builder.finish(rootTable);
     return builder.dataBuffer();
