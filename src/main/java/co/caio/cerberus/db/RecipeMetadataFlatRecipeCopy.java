@@ -14,7 +14,6 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   private final OptionalInt totalTime;
   private final OptionalInt calories;
 
-  // FIXME Write tests
   RecipeMetadataFlatRecipeCopy(FlatRecipe recipe) {
     id = recipe.id();
     name = recipe.name();
@@ -55,7 +54,7 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   @Override
   public String getSiteName() {
     // FIXME implement
-    return "nowhere.local";
+    return null;
   }
 
   @Override

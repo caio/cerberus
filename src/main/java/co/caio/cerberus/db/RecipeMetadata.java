@@ -25,12 +25,10 @@ public interface RecipeMetadata {
 
   OptionalInt getCalories();
 
-  // FIXME write tests
   static RecipeMetadata fromRecipe(Recipe recipe) {
     return new RecipeMetadataRecipeProxy(recipe);
   }
 
-  // FIXME write tests
   static RecipeMetadata fromFlatRecipe(FlatRecipe recipe) {
     return new RecipeMetadataFlatRecipeCopy(recipe);
   }

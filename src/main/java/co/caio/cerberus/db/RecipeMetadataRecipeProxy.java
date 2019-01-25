@@ -4,7 +4,6 @@ import co.caio.cerberus.model.Recipe;
 import java.util.List;
 import java.util.OptionalInt;
 
-// FIXME write tests
 class RecipeMetadataRecipeProxy implements RecipeMetadata {
   private final Recipe recipe;
 
@@ -29,7 +28,7 @@ class RecipeMetadataRecipeProxy implements RecipeMetadata {
 
   @Override
   public String getSiteName() {
-    // FIXME need to implement this
+    // FIXME implement this
     return null;
   }
 

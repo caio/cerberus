@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.DbiFlags;
@@ -119,7 +118,7 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
     }
   }
 
-  private ByteBuffer flattenRecipe(RecipeMetadata recipe) {
+  static ByteBuffer flattenRecipe(RecipeMetadata recipe) {
     var builder =
         new FlatBufferBuilder(
             5_000, cap -> ByteBuffer.allocateDirect(cap).order(ByteOrder.LITTLE_ENDIAN));
