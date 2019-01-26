@@ -281,16 +281,17 @@
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>1.6.0</version>
                         <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <executable>java</executable>
                             <arguments>
                                 <argument>-classpath</argument>
                                 <classpath/>
-                                <argument>-Xmx512m</argument>
-                                <argument>-Xms512m</argument>
+                                <argument>-Xmx1024m</argument>
+                                <argument>-Xms1024m</argument>
                                 <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
-                                <argument>-Dcerberus.recipes.filename=${project.basedir}/tmp/document.jsonlines</argument>
-                                <argument>-Dcerberus.recipes.datadir=${project.basedir}/tmp/hue</argument>
                                 <argument>co.caio.cerberus.Loader</argument>
+                                <argument>src/main/resources/application.properties</argument>
+                                <argument>tmp/document.jsonlines</argument>
                             </arguments>
                         </configuration>
                     </plugin>
