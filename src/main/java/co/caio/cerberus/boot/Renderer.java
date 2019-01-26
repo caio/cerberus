@@ -1,5 +1,7 @@
 package co.caio.cerberus.boot;
 
+import co.caio.cerberus.db.RecipeMetadata;
+import co.caio.cerberus.db.RecipeMetadataDatabase;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import co.caio.cerberus.model.SearchResultRecipe;
@@ -9,15 +11,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Component
 class Renderer {
 
   private final int pageSize;
+  private final RecipeMetadataDatabase db;
 
-  Renderer(@Qualifier("pageSize") int pageSize) {
+  Renderer(
+      @Qualifier("searchPageSize") int pageSize,
+      @Qualifier("metadataDb") RecipeMetadataDatabase db) {
     this.pageSize = pageSize;
+    this.db = db;
   }
 
   private Map<String, String> baseModel =
@@ -69,25 +77,9 @@ class Renderer {
     }
   }
 
-  private List<Map<String, Object>> renderRecipes(List<SearchResultRecipe> recipes) {
-    return recipes
-        .stream()
-        .map(
-            srr -> {
-              List<Map<String, Object>> meta = List.of(); // FIXME
-              return Map.of(
-                  "name",
-                  srr.name(),
-                  "href",
-                  srr.crawlUrl(),
-                  "site",
-                  "nowhere.local", // FIXME
-                  "description",
-                  "", // FIXME
-                  "meta",
-                  meta);
-            })
-        .collect(Collectors.toList());
+  private Iterable<RecipeMetadata> renderRecipes(List<SearchResultRecipe> recipes) {
+    var recipeIds = recipes.stream().map(SearchResultRecipe::recipeId).collect(Collectors.toList());
+    return db.findAllById(recipeIds);
   }
 
   Rendering renderError(String errorTitle, String errorSubtitle, HttpStatus status) {

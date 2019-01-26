@@ -32,8 +32,12 @@
         <jackson.version>2.9.8</jackson.version>
         <logback.version>1.2.3</logback.version>
         <lucene.version>7.6.0</lucene.version>
+        <flatbuffers.version>1.10.0.2</flatbuffers.version>
+        <flatbuffers.sources>${basedir}/src/main/flatbuffers</flatbuffers.sources>
+        <flatbuffers.generated.sources>${project.build.directory}/generated-sources/java</flatbuffers.generated.sources>
         <junit.jupiter.version>5.3.2</junit.jupiter.version>
         <resilience4j.version>0.13.2</resilience4j.version>
+        <lmdb.version>0.6.2</lmdb.version>
     </properties>
 
     <dependencyManagement>
@@ -80,6 +84,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>flatbuffers-java</artifactId>
+            <version>${flatbuffers.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <version>${immutables.version}</version>
@@ -100,6 +110,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.lmdbjava</groupId>
+            <artifactId>lmdbjava</artifactId>
+            <version>${lmdb.version}</version>
         </dependency>
 
         <dependency>
@@ -181,6 +197,77 @@
                     <verbose>false</verbose>
                 </configuration>
             </plugin>
+            <!-- flatbuffers start -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.github.davidmoten</groupId>
+                                    <artifactId>flatbuffers-compiler</artifactId>
+                                    <version>${flatbuffers.version}</version>
+                                    <type>tar.gz</type>
+                                    <classifier>distribution-linux</classifier>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>${project.build.directory}/bin/flatc</executable>
+                    <workingDirectory>${flatbuffers.sources}</workingDirectory>
+                    <arguments>
+                        <argument>--java</argument>
+                        <argument>-o</argument>
+                        <argument>${flatbuffers.generated.sources}</argument>
+                        <argument>recipe.fbs</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${flatbuffers.generated.sources}</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- flatbuffers end -->
         </plugins>
     </build>
 
@@ -194,16 +281,17 @@
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>1.6.0</version>
                         <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
                             <executable>java</executable>
                             <arguments>
                                 <argument>-classpath</argument>
                                 <classpath/>
-                                <argument>-Xmx512m</argument>
-                                <argument>-Xms512m</argument>
+                                <argument>-Xmx1024m</argument>
+                                <argument>-Xms1024m</argument>
                                 <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
-                                <argument>-Dcerberus.recipes.filename=tmp/document.jsonlines</argument>
-                                <argument>-Dcerberus.recipes.datadir=tmp/hue</argument>
                                 <argument>co.caio.cerberus.Loader</argument>
+                                <argument>src/main/resources/application.properties</argument>
+                                <argument>tmp/document.jsonlines</argument>
                             </arguments>
                         </configuration>
                     </plugin>
