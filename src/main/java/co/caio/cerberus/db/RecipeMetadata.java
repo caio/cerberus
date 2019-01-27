@@ -11,11 +11,13 @@ public interface RecipeMetadata {
 
   String getName();
 
+  String getSlug();
+
   String getCrawlUrl();
 
   String getSiteName();
 
-  String getInstructions();
+  List<String> getInstructions();
 
   List<String> getIngredients();
 

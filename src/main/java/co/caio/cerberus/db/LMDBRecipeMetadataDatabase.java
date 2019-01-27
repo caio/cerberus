@@ -129,20 +129,27 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
     var nameOffset = builder.createString(recipe.getName());
     var sourceOffset = builder.createString(recipe.getCrawlUrl());
 
+    var siteNameOffset = builder.createString(recipe.getSiteName());
+    var slugOffset = builder.createString(recipe.getSlug());
+
     var ingredientsOffsets =
         recipe.getIngredients().stream().mapToInt(builder::createString).toArray();
     var ingredientsVectorOffset = FlatRecipe.createIngredientsVector(builder, ingredientsOffsets);
 
-    var descriptionOffset = builder.createString(recipe.getInstructions());
+    var instructionsOffsets =
+        recipe.getInstructions().stream().mapToInt(builder::createString).toArray();
+    var instructionsVectorOffset = FlatRecipe.createIngredientsVector(builder, instructionsOffsets);
 
     var rootTable =
         FlatRecipe.createFlatRecipe(
             builder,
             recipe.getRecipeId(),
             nameOffset,
+            siteNameOffset,
+            slugOffset,
             sourceOffset,
             ingredientsVectorOffset,
-            descriptionOffset,
+            instructionsVectorOffset,
             recipe.getTotalTime().orElse(NON_EXISTENT_OPTIONAL_INT),
             recipe.getCalories().orElse(NON_EXISTENT_OPTIONAL_INT));
 

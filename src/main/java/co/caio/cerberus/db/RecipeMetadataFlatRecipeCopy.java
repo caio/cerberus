@@ -9,7 +9,9 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   private final long id;
   private final String name;
   private final String crawlUrl;
-  private final String instructions;
+  private final String slug;
+  private final String siteName;
+  private final List<String> instructions;
   private final List<String> ingredients;
   private final OptionalInt totalTime;
   private final OptionalInt calories;
@@ -18,9 +20,15 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
     id = recipe.id();
     name = recipe.name();
     crawlUrl = recipe.source();
+    slug = recipe.slug();
+    siteName = recipe.siteName();
 
     // XXX rarely used
-    instructions = recipe.instructions();
+    var numInstructions = recipe.instructionsLength();
+    instructions = new ArrayList<String>(numInstructions);
+    for (int i = 0; i < numInstructions; i++) {
+      instructions.add(recipe.instructions(i));
+    }
 
     var tt = recipe.totalTime();
     totalTime =
@@ -34,11 +42,10 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
             : OptionalInt.of(cal);
 
     var numIngredients = recipe.ingredientsLength();
-    var ings = new ArrayList<String>(numIngredients);
+    ingredients = new ArrayList<String>(numIngredients);
     for (int i = 0; i < numIngredients; i++) {
-      ings.add(recipe.ingredients(i));
+      ingredients.add(recipe.ingredients(i));
     }
-    ingredients = ings;
   }
 
   @Override
@@ -52,18 +59,22 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   }
 
   @Override
+  public String getSlug() {
+    return slug;
+  }
+
+  @Override
   public String getCrawlUrl() {
     return crawlUrl;
   }
 
   @Override
   public String getSiteName() {
-    // FIXME implement
-    return "please.fix.me";
+    return siteName;
   }
 
   @Override
-  public String getInstructions() {
+  public List<String> getInstructions() {
     return instructions;
   }
 

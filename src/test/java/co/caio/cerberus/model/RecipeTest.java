@@ -16,23 +16,28 @@ class RecipeTest {
   void preconditions() {
     assertThrows(
         IllegalStateException.class,
-        () -> new Recipe.Builder().recipeId(1).name("").instructions("").build());
+        () -> new Recipe.Builder().recipeId(1).name("").addInstructions("").build());
     assertThrows(
         IllegalStateException.class,
-        () -> new Recipe.Builder().recipeId(1).name("not empty").instructions("").build());
+        () -> new Recipe.Builder().recipeId(1).name("not empty").addInstructions("").build());
     assertThrows(
         IllegalStateException.class,
-        () -> new Recipe.Builder().recipeId(1).name("not empty").instructions("").build());
-    assertThrows(
-        IllegalStateException.class,
-        () -> new Recipe.Builder().recipeId(1).name("not empty").instructions("not empty").build());
+        () -> new Recipe.Builder().recipeId(1).name("not empty").addInstructions("").build());
     assertThrows(
         IllegalStateException.class,
         () ->
             new Recipe.Builder()
                 .recipeId(1)
                 .name("not empty")
-                .instructions("not empty")
+                .addInstructions("not empty")
+                .build());
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            new Recipe.Builder()
+                .recipeId(1)
+                .name("not empty")
+                .addInstructions("not empty")
                 .crawlUrl("")
                 .build());
     assertThrows(
@@ -42,7 +47,7 @@ class RecipeTest {
                 .recipeId(1)
                 .name("not empty")
                 .crawlUrl("not empty")
-                .instructions("not empty")
+                .addInstructions("not empty")
                 .addIngredients("item 1")
                 .putDiets("keto", -1)
                 .build());
@@ -53,7 +58,7 @@ class RecipeTest {
                 .recipeId(1)
                 .name("not empty")
                 .crawlUrl("not empty")
-                .instructions("not empty")
+                .addInstructions("not empty")
                 .addIngredients("item 1")
                 .putDiets("paleo", 10)
                 .build());
@@ -62,14 +67,16 @@ class RecipeTest {
             new Recipe.Builder()
                 .recipeId(1)
                 .name("not empty")
+                .slug("slug")
+                .siteName("not-empty.com")
                 .crawlUrl("not empty")
-                .instructions("not empty")
+                .addInstructions("not empty")
                 .addIngredients("item 1")
                 .build());
   }
 
   @Test
   void loadAllSamples() {
-    assertEquals(299, Util.getSampleRecipes().count());
+    assertEquals(Util.expectedIndexSize(), Util.getSampleRecipes().count());
   }
 }

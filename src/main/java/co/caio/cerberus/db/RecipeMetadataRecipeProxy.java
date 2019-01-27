@@ -22,18 +22,22 @@ class RecipeMetadataRecipeProxy implements RecipeMetadata {
   }
 
   @Override
+  public String getSlug() {
+    return recipe.slug();
+  }
+
+  @Override
   public String getCrawlUrl() {
     return recipe.crawlUrl();
   }
 
   @Override
   public String getSiteName() {
-    // FIXME implement this
-    return "please.fix.me";
+    return recipe.siteName();
   }
 
   @Override
-  public String getInstructions() {
+  public List<String> getInstructions() {
     return recipe.instructions();
   }
 

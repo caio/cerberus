@@ -19,14 +19,13 @@ class RecipeMetadataFlatRecipeCopyTest {
 
     assertEquals(sample.recipeId(), copied.getRecipeId());
     assertEquals(sample.name(), copied.getName());
+    assertEquals(sample.slug(), copied.getSlug());
+    assertEquals(sample.siteName(), copied.getSiteName());
     assertEquals(sample.ingredients().size(), copied.getNumIngredients());
     assertEquals(sample.ingredients(), copied.getIngredients());
     assertEquals(sample.instructions(), copied.getInstructions());
     assertEquals(sample.calories(), copied.getCalories());
     assertEquals(sample.crawlUrl(), copied.getCrawlUrl());
     assertEquals(sample.totalTime(), copied.getTotalTime());
-
-    // FIXME need to add to the data model
-    assertEquals("please.fix.me", copied.getSiteName());
   }
 }

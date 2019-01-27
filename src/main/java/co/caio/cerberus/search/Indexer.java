@@ -7,6 +7,8 @@ import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
@@ -127,15 +129,20 @@ public interface Indexer {
 
       @Override
       public void addRecipe(Recipe recipe) throws IOException {
+        // FIXME temporarily drop unsearchable fields?
         var doc = new Document();
 
         doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
         doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
 
         doc.add(new TextField(NAME, recipe.name(), Field.Store.YES));
-        doc.add(new TextField(FULLTEXT, recipe.name(), Field.Store.NO));
-        doc.add(new TextField(FULLTEXT, recipe.description(), Field.Store.NO));
-        doc.add(new TextField(FULLTEXT, recipe.instructions(), Field.Store.NO));
+
+        var fulltext =
+            Stream.concat(
+                    Stream.of(recipe.name()),
+                    Stream.concat(recipe.instructions().stream(), recipe.ingredients().stream()))
+                .collect(Collectors.joining("\n"));
+        doc.add(new TextField(FULLTEXT, fulltext, Field.Store.NO));
 
         recipe
             .diets()
