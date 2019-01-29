@@ -1,5 +1,6 @@
 package co.caio.cerberus;
 
+import co.caio.cerberus.db.Flattener;
 import co.caio.cerberus.db.RecipeMetadata;
 import co.caio.cerberus.db.RecipeMetadataDatabase;
 import co.caio.cerberus.model.Recipe;
@@ -8,12 +9,12 @@ import co.caio.cerberus.search.Indexer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
 
 public class Loader {
   private static final Logger logger = LoggerFactory.getLogger(Loader.class);
@@ -83,18 +84,22 @@ public class Loader {
   public void createDatabase() throws IOException {
 
     moveExistingDirs(dbDir);
-    dbDir.toFile().mkdirs();
+    // dbDir.toFile().mkdirs();
 
     logger.info("Creating metadata database at {}", dbDir);
-    var db = RecipeMetadataDatabase.Builder.open(dbDir, maxDbSize, false);
+    var db = RecipeMetadataDatabase.Builder.open(dbDir);
 
-    Flux.fromStream(recipeStream().map(RecipeMetadata::fromRecipe))
-        .buffer(100_000)
-        .subscribe(
-            recipes -> {
-              logger.info("Writing a batch of {} recipes", recipes.size());
-              db.saveAll(recipes);
-            });
+    recipeStream()
+        .map(RecipeMetadata::fromRecipe)
+        .parallel()
+        .forEach(rm -> db.saveAll(List.of(rm)));
+    // Flux.fromStream(recipeStream().map(RecipeMetadata::fromRecipe))
+    //     .buffer(100_000)
+    //     .subscribe(
+    //         recipes -> {
+    //           logger.info("Writing a batch of {} recipes", recipes.size());
+    //           db.saveAll(recipes);
+    //         });
     logger.info("Finished creating metadata database");
   }
 
@@ -117,6 +122,16 @@ public class Loader {
     }
   }
 
+  public void averageValueSize() throws Exception {
+    var avg =
+        recipeStream()
+            .parallel()
+            .map(Flattener.INSTANCE::flattenRecipe)
+            .mapToInt(bb -> bb.limit() - bb.position())
+            .average();
+    System.out.println(avg);
+  }
+
   public static void main(String[] args) throws Exception {
 
     if (args.length != 2) {
@@ -126,8 +141,9 @@ public class Loader {
 
     var loader = new Loader(Path.of(args[0]), Path.of(args[1]));
 
+    // loader.averageValueSize();
     loader.createDatabase();
-    loader.createIndex();
+    // loader.createIndex();
 
     logger.info("Done!");
   }

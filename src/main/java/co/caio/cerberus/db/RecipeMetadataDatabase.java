@@ -1,5 +1,6 @@
 package co.caio.cerberus.db;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -22,6 +23,10 @@ public interface RecipeMetadataDatabase {
     public static RecipeMetadataDatabase open(
         Path databasePath, int maxSizeInMb, boolean isReadOnly) {
       return new LMDBRecipeMetadataDatabase(databasePath, maxSizeInMb, isReadOnly);
+    }
+
+    public static RecipeMetadataDatabase open(Path databasePath) throws IOException {
+      return new ChronicleRecipeMetadataDatabase(databasePath);
     }
   }
 }

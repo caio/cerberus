@@ -34,4 +34,8 @@ public interface RecipeMetadata {
   static RecipeMetadata fromFlatRecipe(FlatRecipe recipe) {
     return new RecipeMetadataFlatRecipeCopy(recipe);
   }
+
+  static RecipeMetadata fromFlatRecipeAsProxy(FlatRecipe recipe) {
+    return new RecipeMetadataFlatRecipeProxy(recipe);
+  }
 }
