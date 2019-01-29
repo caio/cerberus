@@ -11,8 +11,6 @@ public interface RecipeMetadataDatabase {
 
   void saveAll(Iterable<RecipeMetadata> recipes);
 
-  void close();
-
   class RecipeMetadataDbException extends RuntimeException {
     RecipeMetadataDbException(String message) {
       super(message);

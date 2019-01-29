@@ -99,12 +99,6 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public void close() {
-    recipeTableDbi.close();
-    env.close();
-  }
-
-  @Override
   public void saveAll(Iterable<RecipeMetadata> recipes) {
     if (env.isReadOnly()) {
       throw new RecipeDatabaseIsReadOnly("Illegal operation on read-only db");
