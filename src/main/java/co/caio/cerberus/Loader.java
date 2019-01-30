@@ -1,6 +1,6 @@
 package co.caio.cerberus;
 
-import co.caio.cerberus.db.Flattener;
+import co.caio.cerberus.db.FlatBufferSerializer;
 import co.caio.cerberus.db.RecipeMetadata;
 import co.caio.cerberus.db.RecipeMetadataDatabase;
 import co.caio.cerberus.model.Recipe;
@@ -126,7 +126,7 @@ public class Loader {
     var avg =
         recipeStream()
             .parallel()
-            .map(Flattener.INSTANCE::flattenRecipe)
+            .map(FlatBufferSerializer.INSTANCE::flattenRecipe)
             .mapToInt(bb -> bb.limit() - bb.position())
             .average();
     System.out.println(avg);

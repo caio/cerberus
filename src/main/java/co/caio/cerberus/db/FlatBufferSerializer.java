@@ -6,12 +6,12 @@ import com.google.flatbuffers.FlatBufferBuilder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class Flattener {
+public class FlatBufferSerializer {
 
-  public final int NON_EXISTENT_OPTIONAL_INT = 0;
-  public static final Flattener INSTANCE = new Flattener();
+  final int NON_EXISTENT_OPTIONAL_INT = 0;
+  public static final FlatBufferSerializer INSTANCE = new FlatBufferSerializer();
 
-  public ByteBuffer flattenRecipe(RecipeMetadata recipe) {
+  ByteBuffer flattenRecipe(RecipeMetadata recipe) {
     var builder =
         new FlatBufferBuilder(
             5_000, cap -> ByteBuffer.allocateDirect(cap).order(ByteOrder.LITTLE_ENDIAN));
@@ -49,5 +49,9 @@ public class Flattener {
 
   public ByteBuffer flattenRecipe(Recipe recipe) {
     return flattenRecipe(RecipeMetadata.fromRecipe(recipe));
+  }
+
+  FlatRecipe readRecipe(ByteBuffer buffer) {
+    return FlatRecipe.getRootAsFlatRecipe(buffer);
   }
 }

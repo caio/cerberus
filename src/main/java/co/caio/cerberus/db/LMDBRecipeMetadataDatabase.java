@@ -1,9 +1,6 @@
 package co.caio.cerberus.db;
 
-import co.caio.cerberus.flatbuffers.FlatRecipe;
-import com.google.flatbuffers.FlatBufferBuilder;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -68,7 +65,7 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
         return Optional.empty();
       }
 
-      var flatRecipe = FlatRecipe.getRootAsFlatRecipe(buffer);
+      var flatRecipe = FlatBufferSerializer.INSTANCE.readRecipe(buffer);
       // The buffer is not valid after the transaction ends
       return Optional.of(RecipeMetadata.fromFlatRecipe(flatRecipe));
     }
@@ -90,7 +87,7 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
           continue;
         }
 
-        var flatRecipe = FlatRecipe.getRootAsFlatRecipe(buffer);
+        var flatRecipe = FlatBufferSerializer.INSTANCE.readRecipe(buffer);
         result.add(RecipeMetadata.fromFlatRecipe(flatRecipe));
       }
     }
@@ -109,46 +106,10 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
       for (var recipeMetadata : recipes) {
         bbKey.putLong(recipeMetadata.getRecipeId());
         bbKey.flip();
-        recipeTableDbi.put(txn, bbKey, flattenRecipe(recipeMetadata));
+        recipeTableDbi.put(txn, bbKey, FlatBufferSerializer.INSTANCE.flattenRecipe(recipeMetadata));
       }
       txn.commit();
     }
-  }
-
-  static ByteBuffer flattenRecipe(RecipeMetadata recipe) {
-    var builder =
-        new FlatBufferBuilder(
-            5_000, cap -> ByteBuffer.allocateDirect(cap).order(ByteOrder.LITTLE_ENDIAN));
-
-    var nameOffset = builder.createString(recipe.getName());
-    var sourceOffset = builder.createString(recipe.getCrawlUrl());
-
-    var siteNameOffset = builder.createString(recipe.getSiteName());
-    var slugOffset = builder.createString(recipe.getSlug());
-
-    var ingredientsOffsets =
-        recipe.getIngredients().stream().mapToInt(builder::createString).toArray();
-    var ingredientsVectorOffset = FlatRecipe.createIngredientsVector(builder, ingredientsOffsets);
-
-    var instructionsOffsets =
-        recipe.getInstructions().stream().mapToInt(builder::createString).toArray();
-    var instructionsVectorOffset = FlatRecipe.createIngredientsVector(builder, instructionsOffsets);
-
-    var rootTable =
-        FlatRecipe.createFlatRecipe(
-            builder,
-            recipe.getRecipeId(),
-            nameOffset,
-            siteNameOffset,
-            slugOffset,
-            sourceOffset,
-            ingredientsVectorOffset,
-            instructionsVectorOffset,
-            recipe.getTotalTime().orElse(NON_EXISTENT_OPTIONAL_INT),
-            recipe.getCalories().orElse(NON_EXISTENT_OPTIONAL_INT));
-
-    builder.finish(rootTable);
-    return builder.dataBuffer();
   }
 
   private ByteBuffer allocateKeyBuffer() {

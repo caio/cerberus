@@ -1,6 +1,5 @@
 package co.caio.cerberus.db;
 
-import co.caio.cerberus.flatbuffers.FlatRecipe;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -27,7 +26,7 @@ class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   private RecipeMetadata get(long recipeId) {
     var buffer = backingMap.get(recipeId);
     if (buffer != null) {
-      return RecipeMetadata.fromFlatRecipeAsProxy(FlatRecipe.getRootAsFlatRecipe(buffer));
+      return RecipeMetadata.fromFlatRecipeAsProxy(FlatBufferSerializer.INSTANCE.readRecipe(buffer));
     } else {
       return null;
     }
@@ -56,7 +55,7 @@ class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   public void saveAll(Iterable<RecipeMetadata> recipes) {
     recipes.forEach(
         rm -> {
-          backingMap.put(rm.getRecipeId(), Flattener.INSTANCE.flattenRecipe(rm));
+          backingMap.put(rm.getRecipeId(), FlatBufferSerializer.INSTANCE.flattenRecipe(rm));
         });
   }
 }
