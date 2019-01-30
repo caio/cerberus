@@ -16,6 +16,7 @@ class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
     backingMap =
         ChronicleMapBuilder.of(Long.class, ByteBuffer.class)
             .name("recipe-metadata")
+            // FIXME these settings are only necessary when creating the db
             .constantKeySizeBySample(1L)
             .averageValueSize(1434)
             .entries(1_200_000)
