@@ -5,10 +5,11 @@ import co.caio.cerberus.model.Recipe;
 import com.google.flatbuffers.FlatBufferBuilder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.OptionalInt;
 
 public class FlatBufferSerializer {
 
-  final int NON_EXISTENT_OPTIONAL_INT = 0;
+  static final int NON_EXISTENT_OPTIONAL_INT = 0;
   public static final FlatBufferSerializer INSTANCE = new FlatBufferSerializer();
 
   ByteBuffer flattenRecipe(RecipeMetadata recipe) {
@@ -53,5 +54,13 @@ public class FlatBufferSerializer {
 
   FlatRecipe readRecipe(ByteBuffer buffer) {
     return FlatRecipe.getRootAsFlatRecipe(buffer);
+  }
+
+  OptionalInt readOptionalInt(int number) {
+    if (number == NON_EXISTENT_OPTIONAL_INT) {
+      return OptionalInt.empty();
+    } else {
+      return OptionalInt.of(number);
+    }
   }
 }

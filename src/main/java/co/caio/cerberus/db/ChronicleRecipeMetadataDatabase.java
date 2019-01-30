@@ -10,7 +10,6 @@ import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
-  static final int NON_EXISTENT_OPTIONAL_INT = 0;
   private final Map<Long, ByteBuffer> backingMap;
 
   ChronicleRecipeMetadataDatabase(Path databasePath) throws IOException {

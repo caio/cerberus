@@ -11,8 +11,6 @@ import org.lmdbjava.EnvFlags;
 
 class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
-  static final int NON_EXISTENT_OPTIONAL_INT = 0;
-
   private final Env<ByteBuffer> env;
   private final Dbi<ByteBuffer> recipeTableDbi;
 

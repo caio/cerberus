@@ -25,24 +25,16 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
 
     // XXX rarely used
     var numInstructions = recipe.instructionsLength();
-    instructions = new ArrayList<String>(numInstructions);
+    instructions = new ArrayList<>(numInstructions);
     for (int i = 0; i < numInstructions; i++) {
       instructions.add(recipe.instructions(i));
     }
 
-    var tt = recipe.totalTime();
-    totalTime =
-        tt == LMDBRecipeMetadataDatabase.NON_EXISTENT_OPTIONAL_INT
-            ? OptionalInt.empty()
-            : OptionalInt.of(tt);
-    var cal = recipe.calories();
-    calories =
-        cal == LMDBRecipeMetadataDatabase.NON_EXISTENT_OPTIONAL_INT
-            ? OptionalInt.empty()
-            : OptionalInt.of(cal);
+    totalTime = FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.totalTime());
+    calories = FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.calories());
 
     var numIngredients = recipe.ingredientsLength();
-    ingredients = new ArrayList<String>(numIngredients);
+    ingredients = new ArrayList<>(numIngredients);
     for (int i = 0; i < numIngredients; i++) {
       ingredients.add(recipe.ingredients(i));
     }

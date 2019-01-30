@@ -67,21 +67,11 @@ class RecipeMetadataFlatRecipeProxy implements RecipeMetadata {
 
   @Override
   public OptionalInt getTotalTime() {
-    // XXX cache?
-    if (recipe.totalTime() == ChronicleRecipeMetadataDatabase.NON_EXISTENT_OPTIONAL_INT) {
-      return OptionalInt.empty();
-    } else {
-      return OptionalInt.of(recipe.totalTime());
-    }
+    return FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.totalTime());
   }
 
   @Override
   public OptionalInt getCalories() {
-    // XXX cache?
-    if (recipe.calories() == ChronicleRecipeMetadataDatabase.NON_EXISTENT_OPTIONAL_INT) {
-      return OptionalInt.empty();
-    } else {
-      return OptionalInt.of(recipe.calories());
-    }
+    return FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.calories());
   }
 }
