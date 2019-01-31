@@ -202,9 +202,11 @@ class SearcherTest {
         new Recipe.Builder()
             .recipeId(1)
             .name("none")
+            .slug("nope")
+            .siteName("who.cares")
             .crawlUrl("https://who.cares")
             .addIngredients("doesnt matter")
-            .instructions("nothing to do");
+            .addInstructions("nothing to do");
     indexer.addRecipe(recipeBuilder.putDiets("keto", 0.8f).putDiets("paleo", 0.5f).build());
     indexer.addRecipe(recipeBuilder.putDiets("keto", 0.6f).putDiets("paleo", 0.1f).build());
     indexer.commit();

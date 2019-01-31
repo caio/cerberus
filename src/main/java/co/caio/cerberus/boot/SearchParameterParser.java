@@ -5,12 +5,19 @@ import co.caio.cerberus.model.SearchQuery.RangedSpec;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import java.util.Map;
 import java.util.Scanner;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
+@Component
 class SearchParameterParser {
-  private static final int PAGE_SIZE = 10;
+  private final int pageSize;
+
+  SearchParameterParser(@Qualifier("searchPageSize") int pageSize) {
+    this.pageSize = pageSize;
+  }
 
   SearchQuery buildQuery(Map<String, String> params) {
-    var builder = new SearchQuery.Builder().maxResults(PAGE_SIZE);
+    var builder = new SearchQuery.Builder().maxResults(pageSize);
 
     params.forEach(
         (param, value) -> {
@@ -29,7 +36,7 @@ class SearchParameterParser {
               break;
             case "page":
               // page starts from 1, not 0
-              builder.offset((parseUnsignedInt(value) - 1) * PAGE_SIZE);
+              builder.offset((parseUnsignedInt(value) - 1) * pageSize);
               break;
             default:
               throw new SearchParameterException("Unknown parameter " + param);
@@ -82,7 +89,7 @@ class SearchParameterParser {
     }
   }
 
-  public class SearchParameterException extends RuntimeException {
+  class SearchParameterException extends RuntimeException {
     SearchParameterException(String message) {
       super(message);
     }

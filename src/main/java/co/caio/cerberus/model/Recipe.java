@@ -19,15 +19,17 @@ public interface Recipe {
 
   String name();
 
+  String slug();
+
+  String siteName();
+
   String crawlUrl();
 
-  String instructions();
+  List<String> instructions();
 
   List<String> ingredients();
 
   Map<String, Float> diets();
-
-  Set<String> keywords();
 
   OptionalInt prepTime();
 
@@ -43,10 +45,7 @@ public interface Recipe {
 
   OptionalInt proteinContent();
 
-  @Value.Default
-  default String description() {
-    return "";
-  }
+  Set<String> keywords();
 
   @Value.Check
   default void check() {

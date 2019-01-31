@@ -21,9 +21,10 @@ public class Util {
     return new Recipe.Builder()
         .recipeId(1)
         .name("valid recipe 1")
+        .slug("very-simple-slug")
+        .siteName("recipes.recipes")
         .crawlUrl("https://recipes.recipes/1")
-        .description("valid recipe 1 description")
-        .instructions("there is nothing to do")
+        .addInstructions("there is nothing to do")
         .addIngredients("item a", "item b")
         .build();
   }

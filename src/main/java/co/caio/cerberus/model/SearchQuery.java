@@ -150,7 +150,7 @@ public interface SearchQuery {
       throw new IllegalStateException("similarity queries requires at least 30 characters");
     }
     if (fulltext().isPresent() && fulltext().get().strip().length() < 3) {
-      throw new IllegalStateException("fulltext queries require at least 2 characters");
+      throw new IllegalStateException("fulltext queries require at least 3 characters");
     }
     if ((fulltext().isPresent() || similarity().isPresent())
         || !dietThreshold().isEmpty()

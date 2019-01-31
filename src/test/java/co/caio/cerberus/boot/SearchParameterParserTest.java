@@ -12,12 +12,13 @@ import org.junit.jupiter.api.Test;
 
 class SearchParameterParserTest {
 
-  private final SearchParameterParser parser = new SearchParameterParser();
+  private static final int pageSize = 10;
+  private static final SearchParameterParser parser = new SearchParameterParser(pageSize);
 
   @Test
   void buildQuery() {
     var input = new HashMap<String, String>();
-    var builder = new SearchQuery.Builder();
+    var builder = new SearchQuery.Builder().maxResults(pageSize);
 
     input.put("q", "oil");
     assertEquals(parser.buildQuery(input), builder.fulltext("oil").build());
@@ -32,10 +33,10 @@ class SearchParameterParserTest {
     assertEquals(parser.buildQuery(input), builder.build());
 
     input.put("page", "2");
-    assertEquals(parser.buildQuery(input), builder.offset(10).build());
+    assertEquals(parser.buildQuery(input), builder.offset(pageSize).build());
 
     input.put("page", "4");
-    assertEquals(parser.buildQuery(input), builder.offset(30).build());
+    assertEquals(parser.buildQuery(input), builder.offset((4 - 1) * pageSize).build());
 
     input.put("nf", "12");
     assertEquals(parser.buildQuery(input), builder.maxFacets(12).build());
