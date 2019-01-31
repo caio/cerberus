@@ -40,6 +40,7 @@
         <lmdb.version>0.6.2</lmdb.version>
         <chronicle.version>3.17.0</chronicle.version>
         <jsoup.version>1.11.3</jsoup.version>
+        <tablier.version>0.0.2</tablier.version>
     </properties>
 
     <dependencyManagement>
@@ -58,7 +59,7 @@
         <dependency>
             <groupId>co.caio</groupId>
             <artifactId>tablier</artifactId>
-            <version>0.0.1</version>
+            <version>${tablier.version}</version>
         </dependency>
 
         <dependency>
