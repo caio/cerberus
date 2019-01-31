@@ -16,19 +16,19 @@ import org.springframework.web.reactive.result.view.Rendering;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
-class Renderer {
+class ModelView {
 
   private final int pageSize;
   private final RecipeMetadataDatabase db;
 
-  Renderer(
+  ModelView(
       @Qualifier("searchPageSize") int pageSize,
       @Qualifier("metadataDb") RecipeMetadataDatabase db) {
     this.pageSize = pageSize;
     this.db = db;
   }
 
-  private Map<String, String> baseModel =
+  private final Map<String, String> baseModel =
       Map.of(
           "site_title", "gula.recipes",
           "page_description", "",
@@ -40,6 +40,14 @@ class Renderer {
 
   Rendering renderIndex() {
     return Rendering.view("index").model(baseModel).build();
+  }
+
+  Rendering renderUnstableIndex() {
+    return Rendering.view("index")
+        .model(baseModel)
+        .modelAttribute("search_is_disabled", true)
+        .modelAttribute("show_unstable_warning", true)
+        .build();
   }
 
   Rendering renderSearch(SearchQuery query, SearchResult result, UriComponentsBuilder uriBuilder) {

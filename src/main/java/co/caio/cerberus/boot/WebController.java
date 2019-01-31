@@ -33,24 +33,28 @@ public class WebController {
   private final Duration timeout;
   private final SearchParameterParser parser;
   private final CircuitBreaker breaker;
-  private final Renderer renderer;
+  private final ModelView modelView;
 
   public WebController(
       Searcher searcher,
       @Qualifier("searchTimeout") Duration timeout,
       CircuitBreaker breaker,
-      Renderer renderer,
+      ModelView modelView,
       SearchParameterParser parameterParser) {
     this.searcher = searcher;
     this.timeout = timeout;
     this.parser = parameterParser;
     this.breaker = breaker;
-    this.renderer = renderer;
+    this.modelView = modelView;
   }
 
   @GetMapping("/")
   public Rendering index() {
-    return renderer.renderIndex();
+    if (breaker.isCallPermitted()) {
+      return modelView.renderIndex();
+    } else {
+      return modelView.renderUnstableIndex();
+    }
   }
 
   @Timed
@@ -68,7 +72,7 @@ public class WebController {
         .transform(CircuitBreakerOperator.of(breaker))
         .map(
             result ->
-                renderer.renderSearch(
+                modelView.renderSearch(
                     query, result, UriComponentsBuilder.fromHttpRequest(request)));
   }
 
@@ -80,13 +84,13 @@ public class WebController {
     SearchParameterException.class
   })
   Rendering handleBadParameters(Exception ex) {
-    return renderer.renderError(
+    return modelView.renderError(
         "Invalid/Unknown Parameter", ex.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler
   Rendering handleTimeout(TimeoutException ex) {
-    return renderer.renderError(
+    return modelView.renderError(
         "Timeout Error",
         "We're likely overloaded, please try again in a few minutes",
         HttpStatus.REQUEST_TIMEOUT);
@@ -94,7 +98,7 @@ public class WebController {
 
   @ExceptionHandler
   Rendering handleCircuitBreaker(CircuitBreakerOpenException ex) {
-    return renderer.renderError(
+    return modelView.renderError(
         "Service Unavailable",
         "The site is experiencing an abnormal rate of errors, it might be a while before we're back at full speed",
         HttpStatus.SERVICE_UNAVAILABLE);
@@ -103,7 +107,7 @@ public class WebController {
   @ExceptionHandler
   Rendering handleUnknown(Exception ex) {
     logger.error("Handled unknown error", ex);
-    return renderer.renderError(
+    return modelView.renderError(
         "Unknown Error",
         "An unexpected error has occurred and has been logged, please try again",
         HttpStatus.INTERNAL_SERVER_ERROR);

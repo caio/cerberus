@@ -169,7 +169,10 @@ public interface Indexer {
         indexWriter.addDocument(facetsConfig.build(taxonomyWriter, doc));
       }
 
-      private void addOptionalIntField(Document doc, String fieldName, OptionalInt value) {
+      private void addOptionalIntField(
+          Document doc,
+          String fieldName,
+          @SuppressWarnings("OptionalUsedAsFieldOrParameterType") OptionalInt value) {
         if (value.isPresent()) {
           // For filtering
           doc.add(new IntPoint(fieldName, value.getAsInt()));

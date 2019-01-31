@@ -33,19 +33,19 @@ class LMDBRecipeMetadataDatabaseTest {
 
   private static RecipeMetadataDatabase open(boolean readOnly) {
     try {
-      return RecipeMetadataDatabase.Builder.open(dbPath, 5_000, readOnly);
+      return LMDBRecipeMetadataDatabase.open(dbPath, 5_000, readOnly);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
   @Test
-  void cantOpenADbThatDoestExist() throws Exception {
+  void cantOpenADbThatDoesntExist() throws Exception {
     // db path doesn't exist
     assertThrows(
         RecipeDatabaseConfigurationError.class,
         () -> {
-          RecipeMetadataDatabase.Builder.open(Path.of("/should/not/exist"), 5_000, false);
+          LMDBRecipeMetadataDatabase.open(Path.of("/should/not/exist"), 5_000, false);
         });
 
     // path exists, but there is no db and we want to read it
@@ -54,7 +54,7 @@ class LMDBRecipeMetadataDatabaseTest {
     assertThrows(
         RecipeDatabaseDoesNotExist.class,
         () -> {
-          RecipeMetadataDatabase.Builder.open(emptyDir, 5_000, true);
+          LMDBRecipeMetadataDatabase.open(emptyDir, 5_000, true);
         });
   }
 
@@ -63,9 +63,7 @@ class LMDBRecipeMetadataDatabaseTest {
     var db = open(true);
     assertThrows(
         RecipeDatabaseIsReadOnly.class,
-        () -> {
-          db.saveAll(List.of(RecipeMetadata.fromRecipe(Util.getBasicRecipe())));
-        });
+        () -> db.saveAll(List.of(RecipeMetadata.fromRecipe(Util.getBasicRecipe()))));
   }
 
   @Test
@@ -86,7 +84,6 @@ class LMDBRecipeMetadataDatabaseTest {
     assertTrue(maybeSample.isPresent());
     var retrievedSample = maybeSample.get();
 
-    // XXX implement a common .equals?
     assertEquals(sample.getRecipeId(), retrievedSample.getRecipeId());
     assertEquals(sample.getName(), retrievedSample.getName());
   }

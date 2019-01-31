@@ -38,6 +38,8 @@
         <junit.jupiter.version>5.3.2</junit.jupiter.version>
         <resilience4j.version>0.13.2</resilience4j.version>
         <lmdb.version>0.6.2</lmdb.version>
+        <chronicle.version>3.17.0</chronicle.version>
+        <jsoup.version>1.11.3</jsoup.version>
     </properties>
 
     <dependencyManagement>
@@ -113,6 +115,18 @@
         </dependency>
 
         <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-map</artifactId>
+            <version>${chronicle.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.sun.java</groupId>
+                    <artifactId>tools</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.lmdbjava</groupId>
             <artifactId>lmdbjava</artifactId>
             <version>${lmdb.version}</version>
@@ -173,6 +187,13 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -290,7 +311,7 @@
                                 <argument>-Xms1024m</argument>
                                 <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
                                 <argument>co.caio.cerberus.Loader</argument>
-                                <argument>src/main/resources/application.properties</argument>
+                                <argument>src/main/resources/cerberus.properties</argument>
                                 <argument>tmp/document.jsonlines</argument>
                             </arguments>
                         </configuration>

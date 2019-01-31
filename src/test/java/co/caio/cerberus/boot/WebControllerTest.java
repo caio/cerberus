@@ -1,19 +1,24 @@
 package co.caio.cerberus.boot;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+import co.caio.cerberus.db.HashMapRecipeMetadataDatabase;
 import co.caio.cerberus.db.RecipeMetadataDatabase;
 import co.caio.cerberus.model.SearchResult;
 import co.caio.cerberus.search.Searcher;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.util.List;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -58,15 +63,18 @@ class WebControllerTest {
     }
 
     @Bean
-    Renderer renderer() throws Exception {
-      var tmp = Files.createTempDirectory("renderer");
-      var db = RecipeMetadataDatabase.Builder.open(tmp, 42, false);
-      return new Renderer(pageSize(), db);
+    ModelView modelView(@Qualifier("metadataDb") RecipeMetadataDatabase db) {
+      return new ModelView(pageSize(), db);
     }
 
     @Bean("metadataDb")
-    RecipeMetadataDatabase getMetadataDb() throws Exception {
-      return RecipeMetadataDatabase.Builder.open(Files.createTempDirectory("lmdb"), 3_000, false);
+    RecipeMetadataDatabase getMetadataDb() {
+      return new HashMapRecipeMetadataDatabase();
+    }
+
+    @Bean
+    SearchConfigurationProperties conf() {
+      return new SearchConfigurationProperties();
     }
   }
 
@@ -127,6 +135,45 @@ class WebControllerTest {
                   return new SearchResult.Builder().build();
                 });
     assertGet("/search?q=salt", HttpStatus.REQUEST_TIMEOUT);
+  }
+
+  @Test
+  void indexPageRendersNormally() {
+    var doc = parseIndexBody();
+
+    // There are no warning messages
+    assertNull(doc.select("div.hero-body div[class*='notification is-warning']").first());
+    // And the search controls are NOT disabled
+    assertNull(doc.select("form input[disabled]").first());
+    assertNull(doc.select("form button[disabled]").first());
+  }
+
+  @Test
+  void indexPageRendersWarningWhenCircuitBreakerIsOpen() {
+    breaker.transitionToOpenState();
+
+    var doc = parseIndexBody();
+
+    // The warning is displayed
+    assertNotNull(doc.select("div.hero-body div[class*='notification is-warning']").first());
+    // And the search controls are disabled
+    assertNotNull(doc.select("form input[disabled]").first());
+    assertNotNull(doc.select("form button[disabled]").first());
+  }
+
+  private Document parseIndexBody() {
+    var body =
+        testClient
+            .get()
+            .uri("/")
+            .exchange()
+            .expectStatus()
+            .is2xxSuccessful()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+    assertNotNull(body);
+    return Jsoup.parse(body);
   }
 
   void assertGet(String uri, HttpStatus status) {

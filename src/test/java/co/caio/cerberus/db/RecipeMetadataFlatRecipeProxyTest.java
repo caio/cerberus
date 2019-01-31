@@ -6,10 +6,10 @@ import co.caio.cerberus.Util;
 import co.caio.cerberus.flatbuffers.FlatRecipe;
 import org.junit.jupiter.api.Test;
 
-class RecipeMetadataFlatRecipeCopyTest {
+class RecipeMetadataFlatRecipeProxyTest {
 
   @Test
-  void correctCopying() {
+  void correctProxying() {
     var sample = Util.getBasicRecipe();
     var flatRecipe =
         FlatRecipe.getRootAsFlatRecipe(

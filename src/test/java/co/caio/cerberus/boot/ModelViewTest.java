@@ -2,30 +2,20 @@ package co.caio.cerberus.boot;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import co.caio.cerberus.db.RecipeMetadataDatabase;
+import co.caio.cerberus.db.HashMapRecipeMetadataDatabase;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
-import java.nio.file.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.util.UriComponentsBuilder;
 
-class RendererTest {
+class ModelViewTest {
 
   private static final int pageSize = 2; // just to simplify pagination testing
-  private static final Renderer renderer;
+  private static final ModelView modelView =
+      new ModelView(pageSize, new HashMapRecipeMetadataDatabase());
   private UriComponentsBuilder uriBuilder;
-
-  static {
-    try {
-      var tmp = Files.createTempDirectory("renderer");
-      var db = RecipeMetadataDatabase.Builder.open(tmp, 42, false);
-      renderer = new Renderer(pageSize, db);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   @BeforeEach
   void setupUriBuilder() {
@@ -34,13 +24,25 @@ class RendererTest {
 
   @Test
   void renderIndex() {
-    var index = renderer.renderIndex();
+    var index = modelView.renderIndex();
+    var attrs = index.modelAttributes();
     assertEquals("index", index.view());
+    assertNull(attrs.get("search_is_disabled"));
+    assertNull(attrs.get("show_unstable_warning"));
+  }
+
+  @Test
+  void renderUnstableIndex() {
+    var index = modelView.renderUnstableIndex();
+    var attrs = index.modelAttributes();
+    assertEquals("index", index.view());
+    assertTrue((Boolean) attrs.get("search_is_disabled"));
+    assertTrue((Boolean) attrs.get("show_unstable_warning"));
   }
 
   @Test
   void renderError() {
-    var error = renderer.renderError("title", "subtitle", HttpStatus.UNPROCESSABLE_ENTITY);
+    var error = modelView.renderError("title", "subtitle", HttpStatus.UNPROCESSABLE_ENTITY);
     assertEquals("error", error.view());
     assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, error.status());
     assertEquals("title", error.modelAttributes().get("error_title"));
@@ -51,14 +53,14 @@ class RendererTest {
   void emptyResultsShouldRenderItsOwnView() {
     var unusedQuery = new SearchQuery.Builder().fulltext("unused").build();
     var result = new SearchResult.Builder().build();
-    assertEquals("zero_results", renderer.renderSearch(unusedQuery, result, uriBuilder).view());
+    assertEquals("zero_results", modelView.renderSearch(unusedQuery, result, uriBuilder).view());
   }
 
   @Test
   void overPaginationShouldRenderError() {
     var largeOffsetQuery = new SearchQuery.Builder().fulltext("unused").offset(200).build();
     var result = new SearchResult.Builder().totalHits(180).build();
-    assertEquals("error", renderer.renderSearch(largeOffsetQuery, result, uriBuilder).view());
+    assertEquals("error", modelView.renderSearch(largeOffsetQuery, result, uriBuilder).view());
   }
 
   @Test
@@ -67,7 +69,7 @@ class RendererTest {
     var result =
         new SearchResult.Builder().totalHits(1).addRecipe(1, "recipe 1", "doest matter").build();
 
-    var r = renderer.renderSearch(unusedQuery, result, uriBuilder);
+    var r = modelView.renderSearch(unusedQuery, result, uriBuilder);
 
     assertEquals("search", r.view());
     assertNull(r.modelAttributes().get("pagination_next_href"));
@@ -84,7 +86,7 @@ class RendererTest {
             .addRecipe(2, "recipe 2", "doest matter")
             .build();
 
-    var r = renderer.renderSearch(unusedQuery, resultWithNextPage, uriBuilder);
+    var r = modelView.renderSearch(unusedQuery, resultWithNextPage, uriBuilder);
 
     assertEquals("search", r.view());
     assertNull(r.modelAttributes().get("pagination_prev_href"));
@@ -101,7 +103,7 @@ class RendererTest {
             .addRecipe(4, "recipe 4", "doest matter")
             .build();
 
-    var r = renderer.renderSearch(unusedQuery, offsetResultWithNextPage, uriBuilder);
+    var r = modelView.renderSearch(unusedQuery, offsetResultWithNextPage, uriBuilder);
 
     assertEquals("search", r.view());
     assertNotNull(r.modelAttributes().get("pagination_prev_href"));
@@ -119,7 +121,7 @@ class RendererTest {
             .addRecipe(4, "recipe 4", "doest matter")
             .build();
 
-    var r = renderer.renderSearch(unusedQuery, offsetResultWithNextPage, uriBuilder);
+    var r = modelView.renderSearch(unusedQuery, offsetResultWithNextPage, uriBuilder);
 
     assertEquals("search", r.view());
     assertNotNull(r.modelAttributes().get("pagination_prev_href"));
@@ -137,7 +139,7 @@ class RendererTest {
             .addRecipe(4, "recipe 4", "doest matter")
             .build();
 
-    var r = renderer.renderSearch(secondPage, offsetResultWithNextPage, uriBuilder);
+    var r = modelView.renderSearch(secondPage, offsetResultWithNextPage, uriBuilder);
 
     assertEquals("search", r.view());
     assertEquals(4, r.modelAttributes().get("pagination_end"));
@@ -153,7 +155,7 @@ class RendererTest {
             .addRecipe(4, "recipe 4", "doest matter")
             .build();
 
-    var r = renderer.renderSearch(unusedQuery, offsetResultWithNextPage, uriBuilder);
+    var r = modelView.renderSearch(unusedQuery, offsetResultWithNextPage, uriBuilder);
 
     assertEquals("search", r.view());
     assertEquals(
