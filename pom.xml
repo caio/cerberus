@@ -311,7 +311,7 @@
                                 <argument>-Xms1024m</argument>
                                 <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
                                 <argument>co.caio.cerberus.Loader</argument>
-                                <argument>src/main/resources/application.properties</argument>
+                                <argument>src/main/resources/cerberus.properties</argument>
                                 <argument>tmp/document.jsonlines</argument>
                             </arguments>
                         </configuration>

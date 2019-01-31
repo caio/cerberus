@@ -9,20 +9,21 @@ import co.caio.cerberus.search.Indexer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 public class Loader {
   private static final Logger logger = LoggerFactory.getLogger(Loader.class);
 
   private final Path recipesFile;
-  private final Path dataDir;
-  private final Path dbDir;
-  private final int maxDbSize;
+  private final Path luceneIndexDir;
+  private final Path chronicleFilename;
   private final Serializer serializer = new Serializer();
   private final String movePrefix;
 
@@ -36,11 +37,10 @@ public class Loader {
     var conf = new Properties();
     conf.load(Files.newBufferedReader(configFile));
 
-    dataDir = Path.of(conf.getProperty("cerberus.search.location"));
-    dbDir = Path.of(conf.getProperty("cerberus.search.lmdb-location"));
-    maxDbSize = Integer.parseInt(conf.getProperty("cerberus.search.lmdb-max-size"));
+    luceneIndexDir = Path.of(conf.getProperty("cerberus.lucene.directory"));
+    chronicleFilename = Path.of(conf.getProperty("cerberus.chronicle.filename"));
 
-    assert !dataDir.toFile().isFile() && !dbDir.toFile().isFile() && maxDbSize > 0;
+    assert !luceneIndexDir.toFile().isFile() && chronicleFilename.toFile().isFile();
 
     movePrefix = "old." + System.currentTimeMillis() + ".";
   }
@@ -49,16 +49,16 @@ public class Loader {
     return Files.lines(recipesFile).map(serializer::readRecipe).flatMap(Optional::stream);
   }
 
-  public void createIndex() throws IOException {
+  void createIndex() throws IOException {
 
-    moveExistingDirs(dataDir);
-    dataDir.toFile().mkdirs();
+    moveExistingDirs(luceneIndexDir);
+    luceneIndexDir.toFile().mkdirs();
 
     logger.info("Initializing indexer");
     var indexer =
         new Indexer.Builder()
             .analyzer(IndexConfiguration.getAnalyzer())
-            .dataDirectory(dataDir)
+            .dataDirectory(luceneIndexDir)
             .createMode()
             .build();
 
@@ -81,27 +81,41 @@ public class Loader {
     logger.info("Finished creating lucene index");
   }
 
-  public void createDatabase() throws IOException {
+  void createDatabase() throws Exception {
 
-    moveExistingDirs(dbDir);
-    // dbDir.toFile().mkdirs();
+    moveExistingFile(chronicleFilename);
 
-    // FIXME open for creation
-    logger.info("Creating metadata database at {}", dbDir);
-    var db = ChronicleRecipeMetadataDatabase.open(dbDir);
+    var settings = computeChronicleRWSettings();
+    logger.info("Creating metadata database at {}", chronicleFilename);
+    var db =
+        ChronicleRecipeMetadataDatabase.create(chronicleFilename, settings.avg, settings.count);
 
-    recipeStream()
-        .map(RecipeMetadata::fromRecipe)
-        .parallel()
-        .forEach(rm -> db.saveAll(List.of(rm)));
-    // Flux.fromStream(recipeStream().map(RecipeMetadata::fromRecipe))
-    //     .buffer(100_000)
-    //     .subscribe(
-    //         recipes -> {
-    //           logger.info("Writing a batch of {} recipes", recipes.size());
-    //           db.saveAll(recipes);
-    //         });
+    Flux.fromStream(recipeStream().map(RecipeMetadata::fromRecipe))
+        .buffer(100_000)
+        .subscribe(
+            recipes -> {
+              logger.info("Writing a batch of {} recipes", recipes.size());
+              db.saveAll(recipes);
+            });
+
+    db.close();
     logger.info("Finished creating metadata database");
+  }
+
+  private void moveExistingFile(Path filename) {
+    if (!filename.toFile().exists()) {
+      return;
+    }
+
+    var newName = movePrefix + filename.getFileName();
+    var dest = filename.resolveSibling(newName);
+
+    if (filename.toFile().renameTo(dest.toFile())) {
+      logger.info("Renamed {} to {}", filename, dest);
+    } else {
+      logger.error("Failed renaming {} to {}", filename, dest);
+      throw new RuntimeException("Unexpected error. Aborting...");
+    }
   }
 
   private void moveExistingDirs(Path... paths) {
@@ -123,14 +137,40 @@ public class Loader {
     }
   }
 
-  public void averageValueSize() throws Exception {
-    var avg =
-        recipeStream()
-            .parallel()
-            .map(FlatBufferSerializer.INSTANCE::flattenRecipe)
-            .mapToInt(bb -> bb.limit() - bb.position())
-            .average();
-    System.out.println(avg);
+  ChronicleRWSettings computeChronicleRWSettings() throws Exception {
+    Map<String, Long> computed = new HashMap<>();
+
+    logger.info("Computing ChronicleMap creation parameters");
+    recipeStream()
+        .parallel()
+        .map(FlatBufferSerializer.INSTANCE::flattenRecipe)
+        .forEach(
+            bb -> {
+              var bufferSize = bb.limit() - bb.position();
+
+              computed.compute("bytes", (key, orig) -> (orig == null ? 0 : orig) + bufferSize);
+
+              computed.compute("count", (key, orig) -> (orig == null ? 0 : orig) + 1);
+            });
+
+    System.out.println(computed);
+
+    long count = computed.get("count");
+    long bytes = computed.get("bytes");
+    double avg = ((double) bytes) / count;
+
+    logger.info("Computed averageValueByteSize={} and numRecipes={}", avg, count);
+    return new ChronicleRWSettings(avg, count);
+  }
+
+  class ChronicleRWSettings {
+    double avg;
+    long count;
+
+    ChronicleRWSettings(double avg, long count) {
+      this.avg = avg;
+      this.count = count;
+    }
   }
 
   public static void main(String[] args) throws Exception {
@@ -142,9 +182,8 @@ public class Loader {
 
     var loader = new Loader(Path.of(args[0]), Path.of(args[1]));
 
-    // loader.averageValueSize();
     loader.createDatabase();
-    // loader.createIndex();
+    loader.createIndex();
 
     logger.info("Done!");
   }
