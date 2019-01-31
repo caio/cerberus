@@ -4,23 +4,46 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Optional;
+import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
-class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
+public class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
-  private final Map<Long, ByteBuffer> backingMap;
+  private static final String DATABASE_NAME = "recipe-metadata";
 
-  ChronicleRecipeMetadataDatabase(Path databasePath) throws IOException {
-    backingMap =
-        ChronicleMapBuilder.of(Long.class, ByteBuffer.class)
-            .name("recipe-metadata")
-            // FIXME these settings are only necessary when creating the db
-            .constantKeySizeBySample(1L)
-            .averageValueSize(1434)
-            .entries(1_200_000)
-            .createPersistedTo(databasePath.toFile());
+  final ChronicleMap<Long, ByteBuffer> backingMap;
+
+  private ChronicleRecipeMetadataDatabase(ChronicleMap<Long, ByteBuffer> backingMap) {
+    this.backingMap = backingMap;
+  }
+
+  public static RecipeMetadataDatabase open(Path databasePath) {
+    try {
+      var map =
+          ChronicleMapBuilder.of(Long.class, ByteBuffer.class)
+              .name(DATABASE_NAME)
+              .createPersistedTo(databasePath.toFile());
+      return new ChronicleRecipeMetadataDatabase(map);
+    } catch (IOException rethrown) {
+      throw new RecipeMetadataDbException(rethrown);
+    }
+  }
+
+  public static RecipeMetadataDatabase create(
+      Path databasePath, double averageValueBytesSize, long numberOfEntries) {
+    try {
+      var map =
+          ChronicleMapBuilder.of(Long.class, ByteBuffer.class)
+              .name(DATABASE_NAME)
+              .constantKeySizeBySample(1L)
+              .averageValueSize(averageValueBytesSize)
+              .entries(numberOfEntries)
+              .createPersistedTo(databasePath.toFile());
+      return new WriteableChronicleRecipeMetadataDatabase(map);
+    } catch (IOException rethrown) {
+      throw new RecipeMetadataDbException(rethrown);
+    }
   }
 
   private RecipeMetadata get(long recipeId) {
@@ -33,13 +56,17 @@ class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
+  public void close() {
+    backingMap.close();
+  }
+
+  @Override
   public Optional<RecipeMetadata> findById(long recipeId) {
     return Optional.ofNullable(get(recipeId));
   }
 
   @Override
   public Iterable<RecipeMetadata> findAllById(Iterable<Long> recipeIds) {
-    // XXX iterable is super fucking annoying - change to List<> ?
     var result = new ArrayList<RecipeMetadata>(20); // TMI
     recipeIds.forEach(
         id -> {
@@ -53,9 +80,19 @@ class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
   @Override
   public void saveAll(Iterable<RecipeMetadata> recipes) {
-    recipes.forEach(
-        rm -> {
-          backingMap.put(rm.getRecipeId(), FlatBufferSerializer.INSTANCE.flattenRecipe(rm));
-        });
+    throw new RecipeMetadataDbException("Database is open as read-only");
+  }
+
+  static class WriteableChronicleRecipeMetadataDatabase extends ChronicleRecipeMetadataDatabase {
+
+    WriteableChronicleRecipeMetadataDatabase(ChronicleMap<Long, ByteBuffer> backingMap) {
+      super(backingMap);
+    }
+
+    @Override
+    public void saveAll(Iterable<RecipeMetadata> recipes) {
+      recipes.forEach(
+          rm -> backingMap.put(rm.getRecipeId(), FlatBufferSerializer.INSTANCE.flattenRecipe(rm)));
+    }
   }
 }

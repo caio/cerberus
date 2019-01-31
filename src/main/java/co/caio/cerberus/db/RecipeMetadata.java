@@ -5,7 +5,6 @@ import co.caio.cerberus.model.Recipe;
 import java.util.List;
 import java.util.OptionalInt;
 
-// XXX use immutables so it generates .equals() and stuff for me?
 public interface RecipeMetadata {
   long getRecipeId();
 

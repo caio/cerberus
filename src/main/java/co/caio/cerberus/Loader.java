@@ -1,8 +1,8 @@
 package co.caio.cerberus;
 
+import co.caio.cerberus.db.ChronicleRecipeMetadataDatabase;
 import co.caio.cerberus.db.FlatBufferSerializer;
 import co.caio.cerberus.db.RecipeMetadata;
-import co.caio.cerberus.db.RecipeMetadataDatabase;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.IndexConfiguration;
 import co.caio.cerberus.search.Indexer;
@@ -86,8 +86,9 @@ public class Loader {
     moveExistingDirs(dbDir);
     // dbDir.toFile().mkdirs();
 
+    // FIXME open for creation
     logger.info("Creating metadata database at {}", dbDir);
-    var db = RecipeMetadataDatabase.Builder.open(dbDir);
+    var db = ChronicleRecipeMetadataDatabase.open(dbDir);
 
     recipeStream()
         .map(RecipeMetadata::fromRecipe)

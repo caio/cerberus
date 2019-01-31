@@ -13,7 +13,11 @@ class RecipeMetadataFlatRecipeCopy implements RecipeMetadata {
   private final String siteName;
   private final List<String> instructions;
   private final List<String> ingredients;
+
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private final OptionalInt totalTime;
+
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private final OptionalInt calories;
 
   RecipeMetadataFlatRecipeCopy(FlatRecipe recipe) {

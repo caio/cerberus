@@ -9,12 +9,12 @@ import org.lmdbjava.DbiFlags;
 import org.lmdbjava.Env;
 import org.lmdbjava.EnvFlags;
 
-class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
+public class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
   private final Env<ByteBuffer> env;
   private final Dbi<ByteBuffer> recipeTableDbi;
 
-  LMDBRecipeMetadataDatabase(Path databasePath, int maxSizeInMb, boolean isReadOnly) {
+  private LMDBRecipeMetadataDatabase(Path databasePath, int maxSizeInMb, boolean isReadOnly) {
     if (!databasePath.toFile().isDirectory()) {
       throw new RecipeDatabaseConfigurationError("databasePath must be an existing directory");
     }
@@ -22,7 +22,6 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
     if (isReadOnly && !databasePath.resolve("data.mdb").toFile().exists()) {
       throw new RecipeDatabaseDoesNotExist(databasePath.toString());
     }
-
     if (isReadOnly) {
       env = Env.open(databasePath.toFile(), maxSizeInMb, EnvFlags.MDB_RDONLY_ENV);
       recipeTableDbi = env.openDbi("recipe");
@@ -30,6 +29,11 @@ class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
       env = Env.open(databasePath.toFile(), maxSizeInMb);
       recipeTableDbi = env.openDbi("recipe", DbiFlags.MDB_CREATE);
     }
+  }
+
+  public static RecipeMetadataDatabase open(
+      Path databasePath, int maxSizeInMb, boolean isReadOnly) {
+    return new LMDBRecipeMetadataDatabase(databasePath, maxSizeInMb, isReadOnly);
   }
 
   class RecipeDatabaseConfigurationError extends RecipeMetadataDbException {
