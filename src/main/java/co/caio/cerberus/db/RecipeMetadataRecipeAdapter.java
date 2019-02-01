@@ -4,10 +4,10 @@ import co.caio.cerberus.model.Recipe;
 import java.util.List;
 import java.util.OptionalInt;
 
-class RecipeMetadataRecipeProxy implements RecipeMetadata {
+class RecipeMetadataRecipeAdapter implements RecipeMetadata {
   private final Recipe recipe;
 
-  RecipeMetadataRecipeProxy(Recipe recipe) {
+  RecipeMetadataRecipeAdapter(Recipe recipe) {
     this.recipe = recipe;
   }
 

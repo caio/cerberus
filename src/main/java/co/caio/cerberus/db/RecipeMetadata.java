@@ -27,7 +27,7 @@ public interface RecipeMetadata {
   OptionalInt getCalories();
 
   static RecipeMetadata fromRecipe(Recipe recipe) {
-    return new RecipeMetadataRecipeProxy(recipe);
+    return new RecipeMetadataRecipeAdapter(recipe);
   }
 
   static RecipeMetadata fromFlatRecipe(FlatRecipe recipe) {
@@ -35,6 +35,6 @@ public interface RecipeMetadata {
   }
 
   static RecipeMetadata fromFlatRecipeAsProxy(FlatRecipe recipe) {
-    return new RecipeMetadataFlatRecipeProxy(recipe);
+    return new RecipeMetadataFlatRecipeAdapter(recipe);
   }
 }

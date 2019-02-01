@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 
-class RecipeMetadataFlatRecipeProxy implements RecipeMetadata {
+class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
 
   private final FlatRecipe recipe;
 
-  RecipeMetadataFlatRecipeProxy(FlatRecipe recipe) {
+  RecipeMetadataFlatRecipeAdapter(FlatRecipe recipe) {
     this.recipe = recipe;
   }
 

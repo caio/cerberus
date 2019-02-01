@@ -6,7 +6,7 @@ import co.caio.cerberus.Util;
 import co.caio.cerberus.flatbuffers.FlatRecipe;
 import org.junit.jupiter.api.Test;
 
-class RecipeMetadataFlatRecipeProxyTest {
+class RecipeMetadataFlatRecipeAdapterTest {
 
   @Test
   void correctProxying() {

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import co.caio.cerberus.Util;
 import org.junit.jupiter.api.Test;
 
-class RecipeMetadataRecipeProxyTest {
+class RecipeMetadataRecipeAdapterTest {
   @Test
   void correctProxying() {
     var sample = Util.getBasicRecipe();
