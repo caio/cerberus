@@ -1,14 +1,15 @@
 package co.caio.cerberus.db;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RecipeMetadataDatabase {
 
   Optional<RecipeMetadata> findById(long recipeId);
 
-  Iterable<RecipeMetadata> findAllById(Iterable<Long> recipeIds);
+  List<RecipeMetadata> findAllById(List<Long> recipeIds);
 
-  void saveAll(Iterable<RecipeMetadata> recipes);
+  void saveAll(List<RecipeMetadata> recipes);
 
   default void close() {}
 

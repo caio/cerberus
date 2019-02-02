@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
@@ -66,8 +67,8 @@ public class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public Iterable<RecipeMetadata> findAllById(Iterable<Long> recipeIds) {
-    var result = new ArrayList<RecipeMetadata>(20); // TMI
+  public List<RecipeMetadata> findAllById(List<Long> recipeIds) {
+    var result = new ArrayList<RecipeMetadata>(recipeIds.size());
     recipeIds.forEach(
         id -> {
           var recipe = get(id);
@@ -79,7 +80,7 @@ public class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public void saveAll(Iterable<RecipeMetadata> recipes) {
+  public void saveAll(List<RecipeMetadata> recipes) {
     throw new RecipeMetadataDbException("Database is open as read-only");
   }
 
@@ -90,7 +91,7 @@ public class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
     }
 
     @Override
-    public void saveAll(Iterable<RecipeMetadata> recipes) {
+    public void saveAll(List<RecipeMetadata> recipes) {
       recipes.forEach(
           rm -> backingMap.put(rm.getRecipeId(), FlatBufferSerializer.INSTANCE.flattenRecipe(rm)));
     }

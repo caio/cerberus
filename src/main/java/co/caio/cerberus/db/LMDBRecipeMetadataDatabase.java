@@ -3,6 +3,7 @@ package co.caio.cerberus.db;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.lmdbjava.Dbi;
 import org.lmdbjava.DbiFlags;
@@ -74,9 +75,8 @@ public class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public Iterable<RecipeMetadata> findAllById(Iterable<Long> recipeIds) {
-    // XXX TMI: I shouldn't need to know the page size here
-    var result = new ArrayList<RecipeMetadata>(20);
+  public List<RecipeMetadata> findAllById(List<Long> recipeIds) {
+    var result = new ArrayList<RecipeMetadata>(recipeIds.size());
     var bbKey = allocateKeyBuffer();
 
     try (var txn = env.txnRead()) {
@@ -98,7 +98,7 @@ public class LMDBRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public void saveAll(Iterable<RecipeMetadata> recipes) {
+  public void saveAll(List<RecipeMetadata> recipes) {
     if (env.isReadOnly()) {
       throw new RecipeDatabaseIsReadOnly("Illegal operation on read-only db");
     }

@@ -2,6 +2,7 @@ package co.caio.cerberus.db;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,14 +20,14 @@ public class HashMapRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public Iterable<RecipeMetadata> findAllById(Iterable<Long> recipeIds) {
+  public List<RecipeMetadata> findAllById(List<Long> recipeIds) {
     var result = new ArrayList<RecipeMetadata>();
     recipeIds.forEach(id -> findById(id).ifPresent(result::add));
     return result;
   }
 
   @Override
-  public void saveAll(Iterable<RecipeMetadata> recipes) {
+  public void saveAll(List<RecipeMetadata> recipes) {
     recipes.forEach(
         recipe -> {
           map.put(recipe.getRecipeId(), recipe);

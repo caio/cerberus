@@ -67,15 +67,14 @@ class ChronicleRecipeMetadataDatabaseTest {
     }
 
     var recipeIds =
-        recipes.stream().limit(10).map(RecipeMetadata::getRecipeId).collect(Collectors.toSet());
+        recipes.stream().limit(10).map(RecipeMetadata::getRecipeId).collect(Collectors.toList());
     var fetched = testRWDb.findAllById(recipeIds);
 
-    int numFetched = 0;
-    for (RecipeMetadata rm : fetched) {
-      assertTrue(recipeIds.contains(rm.getRecipeId()));
-      numFetched++;
+    assertEquals(recipeIds.size(), fetched.size());
+    for (int i = 0; i < recipeIds.size(); i++) {
+      var rm = fetched.get(i);
+      assertEquals(recipeIds.get(i).longValue(), rm.getRecipeId());
     }
-    assertEquals(recipeIds.size(), numFetched);
   }
 
   @Test
