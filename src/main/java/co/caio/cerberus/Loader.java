@@ -153,8 +153,6 @@ public class Loader {
               computed.compute("count", (key, orig) -> (orig == null ? 0 : orig) + 1);
             });
 
-    System.out.println(computed);
-
     long count = computed.get("count");
     long bytes = computed.get("bytes");
     double avg = ((double) bytes) / count;
