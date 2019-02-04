@@ -27,7 +27,7 @@ public class Loader {
   private final Serializer serializer = new Serializer();
   private final String movePrefix;
 
-  private Loader(Path configFile, Path inputFile) throws IOException {
+  private Loader(Path configFile, Path inputFile) {
 
     assert configFile.toFile().isFile();
     assert inputFile.toFile().isFile();
@@ -35,7 +35,11 @@ public class Loader {
     recipesFile = inputFile;
 
     var conf = new Properties();
-    conf.load(Files.newBufferedReader(configFile));
+    try (var reader = Files.newBufferedReader(configFile)) {
+      conf.load(reader);
+    } catch (Exception rethrown) {
+      throw new RuntimeException(rethrown);
+    }
 
     luceneIndexDir = Path.of(conf.getProperty("cerberus.lucene.directory"));
     chronicleFilename = Path.of(conf.getProperty("cerberus.chronicle.filename"));
@@ -52,6 +56,7 @@ public class Loader {
   void createIndex() throws IOException {
 
     moveExistingDirs(luceneIndexDir);
+    //noinspection ResultOfMethodCallIgnored
     luceneIndexDir.toFile().mkdirs();
 
     logger.info("Initializing indexer");
