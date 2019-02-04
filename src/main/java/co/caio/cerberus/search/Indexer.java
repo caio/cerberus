@@ -116,7 +116,7 @@ public interface Indexer {
       }
     }
 
-    private final class IndexerImpl implements Indexer {
+    private static final class IndexerImpl implements Indexer {
       private final IndexWriter indexWriter;
       private final DirectoryTaxonomyWriter taxonomyWriter;
       private final FacetsConfig facetsConfig;

@@ -161,7 +161,7 @@ public class Loader {
     return new ChronicleRWSettings(avg, count);
   }
 
-  class ChronicleRWSettings {
+  static class ChronicleRWSettings {
     double avg;
     long count;
 

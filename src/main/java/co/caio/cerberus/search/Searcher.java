@@ -66,7 +66,7 @@ public class Searcher {
     return indexSearcher.getIndexReader().numDocs();
   }
 
-  public class SearcherException extends RuntimeException {
+  public static class SearcherException extends RuntimeException {
     private SearcherException(Exception e) {
       super(e);
     }
@@ -181,7 +181,7 @@ public class Searcher {
       return new Searcher(this);
     }
 
-    protected class SearcherBuilderException extends RuntimeException {
+    protected static class SearcherBuilderException extends RuntimeException {
       SearcherBuilderException(String message) {
         super(message);
       }
