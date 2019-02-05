@@ -50,7 +50,7 @@ public class ChronicleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   private RecipeMetadata get(long recipeId) {
     var buffer = backingMap.get(recipeId);
     if (buffer != null) {
-      return RecipeMetadata.fromFlatRecipeAsProxy(FlatBufferSerializer.INSTANCE.readRecipe(buffer));
+      return RecipeMetadata.fromFlatRecipe(FlatBufferSerializer.INSTANCE.readRecipe(buffer));
     } else {
       return null;
     }

@@ -104,6 +104,7 @@ public class Searcher {
           doc.get(IndexField.CRAWL_URL));
     }
 
+    // TODO we should allow specifying which facets to collect
     var maxFacets = query.maxFacets();
     if (maxFacets != 0) {
       var diets =
@@ -118,6 +119,7 @@ public class Searcher {
       addFacetData(builder, keywords);
 
       // XXX maybe extend LongRangeFacetCounts and make it reusable if garbage becomes a problem
+      // XXX using FastTaxonomyFacetCounts and indexed fields would be a lot faster
       for (Entry<String, LongRange[]> entry : fieldToRanges.entrySet()) {
         var topK =
             new LongRangeFacetCounts(entry.getKey(), fc, entry.getValue())
