@@ -35,7 +35,7 @@
         <flatbuffers.version>1.10.0.2</flatbuffers.version>
         <flatbuffers.sources>${basedir}/src/main/flatbuffers</flatbuffers.sources>
         <flatbuffers.generated.sources>${project.build.directory}/generated-sources/java</flatbuffers.generated.sources>
-        <junit.jupiter.version>5.3.2</junit.jupiter.version>
+        <junit.jupiter.version>5.4.0</junit.jupiter.version>
         <resilience4j.version>0.13.2</resilience4j.version>
         <chronicle.version>3.17.0</chronicle.version>
         <jsoup.version>1.11.3</jsoup.version>
@@ -167,14 +167,7 @@
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
+            <artifactId>junit-jupiter</artifactId>
             <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
