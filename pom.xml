@@ -37,7 +37,6 @@
         <flatbuffers.generated.sources>${project.build.directory}/generated-sources/java</flatbuffers.generated.sources>
         <junit.jupiter.version>5.3.2</junit.jupiter.version>
         <resilience4j.version>0.13.2</resilience4j.version>
-        <lmdb.version>0.6.2</lmdb.version>
         <chronicle.version>3.17.0</chronicle.version>
         <jsoup.version>1.11.3</jsoup.version>
         <tablier.version>0.1.3</tablier.version>
@@ -125,12 +124,6 @@
                     <artifactId>tools</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.lmdbjava</groupId>
-            <artifactId>lmdbjava</artifactId>
-            <version>${lmdb.version}</version>
         </dependency>
 
         <dependency>
