@@ -147,7 +147,6 @@ public class Loader {
 
     logger.info("Computing ChronicleMap creation parameters");
     recipeStream()
-        .parallel()
         .map(FlatBufferSerializer.INSTANCE::flattenRecipe)
         .forEach(
             bb -> {
