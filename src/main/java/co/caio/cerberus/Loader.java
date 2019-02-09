@@ -9,10 +9,10 @@ import co.caio.cerberus.search.Indexer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LongSummaryStatistics;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,10 +90,13 @@ public class Loader {
 
     moveExistingFile(chronicleFilename);
 
-    var settings = computeChronicleRWSettings();
+    var stats = computeStats();
+    logger.info("Computed db stats as {}", stats);
     logger.info("Creating metadata database at {}", chronicleFilename);
+
     var db =
-        ChronicleRecipeMetadataDatabase.create(chronicleFilename, settings.avg, settings.count);
+        ChronicleRecipeMetadataDatabase.create(
+            chronicleFilename, stats.getAverage(), stats.getCount());
 
     Flux.fromStream(recipeStream().map(RecipeMetadata::fromRecipe))
         .buffer(100_000)
@@ -142,37 +145,12 @@ public class Loader {
     }
   }
 
-  ChronicleRWSettings computeChronicleRWSettings() throws Exception {
-    Map<String, Long> computed = new HashMap<>();
-
+  LongSummaryStatistics computeStats() throws Exception {
     logger.info("Computing ChronicleMap creation parameters");
-    recipeStream()
+
+    return recipeStream()
         .map(FlatBufferSerializer.INSTANCE::flattenRecipe)
-        .forEach(
-            bb -> {
-              var bufferSize = bb.limit() - bb.position();
-
-              computed.compute("bytes", (key, orig) -> (orig == null ? 0 : orig) + bufferSize);
-
-              computed.compute("count", (key, orig) -> (orig == null ? 0 : orig) + 1);
-            });
-
-    long count = computed.get("count");
-    long bytes = computed.get("bytes");
-    double avg = ((double) bytes) / count;
-
-    logger.info("Computed averageValueByteSize={} and numRecipes={}", avg, count);
-    return new ChronicleRWSettings(avg, count);
-  }
-
-  static class ChronicleRWSettings {
-    double avg;
-    long count;
-
-    ChronicleRWSettings(double avg, long count) {
-      this.avg = avg;
-      this.count = count;
-    }
+        .collect(Collectors.summarizingLong(bb -> bb.limit() - bb.position()));
   }
 
   public static void main(String[] args) throws Exception {
