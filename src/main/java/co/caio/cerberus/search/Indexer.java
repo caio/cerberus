@@ -10,6 +10,7 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
@@ -86,7 +87,7 @@ public interface Indexer {
 
     public Indexer build() {
       if (analyzer == null) {
-        analyzer = new StandardAnalyzer();
+        analyzer = IndexConfiguration.DEFAULT_ANALYZER;
       }
 
       if (writerConfig == null) {

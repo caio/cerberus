@@ -31,7 +31,7 @@ class QueryInterpreter {
   private final FulltextQueryParser queryParser;
 
   QueryInterpreter(MoreLikeThis mlt) {
-    analyzer = new StandardAnalyzer();
+    analyzer = IndexConfiguration.DEFAULT_ANALYZER;
     facetsConfig = IndexConfiguration.getFacetsConfig();
     moreLikeThis = mlt;
 

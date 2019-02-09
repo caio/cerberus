@@ -3,11 +3,13 @@ package co.caio.cerberus.search;
 import static co.caio.cerberus.search.IndexField.*;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
 public class IndexConfiguration {
   private static final FacetsConfig facetsConfig;
+  public static final Analyzer DEFAULT_ANALYZER = new EnglishAnalyzer();
 
   static {
     facetsConfig = new FacetsConfig();
