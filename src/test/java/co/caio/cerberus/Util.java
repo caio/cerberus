@@ -83,6 +83,10 @@ public class Util {
     }
   }
 
+  public static Path getTestDataDir() {
+    return testDataDir;
+  }
+
   public static int getAssertionNumber(String propertyName) {
     return Integer.parseInt(assertionNumbers.getProperty(propertyName));
   }

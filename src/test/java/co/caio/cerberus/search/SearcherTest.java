@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.range.LongRange;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -35,10 +36,27 @@ class SearcherTest {
 
   @Test
   void builder() {
+    // Missing indexReader and analyzer
     assertThrows(IllegalStateException.class, () -> new Searcher.Builder().build());
+    // Missing analyzer
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            new Searcher.Builder()
+                .indexReader(FileSystem.openDirectory(Util.getTestDataDir().resolve("index")))
+                .build());
+    // Missing indexReader
+    assertThrows(
+        IllegalStateException.class,
+        () -> new Searcher.Builder().analyzer(new StandardAnalyzer()).build());
+    // Bad directory
     assertThrows(
         Searcher.Builder.SearcherBuilderException.class,
-        () -> new Searcher.Builder().dataDirectory(Path.of("/this/doesnt/exist")).build());
+        () ->
+            new Searcher.Builder()
+                .analyzer(new StandardAnalyzer())
+                .dataDirectory(Path.of("/this/doesnt/exist"))
+                .build());
   }
 
   @Test

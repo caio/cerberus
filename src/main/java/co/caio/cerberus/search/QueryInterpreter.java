@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Optional;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.facet.DrillDownQuery;
@@ -31,7 +30,7 @@ class QueryInterpreter {
   private final FulltextQueryParser queryParser;
 
   QueryInterpreter(MoreLikeThis mlt) {
-    analyzer = IndexConfiguration.DEFAULT_ANALYZER;
+    analyzer = mlt.getAnalyzer();
     facetsConfig = IndexConfiguration.getFacetsConfig();
     moreLikeThis = mlt;
 

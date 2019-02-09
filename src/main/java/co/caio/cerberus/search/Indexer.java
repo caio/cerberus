@@ -10,8 +10,6 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.FacetsConfig;
@@ -207,6 +205,7 @@ public interface Indexer {
       @Override
       public Searcher buildSearcher() {
         return new Searcher.Builder()
+            .analyzer(indexWriter.getAnalyzer())
             .indexReader(indexWriter.getDirectory())
             .taxonomyReader(taxonomyWriter.getDirectory())
             .build();

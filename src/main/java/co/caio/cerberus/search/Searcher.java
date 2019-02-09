@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
@@ -79,7 +80,7 @@ public class Searcher {
     facetsConfig = IndexConfiguration.getFacetsConfig();
 
     var moreLikeThis = new MoreLikeThis(builder.indexReader);
-    moreLikeThis.setAnalyzer(IndexConfiguration.getAnalyzer());
+    moreLikeThis.setAnalyzer(builder.analyzer);
 
     interpreter = new QueryInterpreter(moreLikeThis);
   }
@@ -145,6 +146,7 @@ public class Searcher {
   public static class Builder {
     private IndexReader indexReader;
     private TaxonomyReader taxonomyReader;
+    private Analyzer analyzer;
 
     public Builder dataDirectory(Path dir) {
       try {
@@ -158,7 +160,7 @@ public class Searcher {
       return this;
     }
 
-    protected Builder indexReader(Directory dir) {
+    Builder indexReader(Directory dir) {
       try {
         indexReader = DirectoryReader.open(dir);
       } catch (Exception wrapped) {
@@ -167,7 +169,12 @@ public class Searcher {
       return this;
     }
 
-    protected Builder taxonomyReader(Directory dir) {
+    public Builder analyzer(Analyzer analyzer) {
+      this.analyzer = analyzer;
+      return this;
+    }
+
+    Builder taxonomyReader(Directory dir) {
       try {
         taxonomyReader = new DirectoryTaxonomyReader(dir);
       } catch (Exception wrapped) {
@@ -180,10 +187,13 @@ public class Searcher {
       if (indexReader == null) {
         throw new IllegalStateException("`indexReader` can't be null");
       }
+      if (analyzer == null) {
+        throw new IllegalStateException("`analyzer` can't be null");
+      }
       return new Searcher(this);
     }
 
-    protected static class SearcherBuilderException extends RuntimeException {
+    static class SearcherBuilderException extends RuntimeException {
       SearcherBuilderException(String message) {
         super(message);
       }
