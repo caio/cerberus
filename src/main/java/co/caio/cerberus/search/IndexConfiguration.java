@@ -4,27 +4,28 @@ import static co.caio.cerberus.search.IndexField.*;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
 
-public class IndexConfiguration {
-  private static final FacetsConfig facetsConfig;
-  public static final Analyzer DEFAULT_ANALYZER = new EnglishAnalyzer();
+class IndexConfiguration {
+  private final FacetsConfig facetsConfig;
+  private final Analyzer analyzer;
 
-  static {
+  IndexConfiguration() {
     facetsConfig = new FacetsConfig();
     facetsConfig.setIndexFieldName(FACET_DIET, FACET_DIET);
     facetsConfig.setMultiValued(FACET_DIET, true);
 
     facetsConfig.setIndexFieldName(FACET_KEYWORD, FACET_KEYWORD);
     facetsConfig.setMultiValued(FACET_KEYWORD, true);
+
+    analyzer = new EnglishAnalyzer();
   }
 
-  public static FacetsConfig getFacetsConfig() {
+  FacetsConfig getFacetsConfig() {
     return facetsConfig;
   }
 
-  public static Analyzer getAnalyzer() {
-    return new StandardAnalyzer();
+  Analyzer getAnalyzer() {
+    return analyzer;
   }
 }

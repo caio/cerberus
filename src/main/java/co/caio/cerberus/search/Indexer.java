@@ -9,10 +9,8 @@ import java.nio.file.Path;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.facet.FacetField;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -34,16 +32,16 @@ public interface Indexer {
   class Builder {
     private Directory indexDirectory;
     private Directory taxonomyDirectory;
-    private Analyzer analyzer;
+    private IndexConfiguration indexConfiguration;
     private IndexWriterConfig writerConfig;
     private IndexWriterConfig.OpenMode openMode;
 
     public Builder reset() {
       indexDirectory = null;
       taxonomyDirectory = null;
-      analyzer = null;
       writerConfig = null;
       openMode = null;
+      indexConfiguration = null;
       return this;
     }
 
@@ -61,13 +59,13 @@ public interface Indexer {
       return this;
     }
 
-    public Builder analyzer(Analyzer an) {
-      analyzer = an;
+    private Builder openMode(IndexWriterConfig.OpenMode mode) {
+      openMode = mode;
       return this;
     }
 
-    private Builder openMode(IndexWriterConfig.OpenMode mode) {
-      openMode = mode;
+    public Builder indexConfiguration(IndexConfiguration conf) {
+      indexConfiguration = conf;
       return this;
     }
 
@@ -84,12 +82,12 @@ public interface Indexer {
     }
 
     public Indexer build() {
-      if (analyzer == null) {
-        analyzer = IndexConfiguration.DEFAULT_ANALYZER;
+      if (indexConfiguration == null) {
+        indexConfiguration = new IndexConfiguration();
       }
 
       if (writerConfig == null) {
-        writerConfig = new IndexWriterConfig(analyzer);
+        writerConfig = new IndexWriterConfig(indexConfiguration.getAnalyzer());
       }
 
       if (openMode == null) {
@@ -109,7 +107,8 @@ public interface Indexer {
       try {
         return new IndexerImpl(
             new IndexWriter(indexDirectory, writerConfig),
-            new DirectoryTaxonomyWriter(taxonomyDirectory, openMode));
+            new DirectoryTaxonomyWriter(taxonomyDirectory, openMode),
+            indexConfiguration);
       } catch (IOException e) {
         throw new IndexBuilderException(String.format("Failure creating index writer: %s", e));
       }
@@ -118,12 +117,13 @@ public interface Indexer {
     private static final class IndexerImpl implements Indexer {
       private final IndexWriter indexWriter;
       private final DirectoryTaxonomyWriter taxonomyWriter;
-      private final FacetsConfig facetsConfig;
+      private final IndexConfiguration indexConfiguration;
 
-      private IndexerImpl(IndexWriter writer, DirectoryTaxonomyWriter taxWriter) {
+      private IndexerImpl(
+          IndexWriter writer, DirectoryTaxonomyWriter taxWriter, IndexConfiguration conf) {
         indexWriter = writer;
         taxonomyWriter = taxWriter;
-        facetsConfig = IndexConfiguration.getFacetsConfig();
+        indexConfiguration = conf;
       }
 
       @Override
@@ -165,7 +165,7 @@ public interface Indexer {
         addOptionalIntField(doc, FAT_CONTENT, recipe.fatContent());
         addOptionalIntField(doc, PROTEIN_CONTENT, recipe.proteinContent());
 
-        indexWriter.addDocument(facetsConfig.build(taxonomyWriter, doc));
+        indexWriter.addDocument(indexConfiguration.getFacetsConfig().build(taxonomyWriter, doc));
       }
 
       private void addOptionalIntField(
@@ -205,7 +205,7 @@ public interface Indexer {
       @Override
       public Searcher buildSearcher() {
         return new Searcher.Builder()
-            .analyzer(indexWriter.getAnalyzer())
+            .indexConfiguration(indexConfiguration)
             .indexReader(indexWriter.getDirectory())
             .taxonomyReader(taxonomyWriter.getDirectory())
             .build();

@@ -11,11 +11,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.range.LongRange;
 import org.apache.lucene.facet.range.LongRangeFacetCounts;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
@@ -31,7 +29,7 @@ public class Searcher {
   private final IndexSearcher indexSearcher;
   private final TaxonomyReader taxonomyReader;
   private final QueryInterpreter interpreter;
-  private final FacetsConfig facetsConfig;
+  private final IndexConfiguration indexConfiguration;
 
   static final Map<String, LongRange[]> fieldToRanges;
 
@@ -77,12 +75,12 @@ public class Searcher {
     // XXX create a worker pool to assign for the searcher maybe
     indexSearcher = new IndexSearcher(builder.indexReader);
     taxonomyReader = builder.taxonomyReader;
-    facetsConfig = IndexConfiguration.getFacetsConfig();
+    indexConfiguration = builder.indexConfiguration;
 
     var moreLikeThis = new MoreLikeThis(builder.indexReader);
-    moreLikeThis.setAnalyzer(builder.analyzer);
+    moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
 
-    interpreter = new QueryInterpreter(moreLikeThis);
+    interpreter = new QueryInterpreter(moreLikeThis, indexConfiguration);
   }
 
   private SearchResult _search(SearchQuery query) throws IOException {
@@ -110,12 +108,20 @@ public class Searcher {
     if (maxFacets != 0) {
       var diets =
           new FloatAssociationsThresholdCount(
-                  IndexField.FACET_DIET, query.dietThreshold(), taxonomyReader, facetsConfig, fc)
+                  IndexField.FACET_DIET,
+                  query.dietThreshold(),
+                  taxonomyReader,
+                  indexConfiguration.getFacetsConfig(),
+                  fc)
               .getTopChildren(maxFacets, IndexField.FACET_DIET);
       addFacetData(builder, diets);
 
       var keywords =
-          new FastTaxonomyFacetCounts(IndexField.FACET_KEYWORD, taxonomyReader, facetsConfig, fc)
+          new FastTaxonomyFacetCounts(
+                  IndexField.FACET_KEYWORD,
+                  taxonomyReader,
+                  indexConfiguration.getFacetsConfig(),
+                  fc)
               .getTopChildren(maxFacets, IndexField.FACET_KEYWORD);
       addFacetData(builder, keywords);
 
@@ -146,7 +152,7 @@ public class Searcher {
   public static class Builder {
     private IndexReader indexReader;
     private TaxonomyReader taxonomyReader;
-    private Analyzer analyzer;
+    private IndexConfiguration indexConfiguration;
 
     public Builder dataDirectory(Path dir) {
       try {
@@ -169,8 +175,8 @@ public class Searcher {
       return this;
     }
 
-    public Builder analyzer(Analyzer analyzer) {
-      this.analyzer = analyzer;
+    Builder indexConfiguration(IndexConfiguration conf) {
+      indexConfiguration = conf;
       return this;
     }
 
@@ -187,8 +193,8 @@ public class Searcher {
       if (indexReader == null) {
         throw new IllegalStateException("`indexReader` can't be null");
       }
-      if (analyzer == null) {
-        throw new IllegalStateException("`analyzer` can't be null");
+      if (indexConfiguration == null) {
+        indexConfiguration = new IndexConfiguration();
       }
       return new Searcher(this);
     }

@@ -7,7 +7,6 @@ import co.caio.cerberus.model.SearchQuery;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Optional;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.facet.DrillDownQuery;
@@ -24,17 +23,15 @@ import org.slf4j.LoggerFactory;
 
 class QueryInterpreter {
   private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
-  private final Analyzer analyzer;
   private final FacetsConfig facetsConfig;
   private final MoreLikeThis moreLikeThis;
   private final FulltextQueryParser queryParser;
 
-  QueryInterpreter(MoreLikeThis mlt) {
-    analyzer = mlt.getAnalyzer();
-    facetsConfig = IndexConfiguration.getFacetsConfig();
+  QueryInterpreter(MoreLikeThis mlt, IndexConfiguration conf) {
+    facetsConfig = conf.getFacetsConfig();
     moreLikeThis = mlt;
 
-    queryParser = new FulltextQueryParser(analyzer);
+    queryParser = new FulltextQueryParser(conf.getAnalyzer());
   }
 
   Query toLuceneQuery(SearchQuery searchQuery) throws IOException {

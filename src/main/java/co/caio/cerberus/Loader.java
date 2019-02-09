@@ -4,7 +4,6 @@ import co.caio.cerberus.db.ChronicleRecipeMetadataDatabase;
 import co.caio.cerberus.db.FlatBufferSerializer;
 import co.caio.cerberus.db.RecipeMetadata;
 import co.caio.cerberus.model.Recipe;
-import co.caio.cerberus.search.IndexConfiguration;
 import co.caio.cerberus.search.Indexer;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,12 +59,7 @@ public class Loader {
     luceneIndexDir.toFile().mkdirs();
 
     logger.info("Initializing indexer");
-    var indexer =
-        new Indexer.Builder()
-            .analyzer(IndexConfiguration.getAnalyzer())
-            .dataDirectory(luceneIndexDir)
-            .createMode()
-            .build();
+    var indexer = new Indexer.Builder().dataDirectory(luceneIndexDir).createMode().build();
 
     logger.info("Ingesting all recipes. This will take a while...");
     recipeStream()

@@ -6,7 +6,6 @@ import co.caio.cerberus.Util;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.junit.jupiter.api.Test;
 
 class IndexerTest {
@@ -16,7 +15,7 @@ class IndexerTest {
     var builder = new Indexer.Builder();
     assertThrows(exc, builder::build);
     assertThrows(exc, () -> builder.reset().createMode().build());
-    assertThrows(exc, () -> builder.reset().analyzer(new StandardAnalyzer()).build());
+    assertThrows(exc, () -> builder.reset().indexConfiguration(new IndexConfiguration()).build());
     assertThrows(
         exc,
         () -> builder.reset().dataDirectory(Path.of("/this/doesnt/exist")).createMode().build());
