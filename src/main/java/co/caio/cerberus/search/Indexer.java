@@ -184,7 +184,7 @@ public interface Indexer {
 
       @Override
       public int numDocs() {
-        return indexWriter.numDocs();
+        return indexWriter.getDocStats().numDocs;
       }
 
       @Override
