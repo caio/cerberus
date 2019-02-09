@@ -244,18 +244,35 @@
                             <goal>exec</goal>
                         </goals>
                         <phase>generate-sources</phase>
+                        <configuration>
+                            <executable>${project.build.directory}/bin/flatc</executable>
+                            <workingDirectory>${flatbuffers.sources}</workingDirectory>
+                            <arguments>
+                                <argument>--java</argument>
+                                <argument>-o</argument>
+                                <argument>${flatbuffers.generated.sources}</argument>
+                                <argument>recipe.fbs</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-index</id>
+                        <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>-Xmx1024m</argument>
+                                <argument>-Xms1024m</argument>
+                                <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
+                                <argument>co.caio.cerberus.Loader</argument>
+                                <argument>src/main/resources/cerberus.properties</argument>
+                                <argument>tmp/document.jsonlines</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <executable>${project.build.directory}/bin/flatc</executable>
-                    <workingDirectory>${flatbuffers.sources}</workingDirectory>
-                    <arguments>
-                        <argument>--java</argument>
-                        <argument>-o</argument>
-                        <argument>${flatbuffers.generated.sources}</argument>
-                        <argument>recipe.fbs</argument>
-                    </arguments>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -279,33 +296,4 @@
             <!-- flatbuffers end -->
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>index</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>1.6.0</version>
-                        <configuration>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-classpath</argument>
-                                <classpath/>
-                                <argument>-Xmx1024m</argument>
-                                <argument>-Xms1024m</argument>
-                                <argument>-Dlogback.configurationFile=src/test/resources/logback-test.xml</argument>
-                                <argument>co.caio.cerberus.Loader</argument>
-                                <argument>src/main/resources/cerberus.properties</argument>
-                                <argument>tmp/document.jsonlines</argument>
-                            </arguments>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
