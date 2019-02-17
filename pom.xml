@@ -39,7 +39,7 @@
         <resilience4j.version>0.13.2</resilience4j.version>
         <chronicle.version>3.17.0</chronicle.version>
         <jsoup.version>1.11.3</jsoup.version>
-        <tablier.version>0.2.0-SNAPSHOT</tablier.version>
+        <tablier.version>0.2.0</tablier.version>
     </properties>
 
     <dependencyManagement>
