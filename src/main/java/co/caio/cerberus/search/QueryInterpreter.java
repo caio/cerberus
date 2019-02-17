@@ -108,6 +108,7 @@ class QueryInterpreter {
   private static final Sort sortPrepTime = integerSorterWithDefault(PREP_TIME);
   private static final Sort sortCookTime = integerSorterWithDefault(COOK_TIME);
   private static final Sort sortTotalTime = integerSorterWithDefault(TOTAL_TIME);
+  private static final Sort sortCalories = integerSorterWithDefault(CALORIES);
 
   Sort toLuceneSort(SearchQuery query) {
     switch (query.sort()) {
@@ -121,6 +122,8 @@ class QueryInterpreter {
         return sortCookTime;
       case TOTAL_TIME:
         return sortTotalTime;
+      case CALORIES:
+        return sortCalories;
       default:
         throw new IllegalStateException(String.format("Unhandled sort order: %s", query.sort()));
     }

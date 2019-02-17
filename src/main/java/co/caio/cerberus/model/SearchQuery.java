@@ -62,7 +62,8 @@ public interface SearchQuery {
     NUM_INGREDIENTS,
     PREP_TIME,
     COOK_TIME,
-    TOTAL_TIME
+    TOTAL_TIME,
+    CALORIES
   }
 
   @Value.Default
