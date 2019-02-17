@@ -9,7 +9,7 @@ import java.util.OptionalInt;
 
 public class FlatBufferSerializer {
 
-  static final int NON_EXISTENT_OPTIONAL_INT = 0;
+  static final int NON_EXISTENT_OPTIONAL_INT = -1;
   public static final FlatBufferSerializer INSTANCE = new FlatBufferSerializer();
 
   ByteBuffer flattenRecipe(RecipeMetadata recipe) {
