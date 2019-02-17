@@ -266,6 +266,10 @@ class SearcherTest {
     checkOrdering(
         queryBuilder.sort(SortOrder.TOTAL_TIME).build(),
         r -> Util.getRecipe(r.recipeId()).totalTime());
+
+    checkOrdering(
+        queryBuilder.sort(SortOrder.CALORIES).build(),
+        r -> Util.getRecipe(r.recipeId()).calories());
   }
 
   private void checkOrdering(

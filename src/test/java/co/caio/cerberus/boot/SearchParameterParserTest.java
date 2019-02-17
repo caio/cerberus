@@ -29,6 +29,20 @@ class SearchParameterParserTest {
     input.put("ni", "5,10");
     assertEquals(parser.buildQuery(input), builder.numIngredients(RangedSpec.of(5, 10)).build());
 
+    input.put("tt", "10");
+    assertEquals(parser.buildQuery(input), builder.totalTime(RangedSpec.of(0, 10)).build());
+
+    input.put("n_k", "200,0");
+    assertEquals(
+        parser.buildQuery(input), builder.calories(RangedSpec.of(200, Integer.MAX_VALUE)).build());
+
+    input.put("n_f", "1,52");
+    assertEquals(parser.buildQuery(input), builder.fatContent(RangedSpec.of(1, 52)).build());
+
+    input.put("n_c", "30");
+    assertEquals(
+        parser.buildQuery(input), builder.carbohydrateContent(RangedSpec.of(0, 30)).build());
+
     input.put("page", "1");
     assertEquals(parser.buildQuery(input), builder.build());
 
@@ -37,9 +51,6 @@ class SearchParameterParserTest {
 
     input.put("page", "4");
     assertEquals(parser.buildQuery(input), builder.offset((4 - 1) * pageSize).build());
-
-    input.put("nf", "12");
-    assertEquals(parser.buildQuery(input), builder.maxFacets(12).build());
   }
 
   @Test
@@ -67,6 +78,8 @@ class SearchParameterParserTest {
     assertEquals(RangedSpec.of(0, 10), parser.parseRange("10"));
     // Ranges are encoded as "numberA,numberB"
     assertEquals(RangedSpec.of(1, 10), parser.parseRange("1,10"));
+    // Special case: "numberA,0" means [numberA, MAX]
+    assertEquals(RangedSpec.of(42, Integer.MAX_VALUE), parser.parseRange("42,0"));
 
     assertThrows(SearchParameterException.class, () -> parser.parseRange("asd"));
 

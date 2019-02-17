@@ -2,12 +2,17 @@ package co.caio.cerberus.boot;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import co.caio.cerberus.Util;
 import co.caio.cerberus.boot.ModelView.OverPaginationError;
+import co.caio.cerberus.boot.ModelView.RecipeNotFoundError;
 import co.caio.cerberus.db.HashMapRecipeMetadataDatabase;
+import co.caio.cerberus.db.RecipeMetadata;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import com.fizzed.rocker.RockerModel;
 import com.fizzed.rocker.runtime.StringBuilderOutput;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,9 +22,17 @@ import org.springframework.web.util.UriComponentsBuilder;
 class ModelViewTest {
 
   private static final int pageSize = 2; // just to simplify pagination testing
-  private static final ModelView modelView =
-      new ModelView(pageSize, new HashMapRecipeMetadataDatabase());
+  private static final ModelView modelView;
+  private static final CircuitBreaker breaker = CircuitBreaker.ofDefaults("mvt");
+
   private UriComponentsBuilder uriBuilder;
+
+  static {
+    var db = new HashMapRecipeMetadataDatabase();
+    db.saveAll(
+        Util.getSampleRecipes().map(RecipeMetadata::fromRecipe).collect(Collectors.toList()));
+    modelView = new ModelView(pageSize, db, breaker);
+  }
 
   private Document parseOutput(RockerModel rockerModel) {
     var rendered = rockerModel.render(StringBuilderOutput.FACTORY).toString();
@@ -27,8 +40,9 @@ class ModelViewTest {
   }
 
   @BeforeEach
-  void setupUriBuilder() {
+  void setup() {
     uriBuilder = UriComponentsBuilder.fromUriString("/renderer");
+    breaker.reset();
   }
 
   @Test
@@ -39,7 +53,8 @@ class ModelViewTest {
 
   @Test
   void renderUnstableIndex() {
-    var doc = parseOutput(modelView.renderUnstableIndex());
+    breaker.transitionToOpenState();
+    var doc = parseOutput(modelView.renderIndex());
     assertTrue(doc.title().startsWith(ModelView.INDEX_PAGE_TITLE));
 
     // The warning is displayed
@@ -64,9 +79,7 @@ class ModelViewTest {
 
     var doc = parseOutput(modelView.renderSearch(unusedQuery, result, uriBuilder));
     assertTrue(doc.title().startsWith(ModelView.SEARCH_PAGE_TITLE));
-    assertEquals(
-        "Couldn't find any recipe matching your search :(",
-        doc.selectFirst("section#results h2.subtitle").text());
+    assertEquals("Try changing your query", doc.selectFirst("section#results h2.subtitle").text());
   }
 
   @Test
@@ -150,6 +163,24 @@ class ModelViewTest {
   }
 
   @Test
+  void sidebarLinksDropThePageParameter() {
+
+    var secondPage = new SearchQuery.Builder().fulltext("unused").offset(pageSize).build();
+    var offsetResultWithNextPage =
+        new SearchResult.Builder()
+            .totalHits(4) // 2 (first page) + 2 (this result)
+            .addRecipe(3, "recipe 3", "doest matter")
+            .addRecipe(4, "recipe 4", "doest matter")
+            .build();
+
+    var doc = parseOutput(modelView.renderSearch(secondPage, offsetResultWithNextPage, uriBuilder));
+
+    var sidebarLinks = doc.select("div#sidebar div.filter-group li a.button").eachAttr("href");
+    assertTrue(sidebarLinks.size() > 0);
+    assertTrue(sidebarLinks.stream().noneMatch(s -> s.contains("page=")));
+  }
+
+  @Test
   void regressionPaginationEndHasProperValue() {
 
     var secondPage = new SearchQuery.Builder().fulltext("unused").offset(pageSize).build();
@@ -164,7 +195,28 @@ class ModelViewTest {
 
     assertTrue(doc.title().startsWith(ModelView.SEARCH_PAGE_TITLE));
 
-    var subtitle = doc.selectFirst("section#results h2.subtitle").text();
-    assertEquals("Showing recipes 3 to 4 (Out of 4)", subtitle);
+    var subtitle = doc.selectFirst("section#results div.notification.content").text();
+    assertTrue(subtitle.contains("from 3 to 4."));
+  }
+
+  @Test
+  void incorrectSlugYieldsNotFound() {
+    var recipe = Util.getSampleRecipes().limit(1).findFirst().orElseThrow();
+    assertThrows(
+        RecipeNotFoundError.class,
+        () -> modelView.renderSingleRecipe(recipe.recipeId(), "incorrect slug"));
+  }
+
+  @Test
+  void incorrectIdYieldsNotFound() {
+    var recipe = Util.getSampleRecipes().limit(1).findFirst().orElseThrow();
+    assertThrows(RecipeNotFoundError.class, () -> modelView.renderSingleRecipe(213, recipe.slug()));
+  }
+
+  @Test
+  void renderSingleRecipe() {
+    var recipe = Util.getSampleRecipes().limit(1).findFirst().orElseThrow();
+    var doc = parseOutput(modelView.renderSingleRecipe(recipe.recipeId(), recipe.slug()));
+    assertTrue(doc.title().startsWith(recipe.name()));
   }
 }

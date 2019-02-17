@@ -19,20 +19,30 @@ class SearchParameterParser {
   SearchQuery buildQuery(Map<String, String> params) {
     var builder = new SearchQuery.Builder().maxResults(pageSize);
 
+    // TODO jdk12 switches plz
     params.forEach(
         (param, value) -> {
           switch (param) {
             case "q":
               builder.fulltext(value);
               break;
-            case "nf":
-              builder.maxFacets(parseUnsignedInt(value));
-              break;
             case "sort":
               builder.sort(parseSortOrder(value));
               break;
             case "ni":
               builder.numIngredients(parseRange(value));
+              break;
+            case "tt":
+              builder.totalTime(parseRange(value));
+              break;
+            case "n_k":
+              builder.calories(parseRange(value));
+              break;
+            case "n_f":
+              builder.fatContent(parseRange(value));
+              break;
+            case "n_c":
+              builder.carbohydrateContent(parseRange(value));
               break;
             case "page":
               // page starts from 1, not 0
@@ -66,6 +76,8 @@ class SearchParameterParser {
         return SortOrder.RELEVANCE;
       case "num_ingredients":
         return SortOrder.NUM_INGREDIENTS;
+      case "calories":
+        return SortOrder.CALORIES;
     }
     throw new SearchParameterException("Invalid sort order: " + order);
   }
@@ -74,7 +86,12 @@ class SearchParameterParser {
     try {
       if (input.contains(",")) {
         var scanner = new Scanner(input).useDelimiter(",");
-        var spec = RangedSpec.of(scanner.nextInt(), scanner.nextInt());
+
+        int start = scanner.nextInt();
+        int end = scanner.nextInt();
+
+        // We encode a range like [x, infinity[ as x,0
+        var spec = RangedSpec.of(start, end == 0 ? Integer.MAX_VALUE : end);
         if (scanner.hasNext()) {
           throw new SearchParameterException("Invalid range: " + input);
         }
