@@ -27,7 +27,6 @@
 
         <start-class>co.caio.cerberus.boot.BootApplication</start-class>
 
-        <os.classifier>linux-x86_64</os.classifier>
         <immutables.version>2.7.5</immutables.version>
         <jackson.version>2.9.8</jackson.version>
         <logback.version>1.2.3</logback.version>
