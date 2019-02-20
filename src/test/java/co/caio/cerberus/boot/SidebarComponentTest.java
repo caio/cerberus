@@ -69,6 +69,7 @@ class SidebarComponentTest {
             .calories(RangedSpec.of(0, 200))
             .fatContent(RangedSpec.of(0, 10))
             .carbohydrateContent(RangedSpec.of(0, 30))
+            .addMatchDiet("keto")
             .build();
 
     var sidebar = sidebarComponent.build(query, uriBuilder);
@@ -83,9 +84,25 @@ class SidebarComponentTest {
     assertEquals(1, activeTimes.size());
     assertTrue(activeTimes.get(0).name().endsWith("15 to 30 minutes"));
 
+    var dietInfo = findFilterInfo(sidebar, SidebarComponent.DIETS_INFO_NAME);
+    var activeDiets = findActive(dietInfo);
+    assertEquals(1, activeDiets.size());
+    assertEquals("Keto", activeDiets.get(0).name());
+
     var nutritionInfo = findFilterInfo(sidebar, SidebarComponent.NUTRITION_INFO_NAME);
     var activeNutritionList = findActive(nutritionInfo);
     assertEquals(3, activeNutritionList.size());
+  }
+
+  @Test
+  void cantRenderMultipleSelectedDiets() {
+    var query =
+        new SearchQuery.Builder()
+            .fulltext("ignored")
+            .addMatchDiet("keto")
+            .addMatchDiet("paleo")
+            .build();
+    assertThrows(IllegalStateException.class, () -> sidebarComponent.build(query, uriBuilder));
   }
 
   @Test
