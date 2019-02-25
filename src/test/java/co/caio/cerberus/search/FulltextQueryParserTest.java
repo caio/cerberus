@@ -1,10 +1,9 @@
 package co.caio.cerberus.search;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.search.MatchNoDocsQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -49,13 +48,9 @@ class FulltextQueryParserTest {
   }
 
   @Test
-  void disabledAllDocsMatch() {
-    var query = parser.parse("*:*");
-    assertNotEquals("*:*", query.toString());
-    assertEquals(MatchNoDocsQuery.class, query.getClass());
-
-    query = parser.parse("*");
-    assertNotEquals("*:*", query.toString());
-    assertEquals(MatchNoDocsQuery.class, query.getClass());
+  void matchAllDocsIsAllowed() {
+    var query = parser.parse("*");
+    assertEquals("*:*", query.toString());
+    assertEquals(MatchAllDocsQuery.class, query.getClass());
   }
 }

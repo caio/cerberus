@@ -95,11 +95,11 @@ public interface SearchQuery {
 
   @Value.Check
   default void check() {
-    if (maxResults() < 1 || maxResults() > 100) {
-      throw new IllegalStateException("maxResults needs to be in [1,100]");
+    if (maxResults() < 1) {
+      throw new IllegalStateException("maxResults must be >= 1");
     }
-    if (maxFacets() < 0 || maxFacets() > 100) {
-      throw new IllegalStateException("maxFacets needs to be in [0,100]");
+    if (maxFacets() < 0) {
+      throw new IllegalStateException("maxFacets must be >= 0");
     }
     if (offset() < 0) {
       throw new IllegalStateException("offset must be >= 0");
@@ -116,12 +116,6 @@ public interface SearchQuery {
             });
     if (fulltext().isPresent() && similarity().isPresent()) {
       throw new IllegalStateException("Can't use fulltext and similarity at the same time");
-    }
-    if (similarity().isPresent() && similarity().get().strip().length() < 30) {
-      throw new IllegalStateException("similarity queries requires at least 30 characters");
-    }
-    if (fulltext().isPresent() && fulltext().get().strip().length() < 3) {
-      throw new IllegalStateException("fulltext queries require at least 3 characters");
     }
     if ((fulltext().isPresent() || similarity().isPresent())
         || !dietThreshold().isEmpty()
