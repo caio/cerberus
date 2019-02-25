@@ -3,7 +3,6 @@ package co.caio.cerberus.model;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.model.SearchQuery.Builder;
-import co.caio.cerberus.model.SearchQuery.DrillDownSpec;
 import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
@@ -32,9 +31,7 @@ class SearchQueryTest {
   void searchOptions() {
     var builder = new SearchQuery.Builder().fulltext("simplest buildable query");
     assertThrows(IllegalStateException.class, () -> builder.maxResults(0).build());
-    assertThrows(IllegalStateException.class, () -> builder.maxResults(123123).build());
     assertThrows(IllegalStateException.class, () -> builder.maxFacets(-1).build());
-    assertThrows(IllegalStateException.class, () -> builder.maxFacets(1232).build());
     assertThrows(IllegalStateException.class, () -> builder.offset(-1).build());
     assertDoesNotThrow(() -> builder.offset(0).maxResults(5).maxFacets(0).build());
   }
@@ -63,22 +60,9 @@ class SearchQueryTest {
   @Test
   void moreLikeThisValidations() {
     var mltBuilder = new Builder();
-    assertThrows(IllegalStateException.class, () -> mltBuilder.similarity("").build());
-    assertThrows(IllegalStateException.class, () -> mltBuilder.similarity("       ").build());
-    assertThrows(IllegalStateException.class, () -> mltBuilder.similarity("short text").build());
-    var text = "query with enough characters to pass the length restriction";
-    assertDoesNotThrow(() -> mltBuilder.similarity(text).build());
+    var text = "query";
     // can't build with similarity and fulltext set
     assertThrows(
         IllegalStateException.class, () -> mltBuilder.similarity(text).fulltext(text).build());
-  }
-
-  @Test
-  void drillDownSpecValidation() {
-    assertThrows(
-        IllegalStateException.class, () -> DrillDownSpec.of("unknown field", "unknown label"));
-    assertThrows(
-        IllegalStateException.class, () -> DrillDownSpec.of(DrillDown.COOK_TIME, "unknown label"));
-    assertDoesNotThrow(() -> DrillDownSpec.of(DrillDown.NUM_INGREDIENTS, "5-10"));
   }
 }

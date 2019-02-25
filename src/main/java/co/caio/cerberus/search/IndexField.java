@@ -1,7 +1,6 @@
 package co.caio.cerberus.search;
 
 import co.caio.cerberus.model.Diet;
-import co.caio.cerberus.model.DrillDown;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
@@ -12,10 +11,10 @@ class IndexField {
   static final String CRAWL_URL = "crawlUrl";
   static final String NAME = "name";
   static final String INGREDIENTS = "ingredients";
-  static final String NUM_INGREDIENTS = DrillDown.NUM_INGREDIENTS;
-  static final String PREP_TIME = DrillDown.PREP_TIME;
-  static final String COOK_TIME = DrillDown.COOK_TIME;
-  static final String TOTAL_TIME = DrillDown.TOTAL_TIME;
+  static final String NUM_INGREDIENTS = "numIngredients";
+  static final String PREP_TIME = "prepTime";
+  static final String COOK_TIME = "cookTime";
+  static final String TOTAL_TIME = "totalTIme";
   static final String CALORIES = "calories";
   static final String FAT_CONTENT = "fatContent";
   static final String PROTEIN_CONTENT = "proteinContent";

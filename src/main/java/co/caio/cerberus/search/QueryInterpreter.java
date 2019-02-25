@@ -2,15 +2,12 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
-import co.caio.cerberus.model.DrillDown;
 import co.caio.cerberus.model.SearchQuery;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Optional;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.facet.DrillDownQuery;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -23,22 +20,25 @@ import org.slf4j.LoggerFactory;
 
 class QueryInterpreter {
   private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
-  private final FacetsConfig facetsConfig;
   private final MoreLikeThis moreLikeThis;
   private final FulltextQueryParser queryParser;
+  private final SearchPolicy searchPolicy;
 
-  QueryInterpreter(MoreLikeThis mlt, IndexConfiguration conf) {
-    facetsConfig = conf.getFacetsConfig();
-    moreLikeThis = mlt;
-
+  QueryInterpreter(MoreLikeThis mlt, IndexConfiguration conf, SearchPolicy policy) {
     queryParser = new FulltextQueryParser(conf.getAnalyzer());
+    moreLikeThis = mlt;
+    searchPolicy = policy;
   }
 
   Query toLuceneQuery(SearchQuery searchQuery) throws IOException {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
-      queryBuilder.add(queryParser.parse(searchQuery.fulltext().get()), BooleanClause.Occur.MUST);
+      var parsedQuery = queryParser.parse(searchQuery.fulltext().get());
+      if (searchPolicy != null) {
+        searchPolicy.inspectParsedFulltextQuery(parsedQuery);
+      }
+      queryBuilder.add(parsedQuery, BooleanClause.Occur.MUST);
     } else if (searchQuery.similarity().isPresent()) {
       queryBuilder.add(
           moreLikeThis.like(FULLTEXT, new StringReader(searchQuery.similarity().get())),
@@ -65,37 +65,7 @@ class QueryInterpreter {
 
     var luceneQuery = queryBuilder.build();
     logger.debug("Interpreted query {} as {}", searchQuery, luceneQuery);
-
-    // no need to drill down on facets, we're done
-    if (searchQuery.matchKeyword().isEmpty() && searchQuery.drillDown().isEmpty()) {
-      return luceneQuery;
-    }
-
-    // TODO verify if matchKeyword really needs a drilldown (instead of filter)
-    logger.debug(
-        "Drilling it down with keyword={}, drillDown={}",
-        searchQuery.matchKeyword(),
-        searchQuery.drillDown());
-
-    DrillDownQuery drillQuery;
-    if (luceneQuery.clauses().isEmpty()) {
-      drillQuery = new DrillDownQuery(facetsConfig);
-    } else {
-      drillQuery = new DrillDownQuery(facetsConfig, luceneQuery);
-    }
-
-    searchQuery.matchKeyword().forEach(kw -> drillQuery.add(IndexField.FACET_KEYWORD, kw));
-
-    // TODO drill sideways
-    searchQuery
-        .drillDown()
-        .forEach(
-            dds -> {
-              var range = DrillDown.getRange(dds.field(), dds.label());
-              drillQuery.add(dds.field(), IntPoint.newRangeQuery(dds.field(), range[0], range[1]));
-            });
-
-    return drillQuery;
+    return luceneQuery;
   }
 
   private static Sort integerSorterWithDefault(String fieldName) {
