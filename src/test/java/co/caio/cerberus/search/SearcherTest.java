@@ -68,7 +68,9 @@ class SearcherTest {
     // This test is just to prevent a regression
     var result = searcher.search(new SearchQuery.Builder().fulltext("oil").maxFacets(50).build());
     var nrDistinctPerDietCounts =
-        result.facets().stream()
+        result
+            .facets()
+            .stream()
             .filter(fd -> fd.dimension().equals("diet"))
             .flatMap(fd -> fd.children().stream())
             .map(LabelData::count)
@@ -83,7 +85,9 @@ class SearcherTest {
     var result = searcher.search(query);
 
     var dietFacet =
-        result.facets().stream()
+        result
+            .facets()
+            .stream()
             .filter(x -> x.dimension().equals(IndexField.FACET_DIET))
             .findFirst();
     assertTrue(dietFacet.isPresent());
@@ -329,7 +333,7 @@ class SearcherTest {
 
     searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").build());
 
-    verify(policyMock).inspectLuceneQuery(any());
+    verify(policyMock).inspectParsedFulltextQuery(any());
   }
 
   @Test
@@ -368,7 +372,7 @@ class SearcherTest {
       }
     }
 
-    doThrow(CustomTestException.class).when(policyMock).inspectLuceneQuery(any());
+    doThrow(CustomTestException.class).when(policyMock).inspectParsedFulltextQuery(any());
 
     assertThrows(
         CustomTestException.class,

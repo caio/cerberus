@@ -22,17 +22,23 @@ class QueryInterpreter {
   private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
   private final MoreLikeThis moreLikeThis;
   private final FulltextQueryParser queryParser;
+  private final SearchPolicy searchPolicy;
 
-  QueryInterpreter(MoreLikeThis mlt, IndexConfiguration conf) {
+  QueryInterpreter(MoreLikeThis mlt, IndexConfiguration conf, SearchPolicy policy) {
     queryParser = new FulltextQueryParser(conf.getAnalyzer());
     moreLikeThis = mlt;
+    searchPolicy = policy;
   }
 
   Query toLuceneQuery(SearchQuery searchQuery) throws IOException {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
-      queryBuilder.add(queryParser.parse(searchQuery.fulltext().get()), BooleanClause.Occur.MUST);
+      var parsedQuery = queryParser.parse(searchQuery.fulltext().get());
+      if (searchPolicy != null) {
+        searchPolicy.inspectParsedFulltextQuery(parsedQuery);
+      }
+      queryBuilder.add(parsedQuery, BooleanClause.Occur.MUST);
     } else if (searchQuery.similarity().isPresent()) {
       queryBuilder.add(
           moreLikeThis.like(FULLTEXT, new StringReader(searchQuery.similarity().get())),

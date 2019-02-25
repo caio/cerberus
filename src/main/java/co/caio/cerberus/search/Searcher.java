@@ -52,22 +52,16 @@ public class Searcher {
     var moreLikeThis = new MoreLikeThis(builder.indexReader);
     moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
 
-    interpreter = new QueryInterpreter(moreLikeThis, indexConfiguration);
+    interpreter = new QueryInterpreter(moreLikeThis, indexConfiguration, searchPolicy);
   }
 
   private SearchResult _search(SearchQuery query) throws IOException {
     var fc = new FacetsCollector();
 
-    var luceneQuery = interpreter.toLuceneQuery(query);
-
-    if (searchPolicy != null) {
-      searchPolicy.inspectLuceneQuery(luceneQuery);
-    }
-
     var result =
         FacetsCollector.search(
             indexSearcher,
-            luceneQuery,
+            interpreter.toLuceneQuery(query),
             query.offset() + query.maxResults(),
             interpreter.toLuceneSort(query),
             fc);
