@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -37,10 +36,6 @@ public interface SearchQuery {
   Optional<RangedSpec> carbohydrateContent();
 
   Map<String, Float> dietThreshold();
-
-  List<DrillDownSpec> drillDown();
-
-  List<String> matchKeyword();
 
   @Value.Default
   default int maxResults() {
@@ -98,31 +93,6 @@ public interface SearchQuery {
     }
   }
 
-  @Value.Immutable(builder = false)
-  @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-  @JsonPropertyOrder({"field", "label"})
-  @JsonSerialize(as = ImmutableDrillDownSpec.class)
-  @JsonDeserialize(as = ImmutableDrillDownSpec.class)
-  interface DrillDownSpec {
-    @Value.Parameter
-    String field();
-
-    @Value.Parameter
-    String label();
-
-    static DrillDownSpec of(String field, String label) {
-      return ImmutableDrillDownSpec.of(field, label);
-    }
-
-    @Value.Check
-    default void check() {
-      if (!DrillDown.isValidRangeLabel(field(), label())) {
-        throw new IllegalStateException(
-            String.format("Invalid label `%s` for field `%s`", label(), field()));
-      }
-    }
-  }
-
   @Value.Check
   default void check() {
     if (maxResults() < 1 || maxResults() > 100) {
@@ -155,7 +125,6 @@ public interface SearchQuery {
     }
     if ((fulltext().isPresent() || similarity().isPresent())
         || !dietThreshold().isEmpty()
-        || !matchKeyword().isEmpty()
         || numIngredients().isPresent()
         || prepTime().isPresent()
         || cookTime().isPresent()
@@ -172,11 +141,6 @@ public interface SearchQuery {
   class Builder extends ImmutableSearchQuery.Builder {
     public Builder addMatchDiet(String dietName) {
       putDietThreshold(dietName, 1f);
-      return this;
-    }
-
-    public Builder addDrillDown(String field, String label) {
-      addDrillDown(DrillDownSpec.of(field, label));
       return this;
     }
   }

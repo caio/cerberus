@@ -3,24 +3,18 @@ package co.caio.cerberus.search;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
-import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
-import co.caio.cerberus.model.SearchQuery.Builder;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.lucene.facet.range.LongRange;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +42,8 @@ class SearcherTest {
     var builder = new SearchQuery.Builder().fulltext("egg");
     assertTrue(searcher.search(builder.maxFacets(0).build()).facets().isEmpty());
 
-    var result = searcher.search(builder.maxFacets(100).build());
-    result.facets().forEach(facetData -> assertTrue(facetData.children().size() <= 100));
+    var result = searcher.search(builder.maxFacets(2).build());
+    result.facets().forEach(facetData -> assertTrue(facetData.children().size() <= 2));
   }
 
   @Test
@@ -117,82 +111,6 @@ class SearcherTest {
   }
 
   @Test
-  void rangeFacets() {
-
-    // capture the maximum range length so that if this ever grows
-    // too big we can fail querying (due to maxFacets() validation)
-    // and then figure out what to do
-    var maxRangeLength =
-        Searcher.fieldToRanges.values().stream().mapToInt(lr -> lr.length).max().getAsInt();
-
-    var results =
-        searcher.search(
-            new SearchQuery.Builder()
-                .fulltext("garlic")
-                .maxResults(100)
-                .maxFacets(maxRangeLength)
-                .build());
-
-    // So that we can verify the counts correctly
-    assertEquals(results.totalHits(), results.recipes().size());
-    // Just so we get a diverse set of recipes
-    assertTrue(results.totalHits() > 50);
-
-    var recipeData =
-        results
-            .recipes()
-            .stream()
-            .map(srr -> Util.getRecipe(srr.recipeId()))
-            .collect(Collectors.toList());
-
-    assertEquals(results.totalHits(), recipeData.size());
-
-    // assemble fake facet data
-    var fieldRangeToManualCount = new HashMap<String, Long>();
-    recipeData.forEach(
-        recipe -> {
-          incFieldRange(IndexField.COOK_TIME, recipe.cookTime(), fieldRangeToManualCount);
-          incFieldRange(IndexField.PREP_TIME, recipe.prepTime(), fieldRangeToManualCount);
-          incFieldRange(IndexField.TOTAL_TIME, recipe.totalTime(), fieldRangeToManualCount);
-          incFieldRange(
-              IndexField.NUM_INGREDIENTS,
-              OptionalInt.of(recipe.ingredients().size()),
-              fieldRangeToManualCount);
-        });
-
-    Searcher.fieldToRanges.forEach(
-        (field, ranges) -> {
-          var maybeFacetData =
-              results.facets().stream().filter(fd -> fd.dimension().equals(field)).findFirst();
-          assertTrue(maybeFacetData.isPresent());
-          var facetData = maybeFacetData.get();
-          assertEquals(facetData.dimension(), field);
-
-          facetData
-              .children()
-              .forEach(
-                  ld -> {
-                    var key = String.format("%s_%s", field, ld.label());
-                    assertTrue(fieldRangeToManualCount.containsKey(key));
-                    assertEquals((long) fieldRangeToManualCount.get(key), ld.count());
-                  });
-        });
-  }
-
-  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  private void incFieldRange(String field, OptionalInt value, Map<String, Long> accumulator) {
-    if (value.isEmpty()) {
-      return;
-    }
-    for (LongRange range : Searcher.fieldToRanges.get(field)) {
-      if (range.accept(value.getAsInt())) {
-        var key = String.format("%s_%s", field, range.label);
-        accumulator.put(key, accumulator.getOrDefault(key, 0L) + 1);
-      }
-    }
-  }
-
-  @Test
   void dietThreshold() throws Exception {
     var indexer =
         new Indexer.Builder()
@@ -230,17 +148,6 @@ class SearcherTest {
     assertTrue(dietFacets.isPresent());
     // we get { "keto": 1, "paleo": 1 } since only one doc matched both criteria
     assertTrue(dietFacets.get().children().stream().map(LabelData::count).allMatch(l -> l == 1));
-  }
-
-  @Test
-  void multipleFacetsAreOr() {
-    var queryBuilder = new SearchQuery.Builder().addMatchKeyword("oil").maxResults(1);
-    var justOilResult = searcher.search(queryBuilder.build());
-    var oilAndSaltResult = searcher.search(queryBuilder.addMatchKeyword("salt").build());
-    // since drilldown queries on same facets are OR'ed,
-    // the expectation is that the more keywords are input,
-    // more recipes are matched
-    assertTrue(oilAndSaltResult.totalHits() >= justOilResult.totalHits());
   }
 
   @Test
@@ -345,50 +252,6 @@ class SearcherTest {
       // Quality assertion: we should be able to find the original
       // recipe in the top 10% of all the documents that matched
       assertTrue(foundIndex / results.totalHits() <= 0.1);
-    }
-  }
-
-  @Test
-  void simpleRangeDrillDown() {
-    var result = searcher.search(new SearchQuery.Builder().fulltext("salt").maxResults(1).build());
-
-    var notARange = Set.of(IndexField.FACET_DIET, IndexField.FACET_KEYWORD);
-    for (FacetData fd : result.facets()) {
-      if (notARange.contains(fd.dimension())) {
-        continue;
-      }
-
-      // Drilling down on a single <field,label> pair should yield the same
-      // number of items as the original result facet data result
-      for (LabelData ld : fd.children()) {
-        var drilledResult =
-            searcher.search(
-                new Builder()
-                    .fulltext("salt")
-                    .maxResults(1)
-                    .addDrillDown(fd.dimension(), ld.label())
-                    .build());
-        assertEquals(ld.count(), drilledResult.totalHits());
-
-        for (FacetData fd2 : drilledResult.facets()) {
-          if (notARange.contains(fd2.dimension()) || fd2.dimension().equals(fd.dimension())) {
-            continue;
-          }
-
-          // The same should be valid for multiple drill downs on *distinct* fields
-          for (LabelData ld2 : fd2.children()) {
-            var drilledDrilledResult =
-                searcher.search(
-                    new Builder()
-                        .fulltext("salt")
-                        .maxResults(1)
-                        .addDrillDown(fd.dimension(), ld.label())
-                        .addDrillDown(fd2.dimension(), ld2.label())
-                        .build());
-            assertEquals(ld2.count(), drilledDrilledResult.totalHits());
-          }
-        }
-      }
     }
   }
 

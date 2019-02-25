@@ -3,7 +3,6 @@ package co.caio.cerberus.model;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.model.SearchQuery.Builder;
-import co.caio.cerberus.model.SearchQuery.DrillDownSpec;
 import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
@@ -71,14 +70,5 @@ class SearchQueryTest {
     // can't build with similarity and fulltext set
     assertThrows(
         IllegalStateException.class, () -> mltBuilder.similarity(text).fulltext(text).build());
-  }
-
-  @Test
-  void drillDownSpecValidation() {
-    assertThrows(
-        IllegalStateException.class, () -> DrillDownSpec.of("unknown field", "unknown label"));
-    assertThrows(
-        IllegalStateException.class, () -> DrillDownSpec.of(DrillDown.COOK_TIME, "unknown label"));
-    assertDoesNotThrow(() -> DrillDownSpec.of(DrillDown.NUM_INGREDIENTS, "5-10"));
   }
 }

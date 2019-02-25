@@ -1,22 +1,14 @@
 package co.caio.cerberus.search;
 
 import co.caio.cerberus.lucene.FloatAssociationsThresholdCount;
-import co.caio.cerberus.model.DrillDown;
 import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
-import org.apache.lucene.facet.range.LongRange;
-import org.apache.lucene.facet.range.LongRangeFacetCounts;
-import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.index.DirectoryReader;
@@ -31,28 +23,6 @@ public class Searcher {
   private final QueryInterpreter interpreter;
   private final IndexConfiguration indexConfiguration;
 
-  static final Map<String, LongRange[]> fieldToRanges;
-
-  static {
-    var tmpFieldToRanges = new HashMap<String, LongRange[]>();
-
-    DrillDown.getFieldToRanges()
-        .forEach(
-            (field, labelToRanges) -> {
-              var longRanges = new LongRange[labelToRanges.size()];
-              var idx = 0;
-              for (Entry<String, int[]> entry : labelToRanges.entrySet()) {
-                var label = entry.getKey();
-                var value = entry.getValue();
-                longRanges[idx] = new LongRange(label, value[0], true, value[1], true);
-                idx++;
-              }
-              tmpFieldToRanges.put(field, longRanges);
-            });
-
-    fieldToRanges = Collections.unmodifiableMap(tmpFieldToRanges);
-  }
-
   public SearchResult search(SearchQuery query) {
     try {
       return _search(query);
@@ -65,7 +35,7 @@ public class Searcher {
     return indexSearcher.getIndexReader().numDocs();
   }
 
-  public static class SearcherException extends RuntimeException {
+  static class SearcherException extends RuntimeException {
     private SearcherException(Exception e) {
       super(e);
     }
@@ -115,24 +85,6 @@ public class Searcher {
                   fc)
               .getTopChildren(maxFacets, IndexField.FACET_DIET);
       addFacetData(builder, diets);
-
-      var keywords =
-          new FastTaxonomyFacetCounts(
-                  IndexField.FACET_KEYWORD,
-                  taxonomyReader,
-                  indexConfiguration.getFacetsConfig(),
-                  fc)
-              .getTopChildren(maxFacets, IndexField.FACET_KEYWORD);
-      addFacetData(builder, keywords);
-
-      // XXX maybe extend LongRangeFacetCounts and make it reusable if garbage becomes a problem
-      // XXX using FastTaxonomyFacetCounts and indexed fields would be a lot faster
-      for (Entry<String, LongRange[]> entry : fieldToRanges.entrySet()) {
-        var topK =
-            new LongRangeFacetCounts(entry.getKey(), fc, entry.getValue())
-                .getTopChildren(maxFacets, entry.getKey());
-        addFacetData(builder, topK);
-      }
     }
 
     return builder.build();
