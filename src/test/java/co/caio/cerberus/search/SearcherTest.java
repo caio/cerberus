@@ -1,6 +1,12 @@
 package co.caio.cerberus.search;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import co.caio.cerberus.Util;
 import co.caio.cerberus.model.FacetData.LabelData;
@@ -62,9 +68,7 @@ class SearcherTest {
     // This test is just to prevent a regression
     var result = searcher.search(new SearchQuery.Builder().fulltext("oil").maxFacets(50).build());
     var nrDistinctPerDietCounts =
-        result
-            .facets()
-            .stream()
+        result.facets().stream()
             .filter(fd -> fd.dimension().equals("diet"))
             .flatMap(fd -> fd.children().stream())
             .map(LabelData::count)
@@ -79,9 +83,7 @@ class SearcherTest {
     var result = searcher.search(query);
 
     var dietFacet =
-        result
-            .facets()
-            .stream()
+        result.facets().stream()
             .filter(x -> x.dimension().equals(IndexField.FACET_DIET))
             .findFirst();
     assertTrue(dietFacet.isPresent());
@@ -313,5 +315,87 @@ class SearcherTest {
 
       offset++;
     }
+  }
+
+  @Test
+  void policyInspectLuceneQueryIsAlwaysCalled() {
+    var policyMock = mock(SearchPolicy.class);
+
+    var searcherWithPolicy =
+        new Searcher.Builder()
+            .searchPolicy(policyMock)
+            .dataDirectory(Util.getTestDataDir())
+            .build();
+
+    searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").build());
+
+    verify(policyMock).inspectLuceneQuery(any());
+  }
+
+  @Test
+  void policyShouldComputeFacetsIsOnlyCalledWhenRelevant() {
+    var policyMock = mock(SearchPolicy.class);
+
+    var searcherWithPolicy =
+        new Searcher.Builder()
+            .searchPolicy(policyMock)
+            .dataDirectory(Util.getTestDataDir())
+            .build();
+
+    // maxFacets is set to zero, policy shouldn't be called
+    searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").maxFacets(0).build());
+
+    verify(policyMock, never()).shouldComputeFacets(any());
+
+    // But with any other valid use it should
+    searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").maxFacets(10).build());
+    verify(policyMock).shouldComputeFacets(any());
+  }
+
+  @Test
+  void throwingFromPolicyIsAllowed() {
+    var policyMock = mock(SearchPolicy.class);
+
+    var searcherWithPolicy =
+        new Searcher.Builder()
+            .searchPolicy(policyMock)
+            .dataDirectory(Util.getTestDataDir())
+            .build();
+
+    class CustomTestException extends RuntimeException {
+      CustomTestException() {
+        super();
+      }
+    }
+
+    doThrow(CustomTestException.class).when(policyMock).inspectLuceneQuery(any());
+
+    assertThrows(
+        CustomTestException.class,
+        () -> searcherWithPolicy.search(new SearchQuery.Builder().fulltext("ignored").build()));
+  }
+
+  @Test
+  void negatingShouldComputeFacetsSkipsFacetComputation() {
+    var policyMock = mock(SearchPolicy.class);
+
+    var searcherWithPolicy =
+        new Searcher.Builder()
+            .searchPolicy(policyMock)
+            .dataDirectory(Util.getTestDataDir())
+            .build();
+
+    var queryWithFacets = new SearchQuery.Builder().fulltext("oil").maxFacets(4).build();
+
+    // Allow computing facets irrespective of results
+    when(policyMock.shouldComputeFacets(any())).thenReturn(true);
+
+    // precondition: base query actually generates facets
+    assertFalse(searcherWithPolicy.search(queryWithFacets).facets().isEmpty());
+
+    // But when the policy is to deny, we get no facets in the result
+    when(policyMock.shouldComputeFacets(any())).thenReturn(false);
+
+    assertTrue(searcherWithPolicy.search(queryWithFacets).facets().isEmpty());
   }
 }

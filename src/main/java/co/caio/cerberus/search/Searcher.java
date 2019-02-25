@@ -22,6 +22,7 @@ public class Searcher {
   private final TaxonomyReader taxonomyReader;
   private final QueryInterpreter interpreter;
   private final IndexConfiguration indexConfiguration;
+  private final SearchPolicy searchPolicy;
 
   public SearchResult search(SearchQuery query) {
     try {
@@ -46,6 +47,7 @@ public class Searcher {
     indexSearcher = new IndexSearcher(builder.indexReader);
     taxonomyReader = builder.taxonomyReader;
     indexConfiguration = builder.indexConfiguration;
+    searchPolicy = builder.searchPolicy;
 
     var moreLikeThis = new MoreLikeThis(builder.indexReader);
     moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
@@ -56,10 +58,16 @@ public class Searcher {
   private SearchResult _search(SearchQuery query) throws IOException {
     var fc = new FacetsCollector();
 
+    var luceneQuery = interpreter.toLuceneQuery(query);
+
+    if (searchPolicy != null) {
+      searchPolicy.inspectLuceneQuery(luceneQuery);
+    }
+
     var result =
         FacetsCollector.search(
             indexSearcher,
-            interpreter.toLuceneQuery(query),
+            luceneQuery,
             query.offset() + query.maxResults(),
             interpreter.toLuceneSort(query),
             fc);
@@ -75,7 +83,7 @@ public class Searcher {
 
     // TODO we should allow specifying which facets to collect
     var maxFacets = query.maxFacets();
-    if (maxFacets != 0) {
+    if (maxFacets != 0 && (searchPolicy == null || searchPolicy.shouldComputeFacets(result))) {
       var diets =
           new FloatAssociationsThresholdCount(
                   IndexField.FACET_DIET,
@@ -105,6 +113,7 @@ public class Searcher {
     private IndexReader indexReader;
     private TaxonomyReader taxonomyReader;
     private IndexConfiguration indexConfiguration;
+    private SearchPolicy searchPolicy;
 
     public Builder dataDirectory(Path dir) {
       try {
@@ -138,6 +147,11 @@ public class Searcher {
       } catch (Exception wrapped) {
         throw new SearcherBuilderException(wrapped.getMessage());
       }
+      return this;
+    }
+
+    public Builder searchPolicy(SearchPolicy policy) {
+      searchPolicy = policy;
       return this;
     }
 
