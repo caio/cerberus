@@ -151,8 +151,6 @@ public interface Indexer {
                   doc.add(new FloatThresholdField(score, FACET_DIET, diet));
                 });
 
-        recipe.keywords().forEach(kw -> doc.add(new FacetField(FACET_KEYWORD, kw)));
-
         recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
         addOptionalIntField(doc, NUM_INGREDIENTS, OptionalInt.of(recipe.ingredients().size()));
 

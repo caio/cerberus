@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
-import java.util.Set;
 import org.immutables.value.Value;
 
 @Value.Style(
@@ -44,8 +43,6 @@ public interface Recipe {
   OptionalInt fatContent();
 
   OptionalInt proteinContent();
-
-  Set<String> keywords();
 
   @Value.Check
   default void check() {
