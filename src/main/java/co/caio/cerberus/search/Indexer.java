@@ -10,7 +10,6 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.lucene.document.*;
-import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -128,14 +127,9 @@ public interface Indexer {
 
       @Override
       public void addRecipe(Recipe recipe) throws IOException {
-        // FIXME temporarily drop unsearchable fields?
         var doc = new Document();
 
         doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
-        doc.add(new StringField(CRAWL_URL, recipe.crawlUrl(), Field.Store.YES));
-
-        doc.add(new TextField(NAME, recipe.name(), Field.Store.YES));
-
         var fulltext =
             Stream.concat(
                     Stream.of(recipe.name()),
@@ -147,8 +141,10 @@ public interface Indexer {
             .diets()
             .forEach(
                 (diet, score) -> {
-                  doc.add(new FloatPoint(IndexField.getFieldNameForDiet(diet), score));
-                  doc.add(new FloatThresholdField(score, FACET_DIET, diet));
+                  if (score > 0) {
+                    doc.add(new FloatPoint(IndexField.getFieldNameForDiet(diet), score));
+                    doc.add(new FloatThresholdField(score, FACET_DIET, diet));
+                  }
                 });
 
         recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
