@@ -13,7 +13,6 @@ import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
-import co.caio.cerberus.model.SearchResultRecipe;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -55,8 +54,8 @@ class SearcherTest {
   @Test
   void respectMaxResults() {
     var builder = new SearchQuery.Builder().fulltext("garlic");
-    assertEquals(1, searcher.search(builder.maxResults(1).build()).recipes().size());
-    assertTrue(searcher.search(builder.maxResults(42).build()).recipes().size() <= 42);
+    assertEquals(1, searcher.search(builder.maxResults(1).build()).recipeIds().size());
+    assertTrue(searcher.search(builder.maxResults(42).build()).recipeIds().size() <= 42);
   }
 
   @Test
@@ -166,30 +165,24 @@ class SearcherTest {
 
     checkOrdering(
         queryBuilder.sort(SortOrder.NUM_INGREDIENTS).build(),
-        r -> OptionalInt.of(Util.getRecipe(r.recipeId()).ingredients().size()));
+        r -> OptionalInt.of(Util.getRecipe(r).ingredients().size()));
 
     checkOrdering(
-        queryBuilder.sort(SortOrder.COOK_TIME).build(),
-        r -> Util.getRecipe(r.recipeId()).cookTime());
+        queryBuilder.sort(SortOrder.COOK_TIME).build(), r -> Util.getRecipe(r).cookTime());
 
     checkOrdering(
-        queryBuilder.sort(SortOrder.PREP_TIME).build(),
-        r -> Util.getRecipe(r.recipeId()).prepTime());
+        queryBuilder.sort(SortOrder.PREP_TIME).build(), r -> Util.getRecipe(r).prepTime());
 
     checkOrdering(
-        queryBuilder.sort(SortOrder.TOTAL_TIME).build(),
-        r -> Util.getRecipe(r.recipeId()).totalTime());
+        queryBuilder.sort(SortOrder.TOTAL_TIME).build(), r -> Util.getRecipe(r).totalTime());
 
-    checkOrdering(
-        queryBuilder.sort(SortOrder.CALORIES).build(),
-        r -> Util.getRecipe(r.recipeId()).calories());
+    checkOrdering(queryBuilder.sort(SortOrder.CALORIES).build(), r -> Util.getRecipe(r).calories());
   }
 
-  private void checkOrdering(
-      SearchQuery query, Function<SearchResultRecipe, OptionalInt> retriever) {
+  private void checkOrdering(SearchQuery query, Function<Long, OptionalInt> retriever) {
     var hits = searcher.search(query);
     var lastValue = Integer.MIN_VALUE;
-    for (SearchResultRecipe r : hits.recipes()) {
+    for (long r : hits.recipeIds()) {
       final var value = retriever.apply(r).orElse(Integer.MAX_VALUE);
       assertTrue(lastValue <= value);
       lastValue = value;
@@ -247,9 +240,9 @@ class SearcherTest {
       var results = searcher.search(builder.similarity(text).build());
 
       var foundIndex = -1;
-      for (SearchResultRecipe rr : results.recipes()) {
+      for (long foundId : results.recipeIds()) {
         foundIndex++;
-        if (rr.recipeId() == r.recipeId()) {
+        if (foundId == r.recipeId()) {
           break;
         }
       }
@@ -290,7 +283,7 @@ class SearcherTest {
     var result = searcher.search(builder.offset(totalHits - wantedRecipesSize).build());
 
     assertEquals(totalHits, result.totalHits());
-    assertEquals(wantedRecipesSize, result.recipes().size());
+    assertEquals(wantedRecipesSize, result.recipeIds().size());
   }
 
   @Test
@@ -300,21 +293,21 @@ class SearcherTest {
 
     var testQuery = builder.offset((int) result.totalHits()).build();
     var testResult = searcher.search(testQuery);
-    assertEquals(0, testResult.recipes().size());
+    assertEquals(0, testResult.recipeIds().size());
     assertEquals(result.totalHits(), testResult.totalHits());
   }
 
   @Test
   void offsetDoesNotChangeOrder() {
     var builder = new SearchQuery.Builder().fulltext("flour").maxResults(30);
-    var results = searcher.search(builder.build()).recipes().toArray();
+    var results = searcher.search(builder.build()).recipeIds().toArray();
 
     var offset = 1;
     while (offset < 30) {
       var offsetResult = searcher.search(builder.offset(offset).build());
 
       for (int i = offset; i < results.length; i++) {
-        assertEquals(results[i], offsetResult.recipes().get(i - offset));
+        assertEquals(results[i], offsetResult.recipeIds().get(i - offset));
       }
 
       offset++;

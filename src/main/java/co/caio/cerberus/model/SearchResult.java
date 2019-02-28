@@ -19,13 +19,14 @@ public interface SearchResult {
     return 0;
   }
 
-  List<SearchResultRecipe> recipes();
+  List<Long> recipeIds();
 
   List<FacetData> facets();
 
   class Builder extends ImmutableSearchResult.Builder {
-    public Builder addRecipe(long recipeId, String name, String crawlUrl) {
-      return addRecipes(SearchResultRecipe.of(recipeId, name, crawlUrl));
+    public Builder addRecipe(long recipeId) {
+      addRecipeIds(recipeId);
+      return this;
     }
   }
 
@@ -34,7 +35,7 @@ public interface SearchResult {
     if (totalHits() < 0) {
       throw new IllegalStateException("totalHits must not be negative");
     }
-    if (recipes().size() > totalHits()) {
+    if (recipeIds().size() > totalHits()) {
       throw new IllegalStateException("totalHits must be >= recipes().length");
     }
   }

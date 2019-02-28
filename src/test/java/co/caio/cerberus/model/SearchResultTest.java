@@ -11,31 +11,15 @@ class SearchResultTest {
         IllegalStateException.class, () -> new SearchResult.Builder().totalHits(-1).build());
     assertThrows(
         IllegalStateException.class,
-        () ->
-            new SearchResult.Builder()
-                .totalHits(0)
-                .addRecipe(1, "recipe 1", "https://nowhere.local/1")
-                .build());
+        () -> new SearchResult.Builder().totalHits(0).addRecipe(1).build());
     assertDoesNotThrow(() -> new SearchResult.Builder().build());
     assertDoesNotThrow(() -> new SearchResult.Builder().totalHits(0).build());
     var sr = simple();
     assertEquals(10, sr.totalHits());
-    assertEquals(2, sr.recipes().size());
-    assertEquals("recipe 2", sr.recipes().get(1).name());
-  }
-
-  @Test
-  void itemBuild() {
-    assertThrows(IllegalStateException.class, () -> SearchResultRecipe.of(-1, "n", "c"));
-    assertThrows(IllegalStateException.class, () -> SearchResultRecipe.of(1, "", "c"));
-    assertThrows(IllegalStateException.class, () -> SearchResultRecipe.of(1, "n", ""));
+    assertEquals(2, sr.recipeIds().size());
   }
 
   private SearchResult simple() {
-    return new SearchResult.Builder()
-        .totalHits(10)
-        .addRecipe(1, "recipe 1", "https://nowhere.local/1")
-        .addRecipe(2, "recipe 2", "https://nowhere.local/2")
-        .build();
+    return new SearchResult.Builder().totalHits(10).addRecipe(1).addRecipe(2).build();
   }
 }

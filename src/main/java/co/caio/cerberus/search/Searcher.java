@@ -69,10 +69,7 @@ public class Searcher {
 
     for (int i = query.offset(); i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
-      builder.addRecipe(
-          doc.getField(IndexField.RECIPE_ID).numericValue().longValue(),
-          doc.get(IndexField.NAME),
-          doc.get(IndexField.CRAWL_URL));
+      builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
     }
 
     // TODO we should allow specifying which facets to collect

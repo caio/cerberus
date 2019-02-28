@@ -28,12 +28,7 @@ class SerializerTest {
 
   @Test
   void searchResultSerDe() {
-    var sr =
-        new SearchResult.Builder()
-            .totalHits(10)
-            .addRecipe(1, "recipe 1", "https://nowhere.local/1")
-            .addRecipe(2, "recipe 2", "https://nowhere.local/2")
-            .build();
+    var sr = new SearchResult.Builder().totalHits(10).addRecipe(1).addRecipe(2).build();
 
     assertDoesNotThrow(
         () -> assertEquals(sr, serializer.readSearchResult(serializer.write(sr).get()).get()));
