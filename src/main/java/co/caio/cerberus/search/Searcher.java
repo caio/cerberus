@@ -13,7 +13,6 @@ import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 
@@ -49,10 +48,7 @@ public class Searcher {
     indexConfiguration = builder.indexConfiguration;
     searchPolicy = builder.searchPolicy;
 
-    var moreLikeThis = new MoreLikeThis(builder.indexReader);
-    moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
-
-    interpreter = new QueryInterpreter(moreLikeThis, indexConfiguration, searchPolicy);
+    interpreter = new QueryInterpreter(indexConfiguration, searchPolicy);
   }
 
   private SearchResult _search(SearchQuery query) throws IOException {

@@ -15,11 +15,8 @@ import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.OptionalInt;
-import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -218,40 +215,6 @@ class SearcherTest {
             .build();
     assertEquals(
         Util.getAssertionNumber("test.total_time_10_15"), searcher.search(query).totalHits());
-  }
-
-  @Test
-  void similarityQueries() {
-    var builder = new SearchQuery.Builder().maxResults(100).maxFacets(0);
-
-    // very inefficiently pick 30 random recipes
-    // (maybe make random seed stable later)
-    var recipes = List.copyOf(Util.getRecipeMap().values());
-    var pickedRecipes =
-        new Random()
-            .ints(30, 0, recipes.size())
-            .mapToObj(recipes::get)
-            .collect(Collectors.toList());
-
-    for (Recipe r : pickedRecipes) {
-      var text =
-          String.format(
-              "%s\n%s\n%s", r.name(), String.join("\n", r.ingredients()), r.instructions());
-      var results = searcher.search(builder.similarity(text).build());
-
-      var foundIndex = -1;
-      for (long foundId : results.recipeIds()) {
-        foundIndex++;
-        if (foundId == r.recipeId()) {
-          break;
-        }
-      }
-
-      assertTrue(foundIndex >= 0);
-      // Quality assertion: we should be able to find the original
-      // recipe in the top 10% of all the documents that matched
-      assertTrue(foundIndex / results.totalHits() <= 0.1);
-    }
   }
 
   @Test

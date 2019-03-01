@@ -3,12 +3,9 @@ package co.caio.cerberus.search;
 import static co.caio.cerberus.search.IndexField.*;
 
 import co.caio.cerberus.model.SearchQuery;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.Optional;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -20,17 +17,15 @@ import org.slf4j.LoggerFactory;
 
 class QueryInterpreter {
   private static final Logger logger = LoggerFactory.getLogger(QueryInterpreter.class);
-  private final MoreLikeThis moreLikeThis;
   private final FulltextQueryParser queryParser;
   private final SearchPolicy searchPolicy;
 
-  QueryInterpreter(MoreLikeThis mlt, IndexConfiguration conf, SearchPolicy policy) {
+  QueryInterpreter(IndexConfiguration conf, SearchPolicy policy) {
     queryParser = new FulltextQueryParser(conf.getAnalyzer());
-    moreLikeThis = mlt;
     searchPolicy = policy;
   }
 
-  Query toLuceneQuery(SearchQuery searchQuery) throws IOException {
+  Query toLuceneQuery(SearchQuery searchQuery) {
     var queryBuilder = new BooleanQuery.Builder();
 
     if (searchQuery.fulltext().isPresent()) {
@@ -39,10 +34,6 @@ class QueryInterpreter {
         searchPolicy.inspectParsedFulltextQuery(parsedQuery);
       }
       queryBuilder.add(parsedQuery, BooleanClause.Occur.MUST);
-    } else if (searchQuery.similarity().isPresent()) {
-      queryBuilder.add(
-          moreLikeThis.like(FULLTEXT, new StringReader(searchQuery.similarity().get())),
-          BooleanClause.Occur.MUST);
     }
 
     addFieldRangeQuery(queryBuilder, NUM_INGREDIENTS, searchQuery.numIngredients());
