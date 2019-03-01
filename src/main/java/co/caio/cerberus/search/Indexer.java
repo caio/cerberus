@@ -7,9 +7,8 @@ import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.OptionalInt;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.lucene.document.*;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -130,12 +129,10 @@ public interface Indexer {
         var doc = new Document();
 
         doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
-        var fulltext =
-            Stream.concat(
-                    Stream.of(recipe.name()),
-                    Stream.concat(recipe.instructions().stream(), recipe.ingredients().stream()))
-                .collect(Collectors.joining("\n"));
-        doc.add(new TextField(FULLTEXT, fulltext, Field.Store.NO));
+
+        doc.add(new TextField(NAME, recipe.name(), Store.NO));
+        recipe.instructions().forEach(i -> doc.add(new TextField(INSTRUCTIONS, i, Store.NO)));
+        recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Store.NO)));
 
         recipe
             .diets()
@@ -147,7 +144,6 @@ public interface Indexer {
                   }
                 });
 
-        recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Field.Store.NO)));
         addOptionalIntField(doc, NUM_INGREDIENTS, OptionalInt.of(recipe.ingredients().size()));
 
         addOptionalIntField(doc, PREP_TIME, recipe.prepTime());

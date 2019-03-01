@@ -56,13 +56,4 @@ class SearchQueryTest {
         IllegalStateException.class, () -> new Builder().putDietThreshold("vegan", 1.1f).build());
     assertDoesNotThrow(() -> new Builder().putDietThreshold("paleo", 1.0f).build());
   }
-
-  @Test
-  void moreLikeThisValidations() {
-    var mltBuilder = new Builder();
-    var text = "query";
-    // can't build with similarity and fulltext set
-    assertThrows(
-        IllegalStateException.class, () -> mltBuilder.similarity(text).fulltext(text).build());
-  }
 }

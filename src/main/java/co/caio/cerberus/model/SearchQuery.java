@@ -17,8 +17,6 @@ import org.immutables.value.Value;
 public interface SearchQuery {
   Optional<String> fulltext();
 
-  Optional<String> similarity();
-
   Optional<RangedSpec> numIngredients();
 
   Optional<RangedSpec> prepTime();
@@ -114,10 +112,7 @@ public interface SearchQuery {
                 throw new IllegalStateException(String.format("Unknown diet `%s`", diet));
               }
             });
-    if (fulltext().isPresent() && similarity().isPresent()) {
-      throw new IllegalStateException("Can't use fulltext and similarity at the same time");
-    }
-    if ((fulltext().isPresent() || similarity().isPresent())
+    if (fulltext().isPresent()
         || !dietThreshold().isEmpty()
         || numIngredients().isPresent()
         || prepTime().isPresent()
