@@ -32,7 +32,9 @@
         <chronicle.version>3.17.1</chronicle.version>
         <mockito.version>2.24.5</mockito.version>
         <reactor.version>Californium-SR5</reactor.version>
+
         <maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
+        <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -154,9 +156,26 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${maven-jar-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
+            <!-- package a test jar so that casserole can use it -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- flatbuffers start -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
