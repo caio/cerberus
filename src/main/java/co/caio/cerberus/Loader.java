@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LongSummaryStatistics;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -26,24 +25,14 @@ public class Loader {
   private final Serializer serializer = new Serializer();
   private final String movePrefix;
 
-  private Loader(Path configFile, Path inputFile) {
+  private Loader(Path luceneIndexDir, Path chronicleFilename, Path recipesFile) {
 
-    assert configFile.toFile().isFile();
-    assert inputFile.toFile().isFile();
-
-    recipesFile = inputFile;
-
-    var conf = new Properties();
-    try (var reader = Files.newBufferedReader(configFile)) {
-      conf.load(reader);
-    } catch (Exception rethrown) {
-      throw new RuntimeException(rethrown);
-    }
-
-    luceneIndexDir = Path.of(conf.getProperty("cerberus.lucene.directory"));
-    chronicleFilename = Path.of(conf.getProperty("cerberus.chronicle.filename"));
-
+    assert recipesFile.toFile().isFile();
     assert !luceneIndexDir.toFile().isFile() && chronicleFilename.toFile().isFile();
+
+    this.luceneIndexDir = luceneIndexDir;
+    this.chronicleFilename = chronicleFilename;
+    this.recipesFile = recipesFile;
 
     movePrefix = "old." + System.currentTimeMillis() + ".";
   }
@@ -149,12 +138,12 @@ public class Loader {
 
   public static void main(String[] args) throws Exception {
 
-    if (args.length != 2) {
-      logger.error("Required arguments: application.properties document.jsonlines");
+    if (args.length != 3) {
+      logger.error("Required arguments: lucene.dir chronicle.file document.jsonlines");
       System.exit(1);
     }
 
-    var loader = new Loader(Path.of(args[0]), Path.of(args[1]));
+    var loader = new Loader(Path.of(args[0]), Path.of(args[1]), Path.of(args[2]));
 
     loader.createDatabase();
     loader.createIndex();
