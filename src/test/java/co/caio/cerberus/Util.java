@@ -2,6 +2,8 @@ package co.caio.cerberus;
 
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.Indexer;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -30,11 +32,10 @@ public class Util {
   }
 
   public static Stream<Recipe> getSampleRecipes() {
-    var samplesFile = Util.class.getResource("/sample_recipes.jsonlines").getFile();
+    var samplesStream = Util.class.getResourceAsStream("/sample_recipes.jsonlines");
+    var reader = new BufferedReader(new InputStreamReader(samplesStream));
     try {
-      return Files.lines(Path.of(samplesFile))
-          .map(serializer::readRecipe)
-          .flatMap(Optional::stream);
+      return reader.lines().map(serializer::readRecipe).flatMap(Optional::stream);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
