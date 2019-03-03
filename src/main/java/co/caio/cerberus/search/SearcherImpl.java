@@ -23,7 +23,7 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortField.Type;
 import org.apache.lucene.search.TopDocs;
 
-public class SearcherImpl implements Searcher {
+class SearcherImpl implements Searcher {
 
   private static final Sort sortNumIngredients = integerSorterWithDefault(NUM_INGREDIENTS);
   private static final Sort sortPrepTime = integerSorterWithDefault(PREP_TIME);

@@ -3,7 +3,7 @@ package co.caio.cerberus.search;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
 
-public class SearcherWithPolicy extends SearcherImpl implements Searcher {
+class SearcherWithPolicy extends SearcherImpl implements Searcher {
 
   private final SearchPolicy searchPolicy;
 
