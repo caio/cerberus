@@ -69,7 +69,12 @@ public interface Searcher {
       if (indexConfiguration == null) {
         indexConfiguration = new IndexConfiguration();
       }
-      return new SearcherImpl(this);
+
+      if (searchPolicy != null) {
+        return new SearcherWithPolicy(this);
+      } else {
+        return new SearcherImpl(this);
+      }
     }
 
     IndexReader getIndexReader() {

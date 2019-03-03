@@ -21,6 +21,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortField.Type;
+import org.apache.lucene.search.TopDocs;
 
 public class SearcherImpl implements Searcher {
 
@@ -33,15 +34,12 @@ public class SearcherImpl implements Searcher {
   private final IndexSearcher indexSearcher;
   private final TaxonomyReader taxonomyReader;
   private final IndexConfiguration indexConfiguration;
-  private final SearchPolicy searchPolicy;
   private final FulltextQueryParser queryParser;
 
   SearcherImpl(Builder builder) {
-    // XXX create a worker pool to assign for the searcher maybe
     indexSearcher = new IndexSearcher(builder.getIndexReader());
     taxonomyReader = builder.getTaxonomyReader();
     indexConfiguration = builder.getIndexConfiguration();
-    searchPolicy = builder.getSearchPolicy();
     queryParser = new FulltextQueryParser(indexConfiguration.getAnalyzer());
   }
 
@@ -80,9 +78,8 @@ public class SearcherImpl implements Searcher {
       builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
     }
 
-    // TODO we should allow specifying which facets to collect
     var maxFacets = query.maxFacets();
-    if (maxFacets != 0 && (searchPolicy == null || searchPolicy.shouldComputeFacets(result))) {
+    if (maxFacets > 0 && canComputeFacets(result)) {
       var diets =
           new FloatAssociationsThresholdCount(
                   IndexField.FACET_DIET,
@@ -95,6 +92,10 @@ public class SearcherImpl implements Searcher {
     }
 
     return builder.build();
+  }
+
+  boolean canComputeFacets(TopDocs luceneResult) {
+    return true;
   }
 
   private void addFacetData(SearchResult.Builder sb, FacetResult fr) {
@@ -136,16 +137,7 @@ public class SearcherImpl implements Searcher {
 
     searchQuery
         .fulltext()
-        .ifPresent(
-            fulltext -> {
-              var parsed = parseFulltext(fulltext);
-
-              if (searchPolicy != null) {
-                searchPolicy.inspectParsedFulltextQuery(parsed);
-              }
-
-              queryBuilder.add(parsed, Occur.MUST);
-            });
+        .ifPresent(fulltext -> queryBuilder.add(parseFulltext(fulltext), Occur.MUST));
 
     searchQuery
         .numIngredients()
