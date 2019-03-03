@@ -7,9 +7,7 @@ import java.util.Map;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
-@Value.Style(
-    visibility = Value.Style.ImplementationVisibility.PACKAGE,
-    overshadowImplementation = true)
+@ImmutableStyle
 @JsonDeserialize(as = ImmutableRecipe.class)
 @JsonSerialize(as = ImmutableRecipe.class)
 @Value.Immutable

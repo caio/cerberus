@@ -8,9 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Style(
-    visibility = Value.Style.ImplementationVisibility.PACKAGE,
-    overshadowImplementation = true)
+@ImmutableStyle
 @JsonSerialize(as = ImmutableSearchQuery.class)
 @JsonDeserialize(as = ImmutableSearchQuery.class)
 @Value.Immutable

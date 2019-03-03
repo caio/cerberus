@@ -7,10 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import org.immutables.value.Value;
 
-@Value.Style(
-    strictBuilder = true,
-    visibility = Value.Style.ImplementationVisibility.PACKAGE,
-    overshadowImplementation = true)
+@ImmutableStyle
 @JsonSerialize(as = ImmutableFacetData.class)
 @JsonDeserialize(as = ImmutableFacetData.class)
 @Value.Immutable
