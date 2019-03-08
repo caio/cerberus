@@ -1,5 +1,8 @@
 package co.caio.cerberus.search;
 
+import static co.caio.cerberus.search.IndexField.*;
+
+import co.caio.cerberus.lucene.PhoneticEnglishAnalyzer;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,7 +13,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -32,7 +34,7 @@ class IndexConfiguration {
     }
 
     this.baseDirectory = baseDirectory;
-    this.analyzer = new EnglishAnalyzer();
+    this.analyzer = new PhoneticEnglishAnalyzer();
 
     this.facetsConfig = new FacetsConfig();
     multiValuedDimensions.forEach(c -> facetsConfig.setMultiValued(c, true));

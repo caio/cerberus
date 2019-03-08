@@ -57,6 +57,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-analyzers-phonetic</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.davidmoten</groupId>
             <artifactId>flatbuffers-java</artifactId>
             <version>${flatbuffers.version}</version>
