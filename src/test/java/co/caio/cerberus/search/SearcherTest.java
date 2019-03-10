@@ -77,7 +77,8 @@ class SearcherTest {
 
   @Test
   void facets() {
-    var query = new SearchQuery.Builder().fulltext("vegan").maxResults(1).maxFacets(10).build();
+    var query =
+        new SearchQuery.Builder().fulltext("vegetarian").maxResults(1).maxFacets(10).build();
     var result = searcher.search(query);
 
     var dietFacet =
@@ -87,29 +88,32 @@ class SearcherTest {
             .filter(x -> x.dimension().equals(IndexField.FACET_DIET))
             .findFirst();
     assertTrue(dietFacet.isPresent());
-    // make sure that when searching for vegan we actually get a count for Diet => vegan
-    var veganData =
-        dietFacet.get().children().stream().filter(x -> x.label().equals("vegan")).findFirst();
-    assertTrue(veganData.isPresent());
-    var nrVeganRecipes = veganData.get().count();
-    assertTrue(veganData.get().count() > 0);
+    // make sure that when searching for vegetarian we actually get a
+    // count for Diet => vegetarian
+    var vegetarianData =
+        dietFacet.get().children().stream().filter(x -> x.label().equals("vegetarian")).findFirst();
+    assertTrue(vegetarianData.isPresent());
+    var nrVegetarianRecipes = vegetarianData.get().count();
+    assertTrue(vegetarianData.get().count() > 0);
 
-    // now lets drill down the same query on the vegan facet.
-    //  it should give us just `nrVeganRecipes` results as verified above
+    // now lets drill down the same query on the vegetarian facet.
+    //  it should give us just `nrVegetarianRecipes` results as verified above
     result =
         searcher.search(
             new SearchQuery.Builder()
-                .fulltext("vegan")
-                .addMatchDiet("vegan")
+                .fulltext("vegetarian")
+                .addMatchDiet("vegetarian")
                 .maxResults(1)
                 .build());
-    assertEquals(nrVeganRecipes, result.totalHits());
+    assertEquals(nrVegetarianRecipes, result.totalHits());
 
-    // but only searching for the vegan diet facet (i.e. not searching for the term<vegan>
-    // in the whole index would give us AT LEAST the same number as above, but maybe
-    // more since a recipe can be vegan without having to call itself vegan
-    result = searcher.search(new SearchQuery.Builder().addMatchDiet("vegan").maxResults(1).build());
-    assertTrue(result.totalHits() >= nrVeganRecipes);
+    // but only searching for the vegetarian diet facet (i.e. not searching for the
+    // term<vegetarian> in the whole index would give us AT LEAST the same number
+    // as above, but maybe more since a recipe can be vegetarian without having to
+    // call itself vegetarian
+    result =
+        searcher.search(new SearchQuery.Builder().addMatchDiet("vegetarian").maxResults(1).build());
+    assertTrue(result.totalHits() >= nrVegetarianRecipes);
   }
 
   @Test
