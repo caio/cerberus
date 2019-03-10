@@ -8,7 +8,7 @@ public class Diet {
   public static final Set<String> knownDiets =
       Collections.unmodifiableSet(Set.of("keto", "paleo", "lowcarb", "vegetarian"));
 
-  static boolean isKnown(String diet) {
+  public static boolean isKnown(String diet) {
     return knownDiets.contains(diet);
   }
 }
