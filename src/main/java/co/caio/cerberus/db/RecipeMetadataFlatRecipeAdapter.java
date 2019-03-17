@@ -3,6 +3,7 @@ package co.caio.cerberus.db;
 import co.caio.cerberus.flatbuffers.FlatRecipe;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
@@ -39,17 +40,6 @@ class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
   }
 
   @Override
-  public List<String> getInstructions() {
-    // XXX cache?
-    var numInstructions = recipe.instructionsLength();
-    var instructions = new ArrayList<String>(numInstructions);
-    for (int i = 0; i < numInstructions; i++) {
-      instructions.add(recipe.instructions(i));
-    }
-    return instructions;
-  }
-
-  @Override
   public List<String> getIngredients() {
     // XXX cache?
     var numIngredients = recipe.ingredientsLength();
@@ -66,6 +56,16 @@ class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
   }
 
   @Override
+  public OptionalInt getPrepTime() {
+    return FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.prepTime());
+  }
+
+  @Override
+  public OptionalInt getCookTime() {
+    return FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.cookTime());
+  }
+
+  @Override
   public OptionalInt getTotalTime() {
     return FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.totalTime());
   }
@@ -73,5 +73,20 @@ class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
   @Override
   public OptionalInt getCalories() {
     return FlatBufferSerializer.INSTANCE.readOptionalInt(recipe.calories());
+  }
+
+  @Override
+  public OptionalDouble getFatContent() {
+    return FlatBufferSerializer.INSTANCE.readOptionalDouble(recipe.fatContent());
+  }
+
+  @Override
+  public OptionalDouble getProteinContent() {
+    return FlatBufferSerializer.INSTANCE.readOptionalDouble(recipe.proteinContent());
+  }
+
+  @Override
+  public OptionalDouble getCarbohydrateContent() {
+    return FlatBufferSerializer.INSTANCE.readOptionalDouble(recipe.carbohydrateContent());
   }
 }

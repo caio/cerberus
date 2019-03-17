@@ -15,11 +15,18 @@ class RecipeMetadataRecipeAdapterTest {
     assertEquals(sample.name(), proxied.getName());
     assertEquals(sample.slug(), proxied.getSlug());
     assertEquals(sample.siteName(), proxied.getSiteName());
+    assertEquals(sample.crawlUrl(), proxied.getCrawlUrl());
+
     assertEquals(sample.ingredients().size(), proxied.getNumIngredients());
     assertEquals(sample.ingredients(), proxied.getIngredients());
-    assertEquals(sample.instructions(), proxied.getInstructions());
-    assertEquals(sample.calories(), proxied.getCalories());
-    assertEquals(sample.crawlUrl(), proxied.getCrawlUrl());
+
+    assertEquals(sample.prepTime(), proxied.getPrepTime());
+    assertEquals(sample.cookTime(), proxied.getCookTime());
     assertEquals(sample.totalTime(), proxied.getTotalTime());
+
+    assertEquals(sample.calories(), proxied.getCalories());
+    assertEquals(sample.fatContent(), proxied.getFatContent());
+    assertEquals(sample.proteinContent(), proxied.getProteinContent());
+    assertEquals(sample.carbohydrateContent(), proxied.getCarbohydrateContent());
   }
 }

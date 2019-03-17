@@ -2,14 +2,22 @@ namespace co.caio.cerberus.flatbuffers;
 
 table FlatRecipe {
   id:long;
+
   name:string;
   site_name:string;
   slug:string;
   source:string;
+
   ingredients:[string];
-  instructions:[string];
-  total_time:int = 0;
-  calories:int = 0;
+
+  prep_time:int = -1;
+  cook_time:int = -1;
+  total_time:int = -1;
+
+  calories:int = -1;
+  fat_content:float = -1;
+  protein_content:float = -1;
+  carbohydrate_content:float = -1;
 }
 
 root_type FlatRecipe;

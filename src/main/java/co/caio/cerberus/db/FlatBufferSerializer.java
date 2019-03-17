@@ -5,11 +5,14 @@ import co.caio.cerberus.model.Recipe;
 import com.google.flatbuffers.FlatBufferBuilder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 public class FlatBufferSerializer {
 
   static final int NON_EXISTENT_OPTIONAL_INT = -1;
+  static final float NON_EXISTENT_OPTIONAL_FLOAT = -1;
+
   public static final FlatBufferSerializer INSTANCE = new FlatBufferSerializer();
 
   ByteBuffer flattenRecipe(RecipeMetadata recipe) {
@@ -27,10 +30,6 @@ public class FlatBufferSerializer {
         recipe.getIngredients().stream().mapToInt(builder::createString).toArray();
     var ingredientsVectorOffset = FlatRecipe.createIngredientsVector(builder, ingredientsOffsets);
 
-    var instructionsOffsets =
-        recipe.getInstructions().stream().mapToInt(builder::createString).toArray();
-    var instructionsVectorOffset = FlatRecipe.createIngredientsVector(builder, instructionsOffsets);
-
     var rootTable =
         FlatRecipe.createFlatRecipe(
             builder,
@@ -40,9 +39,13 @@ public class FlatBufferSerializer {
             slugOffset,
             sourceOffset,
             ingredientsVectorOffset,
-            instructionsVectorOffset,
+            recipe.getPrepTime().orElse(NON_EXISTENT_OPTIONAL_INT),
+            recipe.getCookTime().orElse(NON_EXISTENT_OPTIONAL_INT),
             recipe.getTotalTime().orElse(NON_EXISTENT_OPTIONAL_INT),
-            recipe.getCalories().orElse(NON_EXISTENT_OPTIONAL_INT));
+            recipe.getCalories().orElse(NON_EXISTENT_OPTIONAL_INT),
+            (float) recipe.getFatContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT),
+            (float) recipe.getProteinContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT),
+            (float) recipe.getCarbohydrateContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT));
 
     builder.finish(rootTable);
     return builder.dataBuffer();
@@ -61,6 +64,14 @@ public class FlatBufferSerializer {
       return OptionalInt.empty();
     } else {
       return OptionalInt.of(number);
+    }
+  }
+
+  OptionalDouble readOptionalDouble(float number) {
+    if (number == NON_EXISTENT_OPTIONAL_FLOAT) {
+      return OptionalDouble.empty();
+    } else {
+      return OptionalDouble.of(number);
     }
   }
 }

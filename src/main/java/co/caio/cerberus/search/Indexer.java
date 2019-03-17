@@ -6,6 +6,7 @@ import co.caio.cerberus.lucene.FloatThresholdField;
 import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import org.apache.lucene.document.*;
 import org.apache.lucene.document.Field.Store;
@@ -151,11 +152,23 @@ public interface Indexer {
         addOptionalIntField(doc, TOTAL_TIME, recipe.totalTime());
 
         addOptionalIntField(doc, CALORIES, recipe.calories());
-        addOptionalIntField(doc, CARBOHYDRATE_CONTENT, recipe.carbohydrateContent());
-        addOptionalIntField(doc, FAT_CONTENT, recipe.fatContent());
-        addOptionalIntField(doc, PROTEIN_CONTENT, recipe.proteinContent());
+
+        addOptionalDoubleField(doc, CARBOHYDRATE_CONTENT, recipe.carbohydrateContent());
+        addOptionalDoubleField(doc, FAT_CONTENT, recipe.fatContent());
+        addOptionalDoubleField(doc, PROTEIN_CONTENT, recipe.proteinContent());
 
         indexWriter.addDocument(indexConfiguration.getFacetsConfig().build(taxonomyWriter, doc));
+      }
+
+      private void addOptionalDoubleField(
+          Document doc,
+          String fieldName,
+          @SuppressWarnings("OptionalUsedAsFieldOrParameterType") OptionalDouble value) {
+        value.ifPresent(
+            v -> {
+              doc.add(new FloatPoint(fieldName, (float) v));
+              // XXX and field for sort / faceting if needed
+            });
       }
 
       private void addOptionalIntField(

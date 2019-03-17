@@ -180,14 +180,14 @@ class SearcherImpl implements Searcher {
         .ifPresent(
             range ->
                 queryBuilder.add(
-                    IntPoint.newRangeQuery(FAT_CONTENT, range.start(), range.end()), Occur.MUST));
+                    FloatPoint.newRangeQuery(FAT_CONTENT, range.start(), range.end()), Occur.MUST));
 
     searchQuery
         .proteinContent()
         .ifPresent(
             range ->
                 queryBuilder.add(
-                    IntPoint.newRangeQuery(PROTEIN_CONTENT, range.start(), range.end()),
+                    FloatPoint.newRangeQuery(PROTEIN_CONTENT, range.start(), range.end()),
                     Occur.MUST));
 
     searchQuery
@@ -195,7 +195,7 @@ class SearcherImpl implements Searcher {
         .ifPresent(
             range ->
                 queryBuilder.add(
-                    IntPoint.newRangeQuery(CARBOHYDRATE_CONTENT, range.start(), range.end()),
+                    FloatPoint.newRangeQuery(CARBOHYDRATE_CONTENT, range.start(), range.end()),
                     Occur.MUST));
 
     searchQuery

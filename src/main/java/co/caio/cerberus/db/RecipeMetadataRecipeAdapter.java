@@ -2,6 +2,7 @@ package co.caio.cerberus.db;
 
 import co.caio.cerberus.model.Recipe;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 class RecipeMetadataRecipeAdapter implements RecipeMetadata {
@@ -37,11 +38,6 @@ class RecipeMetadataRecipeAdapter implements RecipeMetadata {
   }
 
   @Override
-  public List<String> getInstructions() {
-    return recipe.instructions();
-  }
-
-  @Override
   public List<String> getIngredients() {
     return recipe.ingredients();
   }
@@ -52,6 +48,16 @@ class RecipeMetadataRecipeAdapter implements RecipeMetadata {
   }
 
   @Override
+  public OptionalInt getPrepTime() {
+    return recipe.prepTime();
+  }
+
+  @Override
+  public OptionalInt getCookTime() {
+    return recipe.cookTime();
+  }
+
+  @Override
   public OptionalInt getTotalTime() {
     return recipe.totalTime();
   }
@@ -59,5 +65,20 @@ class RecipeMetadataRecipeAdapter implements RecipeMetadata {
   @Override
   public OptionalInt getCalories() {
     return recipe.calories();
+  }
+
+  @Override
+  public OptionalDouble getFatContent() {
+    return recipe.fatContent();
+  }
+
+  @Override
+  public OptionalDouble getProteinContent() {
+    return recipe.proteinContent();
+  }
+
+  @Override
+  public OptionalDouble getCarbohydrateContent() {
+    return recipe.carbohydrateContent();
   }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
@@ -36,11 +37,11 @@ public interface Recipe {
 
   OptionalInt calories();
 
-  OptionalInt carbohydrateContent();
+  OptionalDouble carbohydrateContent();
 
-  OptionalInt fatContent();
+  OptionalDouble fatContent();
 
-  OptionalInt proteinContent();
+  OptionalDouble proteinContent();
 
   @Value.Check
   default void check() {
