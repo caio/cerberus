@@ -35,7 +35,7 @@ public interface Indexer {
     private IndexWriterConfig writerConfig;
     private IndexWriterConfig.OpenMode openMode;
 
-    public Builder reset() {
+    Builder reset() {
       indexDirectory = null;
       taxonomyDirectory = null;
       writerConfig = null;
@@ -48,23 +48,17 @@ public interface Indexer {
       if (!dir.toFile().isDirectory()) {
         throw new IndexBuilderException(String.format("'%s' is not a directory", dir));
       }
-      try {
-        indexDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.INDEX_DIR_NAME), true);
-        taxonomyDirectory =
-            FileSystem.openDirectory(dir.resolve(FileSystem.TAXONOMY_DIR_NAME), true);
-      } catch (Exception e) {
-        throw new IndexBuilderException(e.getMessage());
-      }
+
+      indexConfiguration = new IndexConfiguration(dir);
+
+      indexDirectory = indexConfiguration.openIndexDirectory();
+      taxonomyDirectory = indexConfiguration.openTaxonomyDirectory();
+
       return this;
     }
 
     private Builder openMode(IndexWriterConfig.OpenMode mode) {
       openMode = mode;
-      return this;
-    }
-
-    public Builder indexConfiguration(IndexConfiguration conf) {
-      indexConfiguration = conf;
       return this;
     }
 
@@ -81,26 +75,15 @@ public interface Indexer {
     }
 
     public Indexer build() {
-      if (indexConfiguration == null) {
-        indexConfiguration = new IndexConfiguration();
-      }
-
-      if (writerConfig == null) {
-        writerConfig = new IndexWriterConfig(indexConfiguration.getAnalyzer());
-      }
-
       if (openMode == null) {
         throw new IndexBuilderException("Missing `openMode`");
       }
 
-      if (indexDirectory == null) {
-        throw new IndexBuilderException("Missing `indexDirectory`");
+      if (indexDirectory == null || taxonomyDirectory == null || indexConfiguration == null) {
+        throw new IndexBuilderException("dataDirectory() not set");
       }
 
-      if (taxonomyDirectory == null) {
-        throw new IndexBuilderException("Missing `taxonomyDirectory`");
-      }
-
+      writerConfig = new IndexWriterConfig(indexConfiguration.getAnalyzer());
       writerConfig.setOpenMode(openMode);
 
       try {

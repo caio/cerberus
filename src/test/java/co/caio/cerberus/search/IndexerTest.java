@@ -15,7 +15,6 @@ class IndexerTest {
     var builder = new Indexer.Builder();
     assertThrows(exc, builder::build);
     assertThrows(exc, () -> builder.reset().createMode().build());
-    assertThrows(exc, () -> builder.reset().indexConfiguration(new IndexConfiguration()).build());
     assertThrows(
         exc,
         () -> builder.reset().dataDirectory(Path.of("/this/doesnt/exist")).createMode().build());

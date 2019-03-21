@@ -23,24 +23,9 @@ public interface Searcher {
     private SearchPolicy searchPolicy;
 
     public Builder dataDirectory(Path dir) {
-      try {
-        var indexDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.INDEX_DIR_NAME));
-        var taxonomyDirectory = FileSystem.openDirectory(dir.resolve(FileSystem.TAXONOMY_DIR_NAME));
-        indexReader = DirectoryReader.open(indexDirectory);
-        taxonomyReader = new DirectoryTaxonomyReader(taxonomyDirectory);
-      } catch (Exception e) {
-        throw new SearcherBuilderException(e.getMessage());
-      }
-      return this;
-    }
-
-    Builder indexReader(Directory dir) {
-      try {
-        indexReader = DirectoryReader.open(dir);
-      } catch (Exception wrapped) {
-        throw new SearcherBuilderException(wrapped.getMessage());
-      }
-      return this;
+      return indexConfiguration(new IndexConfiguration(dir))
+          .indexReader(indexConfiguration.openIndexDirectory())
+          .taxonomyReader(indexConfiguration.openTaxonomyDirectory());
     }
 
     Builder indexConfiguration(IndexConfiguration conf) {
@@ -48,11 +33,20 @@ public interface Searcher {
       return this;
     }
 
+    Builder indexReader(Directory dir) {
+      try {
+        indexReader = DirectoryReader.open(dir);
+      } catch (Exception wrapped) {
+        throw new SearcherBuilderException(wrapped);
+      }
+      return this;
+    }
+
     Builder taxonomyReader(Directory dir) {
       try {
         taxonomyReader = new DirectoryTaxonomyReader(dir);
       } catch (Exception wrapped) {
-        throw new SearcherBuilderException(wrapped.getMessage());
+        throw new SearcherBuilderException(wrapped);
       }
       return this;
     }
@@ -63,11 +57,8 @@ public interface Searcher {
     }
 
     public Searcher build() {
-      if (indexReader == null) {
-        throw new IllegalStateException("`indexReader` can't be null");
-      }
-      if (indexConfiguration == null) {
-        indexConfiguration = new IndexConfiguration();
+      if (indexReader == null || taxonomyReader == null || indexConfiguration == null) {
+        throw new IllegalStateException("`dataDirectory` not set");
       }
 
       if (searchPolicy != null) {
@@ -94,8 +85,8 @@ public interface Searcher {
     }
 
     static class SearcherBuilderException extends RuntimeException {
-      SearcherBuilderException(String message) {
-        super(message);
+      SearcherBuilderException(Throwable throwable) {
+        super(throwable);
       }
     }
   }

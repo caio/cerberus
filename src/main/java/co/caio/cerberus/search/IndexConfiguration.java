@@ -2,15 +2,30 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
 class IndexConfiguration {
+  static final String INDEX_DIR_NAME = "index";
+  static final String TAXONOMY_DIR_NAME = "taxonomy";
+
   private final FacetsConfig facetsConfig;
   private final Analyzer analyzer;
+  private final Path baseDirectory;
 
-  IndexConfiguration() {
+  IndexConfiguration(Path baseDirectory) {
+
+    if (!baseDirectory.toFile().isDirectory()) {
+      throw new IndexConfigurationException("Not a directory: " + baseDirectory);
+    }
+
+    this.baseDirectory = baseDirectory;
+
     facetsConfig = new FacetsConfig();
     facetsConfig.setIndexFieldName(FACET_DIET, FACET_DIET);
     facetsConfig.setMultiValued(FACET_DIET, true);
@@ -27,5 +42,31 @@ class IndexConfiguration {
 
   Analyzer getAnalyzer() {
     return analyzer;
+  }
+
+  Directory openIndexDirectory() {
+    return uncheckedOpen(INDEX_DIR_NAME);
+  }
+
+  Directory openTaxonomyDirectory() {
+    return uncheckedOpen(TAXONOMY_DIR_NAME);
+  }
+
+  private Directory uncheckedOpen(String dirName) {
+    try {
+      return FSDirectory.open(baseDirectory.resolve(dirName));
+    } catch (IOException wrapped) {
+      throw new IndexConfigurationException(wrapped);
+    }
+  }
+
+  static class IndexConfigurationException extends RuntimeException {
+    IndexConfigurationException(Throwable throwable) {
+      super(throwable);
+    }
+
+    IndexConfigurationException(String message) {
+      super(message);
+    }
   }
 }

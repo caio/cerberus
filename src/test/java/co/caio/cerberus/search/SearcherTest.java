@@ -13,6 +13,7 @@ import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
+import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.OptionalInt;
@@ -35,7 +36,7 @@ class SearcherTest {
     assertThrows(IllegalStateException.class, () -> new Searcher.Builder().build());
     // Bad directory
     assertThrows(
-        Searcher.Builder.SearcherBuilderException.class,
+        IndexConfigurationException.class,
         () -> new Searcher.Builder().dataDirectory(Path.of("/this/doesnt/exist")).build());
   }
 
