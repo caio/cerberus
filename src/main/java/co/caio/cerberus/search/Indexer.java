@@ -2,14 +2,12 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
-import co.caio.cerberus.lucene.FloatThresholdField;
 import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
 import org.apache.lucene.document.*;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.facet.FacetField;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -124,45 +122,130 @@ public interface Indexer {
                 (diet, score) -> {
                   if (score > 0) {
                     doc.add(new FloatPoint(IndexField.getFieldNameForDiet(diet), score));
-                    doc.add(new FloatThresholdField(score, FACET_DIET, diet));
+                    if (score == 1) {
+                      doc.add(new FacetField(FACET_DIET, diet));
+                    }
+                    // TODO per-diet thresholds, per-threshold counts
                   }
                 });
 
-        addOptionalIntField(doc, NUM_INGREDIENTS, OptionalInt.of(recipe.ingredients().size()));
+        var numIngredients = recipe.ingredients().size();
+        doc.add(new IntPoint(NUM_INGREDIENTS, numIngredients));
+        doc.add(new NumericDocValuesField(NUM_INGREDIENTS, numIngredients));
+        for (var range : RANGE_NUM_INGREDIENTS) {
+          if (range.check(numIngredients)) {
+            doc.add(new FacetField(FACET_NUM_INGREDIENTS, range.label));
+          }
+        }
 
-        addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
-        addOptionalIntField(doc, COOK_TIME, recipe.cookTime());
-        addOptionalIntField(doc, TOTAL_TIME, recipe.totalTime());
+        // Timing
 
-        addOptionalIntField(doc, CALORIES, recipe.calories());
+        recipe
+            .prepTime()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(PREP_TIME, value));
+                  // For sorting
+                  doc.add(new NumericDocValuesField(PREP_TIME, value));
+                });
 
-        addOptionalDoubleField(doc, CARBOHYDRATE_CONTENT, recipe.carbohydrateContent());
-        addOptionalDoubleField(doc, FAT_CONTENT, recipe.fatContent());
-        addOptionalDoubleField(doc, PROTEIN_CONTENT, recipe.proteinContent());
+        recipe
+            .cookTime()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(COOK_TIME, value));
+                  // For sorting
+                  doc.add(new NumericDocValuesField(COOK_TIME, value));
+                });
+
+        recipe
+            .totalTime()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(TOTAL_TIME, value));
+                  for (var range : RANGE_TOTAL_TIME) {
+                    if (range.check(value)) {
+                      doc.add(new FacetField(FACET_TOTAL_TIME, range.label));
+                    }
+                  }
+                  // For sorting
+                  doc.add(new NumericDocValuesField(TOTAL_TIME, value));
+                });
+
+        // Nutrition
+
+        recipe
+            .calories()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(CALORIES, value));
+                  for (var range : RANGE_CALORIES) {
+                    if (range.check(value)) {
+                      doc.add(new FacetField(FACET_CALORIES, range.label));
+                    }
+                  }
+                  // For sorting
+                  doc.add(new NumericDocValuesField(CALORIES, value));
+                });
+
+        recipe
+            .fatContent()
+            .ifPresent(
+                value -> {
+                  doc.add(new FloatPoint(FAT_CONTENT, (float) value));
+                  if (value <= 10) {
+                    doc.add(new FacetField(FACET_FAT_CONTENT, "0,10"));
+                  }
+                });
+
+        recipe
+            .proteinContent()
+            .ifPresent(value -> doc.add(new FloatPoint(PROTEIN_CONTENT, (float) value)));
+
+        recipe
+            .carbohydrateContent()
+            .ifPresent(
+                value -> {
+                  doc.add(new FloatPoint(CARBOHYDRATE_CONTENT, (float) value));
+                  if (value <= 30) {
+                    doc.add(new FacetField(FACET_CARBOHYDRATE_CONTENT, "0,30"));
+                  }
+                });
 
         indexWriter.addDocument(indexConfiguration.getFacetsConfig().build(taxonomyWriter, doc));
       }
 
-      private void addOptionalDoubleField(
-          Document doc,
-          String fieldName,
-          @SuppressWarnings("OptionalUsedAsFieldOrParameterType") OptionalDouble value) {
-        value.ifPresent(
-            v -> {
-              doc.add(new FloatPoint(fieldName, (float) v));
-              // XXX and field for sort / faceting if needed
-            });
-      }
+      private final LabeledRange[] RANGE_NUM_INGREDIENTS =
+          new LabeledRange[] {
+            new LabeledRange("0,5", 0, 5),
+            new LabeledRange("6,10", 6, 10),
+            new LabeledRange("11+", 11, Double.MAX_VALUE)
+          };
 
-      private void addOptionalIntField(
-          Document doc,
-          String fieldName,
-          @SuppressWarnings("OptionalUsedAsFieldOrParameterType") OptionalInt value) {
-        if (value.isPresent()) {
-          // For filtering
-          doc.add(new IntPoint(fieldName, value.getAsInt()));
-          // For sorting and range-facets
-          doc.add(new NumericDocValuesField(fieldName, value.getAsInt()));
+      private final LabeledRange[] RANGE_TOTAL_TIME =
+          new LabeledRange[] {
+            new LabeledRange("0,15", 0, 15),
+            new LabeledRange("15,30", 15, 30),
+            new LabeledRange("30,60", 30, 60),
+            new LabeledRange("60+", 60, Double.MAX_VALUE)
+          };
+
+      private final LabeledRange[] RANGE_CALORIES =
+          new LabeledRange[] {new LabeledRange("0,200", 0, 200), new LabeledRange("0,500", 0, 500)};
+
+      private class LabeledRange {
+        final String label;
+        final double start;
+        final double end;
+
+        LabeledRange(String label, double start, double end) {
+          this.label = label;
+          this.start = start;
+          this.end = end;
+        }
+
+        boolean check(double value) {
+          return value >= start && value <= end;
         }
       }
 

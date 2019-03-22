@@ -2,7 +2,6 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
-import co.caio.cerberus.lucene.FloatAssociationsThresholdCount;
 import co.caio.cerberus.model.FacetData;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
@@ -13,6 +12,7 @@ import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -80,15 +80,11 @@ class SearcherImpl implements Searcher {
 
     var maxFacets = query.maxFacets();
     if (maxFacets > 0 && canComputeFacets(result)) {
-      var diets =
-          new FloatAssociationsThresholdCount(
-                  IndexField.FACET_DIET,
-                  query.dietThreshold(),
-                  taxonomyReader,
-                  indexConfiguration.getFacetsConfig(),
-                  fc)
-              .getTopChildren(maxFacets, IndexField.FACET_DIET);
-      addFacetData(builder, diets);
+
+      var staticFacets =
+          new FastTaxonomyFacetCounts(taxonomyReader, indexConfiguration.getFacetsConfig(), fc);
+
+      staticFacets.getAllDims(maxFacets).forEach(fr -> addFacetData(builder, fr));
     }
 
     return builder.build();

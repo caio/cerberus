@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 class IndexField {
   static final String RECIPE_ID = "recipeId";
-  static final String CRAWL_URL = "crawlUrl";
   static final String NAME = "name";
   static final String INGREDIENTS = "ingredients";
   static final String INSTRUCTIONS = "instructions";
@@ -20,9 +19,14 @@ class IndexField {
   static final String FAT_CONTENT = "fatContent";
   static final String PROTEIN_CONTENT = "proteinContent";
   static final String CARBOHYDRATE_CONTENT = "carbohydrateContent";
-  static final String FULLTEXT = "fulltext";
+
   static final String FACET_DIET = "diet";
-  static final String FACET_KEYWORD = "keyword";
+  static final String FACET_NUM_INGREDIENTS = "num_ingredients";
+  static final String FACET_TOTAL_TIME = "total_time";
+
+  static final String FACET_CALORIES = "calories";
+  static final String FACET_FAT_CONTENT = "fat_content";
+  static final String FACET_CARBOHYDRATE_CONTENT = "carbohydrate_content";
 
   private static final Map<String, String> dietToFieldName =
       Collections.unmodifiableMap(

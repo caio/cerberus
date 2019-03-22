@@ -147,14 +147,8 @@ class SearcherTest {
             new SearchQuery.Builder()
                 .putDietThreshold("keto", 0.8f)
                 .putDietThreshold("paleo", 0.1f)
-                .maxFacets(10)
                 .build());
     assertEquals(1, result.totalHits());
-    var dietFacets =
-        result.facets().stream().filter(fd -> fd.dimension().equals("diet")).findFirst();
-    assertTrue(dietFacets.isPresent());
-    // we get { "keto": 1, "paleo": 1 } since only one doc matched both criteria
-    assertTrue(dietFacets.get().children().stream().map(LabelData::count).allMatch(l -> l == 1));
   }
 
   @Test
