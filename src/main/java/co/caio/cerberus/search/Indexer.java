@@ -6,8 +6,6 @@ import co.caio.cerberus.lucene.FloatThresholdField;
 import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
 import org.apache.lucene.document.*;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
@@ -128,42 +126,57 @@ public interface Indexer {
                   }
                 });
 
-        addOptionalIntField(doc, NUM_INGREDIENTS, OptionalInt.of(recipe.ingredients().size()));
+        var numIngredients = recipe.ingredients().size();
+        doc.add(new IntPoint(NUM_INGREDIENTS, numIngredients));
+        doc.add(new NumericDocValuesField(NUM_INGREDIENTS, numIngredients));
 
-        addOptionalIntField(doc, PREP_TIME, recipe.prepTime());
-        addOptionalIntField(doc, COOK_TIME, recipe.cookTime());
-        addOptionalIntField(doc, TOTAL_TIME, recipe.totalTime());
+        // Timing
 
-        addOptionalIntField(doc, CALORIES, recipe.calories());
+        recipe
+            .prepTime()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(PREP_TIME, value));
+                  doc.add(new NumericDocValuesField(PREP_TIME, value));
+                });
 
-        addOptionalDoubleField(doc, CARBOHYDRATE_CONTENT, recipe.carbohydrateContent());
-        addOptionalDoubleField(doc, FAT_CONTENT, recipe.fatContent());
-        addOptionalDoubleField(doc, PROTEIN_CONTENT, recipe.proteinContent());
+        recipe
+            .cookTime()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(COOK_TIME, value));
+                  doc.add(new NumericDocValuesField(COOK_TIME, value));
+                });
+
+        recipe
+            .totalTime()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(TOTAL_TIME, value));
+                  doc.add(new NumericDocValuesField(TOTAL_TIME, value));
+                });
+
+        // Nutrition
+
+        recipe
+            .calories()
+            .ifPresent(
+                value -> {
+                  doc.add(new IntPoint(CALORIES, value));
+                  doc.add(new NumericDocValuesField(CALORIES, value));
+                });
+
+        recipe.fatContent().ifPresent(value -> doc.add(new FloatPoint(FAT_CONTENT, (float) value)));
+
+        recipe
+            .proteinContent()
+            .ifPresent(value -> doc.add(new FloatPoint(PROTEIN_CONTENT, (float) value)));
+
+        recipe
+            .carbohydrateContent()
+            .ifPresent(value -> doc.add(new FloatPoint(CARBOHYDRATE_CONTENT, (float) value)));
 
         indexWriter.addDocument(indexConfiguration.getFacetsConfig().build(taxonomyWriter, doc));
-      }
-
-      private void addOptionalDoubleField(
-          Document doc,
-          String fieldName,
-          @SuppressWarnings("OptionalUsedAsFieldOrParameterType") OptionalDouble value) {
-        value.ifPresent(
-            v -> {
-              doc.add(new FloatPoint(fieldName, (float) v));
-              // XXX and field for sort / faceting if needed
-            });
-      }
-
-      private void addOptionalIntField(
-          Document doc,
-          String fieldName,
-          @SuppressWarnings("OptionalUsedAsFieldOrParameterType") OptionalInt value) {
-        if (value.isPresent()) {
-          // For filtering
-          doc.add(new IntPoint(fieldName, value.getAsInt()));
-          // For sorting and range-facets
-          doc.add(new NumericDocValuesField(fieldName, value.getAsInt()));
-        }
       }
 
       @Override
