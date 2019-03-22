@@ -18,7 +18,7 @@
     <description>Recipe Search and Metadata retrieval library</description>
 
     <properties>
-        <lucene.version>8.0.0</lucene.version>
+        <lucene.version>7.7.1</lucene.version>
         <flatbuffers.version>1.10.0.2</flatbuffers.version>
         <flatbuffers.sources>${basedir}/src/main/flatbuffers</flatbuffers.sources>
         <flatbuffers.generated.sources>${project.build.directory}/generated-sources/java</flatbuffers.generated.sources>

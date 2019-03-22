@@ -71,7 +71,7 @@ class SearcherImpl implements Searcher {
             query.offset() + query.maxResults(),
             toLuceneSort(query.sort()),
             fc);
-    var builder = new SearchResult.Builder().totalHits(result.totalHits.value);
+    var builder = new SearchResult.Builder().totalHits(result.totalHits);
 
     for (int i = query.offset(); i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
