@@ -1,7 +1,5 @@
 package co.caio.cerberus.search;
 
-import static co.caio.cerberus.search.IndexField.*;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.lucene.analysis.Analyzer;
@@ -27,11 +25,11 @@ class IndexConfiguration {
     this.baseDirectory = baseDirectory;
 
     facetsConfig = new FacetsConfig();
-    facetsConfig.setIndexFieldName(FACET_DIET, FACET_DIET);
-    facetsConfig.setMultiValued(FACET_DIET, true);
 
-    facetsConfig.setIndexFieldName(FACET_KEYWORD, FACET_KEYWORD);
-    facetsConfig.setMultiValued(FACET_KEYWORD, true);
+    // Static facets that have inclusive ranges configured
+    facetsConfig.setMultiValued(IndexField.FACET_DIET, true);
+    facetsConfig.setMultiValued(IndexField.FACET_TOTAL_TIME, true);
+    facetsConfig.setMultiValued(IndexField.FACET_CALORIES, true);
 
     analyzer = new EnglishAnalyzer();
   }
