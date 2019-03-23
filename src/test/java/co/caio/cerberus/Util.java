@@ -3,6 +3,9 @@ package co.caio.cerberus;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.search.CategoryExtractor;
 import co.caio.cerberus.search.Indexer;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -22,6 +25,14 @@ public class Util {
 
   private static final Logger logger = LoggerFactory.getLogger(Util.class);
 
+  private static final ObjectMapper mapper;
+
+  static {
+    mapper = new ObjectMapper();
+    mapper.registerModule(new Jdk8Module());
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+  }
+
   public static Recipe getBasicRecipe() {
     return new Recipe.Builder()
         .recipeId(1)
@@ -38,9 +49,18 @@ public class Util {
     var samplesStream = Util.class.getResourceAsStream("/sample_recipes.jsonlines");
     var reader = new BufferedReader(new InputStreamReader(samplesStream));
     try {
-      return reader.lines().map(serializer::readRecipe).flatMap(Optional::stream);
+      return reader.lines().map(Util::readRecipe).flatMap(Optional::stream);
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private static Optional<Recipe> readRecipe(String line) {
+    try {
+      return Optional.of(mapper.readValue(line, Recipe.class));
+    } catch (Exception logged) {
+      logger.warn("Failed reading recipe from string: " + line, logged);
+      return Optional.empty();
     }
   }
 
@@ -48,7 +68,6 @@ public class Util {
   private static final Map<Long, Recipe> recipeMap;
   private static final Path testDataDir;
   private static final Properties assertionNumbers;
-  private static final Serializer serializer = new Serializer();
 
   static {
     var tmpRecipeMap = new HashMap<Long, Recipe>();
