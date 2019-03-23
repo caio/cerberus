@@ -2,6 +2,7 @@ package co.caio.cerberus.search;
 
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchResult;
+import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
@@ -21,33 +22,20 @@ public interface Searcher {
     private TaxonomyReader taxonomyReader;
     private IndexConfiguration indexConfiguration;
     private SearchPolicy searchPolicy;
+    private Path dataDirectory;
+    private CategoryExtractor categoryExtractor;
 
     public Builder dataDirectory(Path dir) {
-      return indexConfiguration(new IndexConfiguration(dir))
-          .indexReader(indexConfiguration.openIndexDirectory())
-          .taxonomyReader(indexConfiguration.openTaxonomyDirectory());
-    }
-
-    Builder indexConfiguration(IndexConfiguration conf) {
-      indexConfiguration = conf;
+      dataDirectory = dir;
       return this;
     }
 
-    Builder indexReader(Directory dir) {
-      try {
-        indexReader = DirectoryReader.open(dir);
-      } catch (Exception wrapped) {
-        throw new SearcherBuilderException(wrapped);
+    public Builder categoryExtractor(CategoryExtractor extractor) {
+      if (indexConfiguration != null) {
+        throw new SearcherBuilderException(
+            "Can't have categoryExtractor and indexConfiguration set at the same time");
       }
-      return this;
-    }
-
-    Builder taxonomyReader(Directory dir) {
-      try {
-        taxonomyReader = new DirectoryTaxonomyReader(dir);
-      } catch (Exception wrapped) {
-        throw new SearcherBuilderException(wrapped);
-      }
+      categoryExtractor = extractor;
       return this;
     }
 
@@ -56,9 +44,39 @@ public interface Searcher {
       return this;
     }
 
+    static Searcher fromOpened(
+        IndexConfiguration configuration, Directory indexDir, Directory taxonomyDir) {
+
+      var builder = new Searcher.Builder();
+      builder.indexConfiguration = configuration;
+      try {
+        builder.indexReader = DirectoryReader.open(indexDir);
+        builder.taxonomyReader = new DirectoryTaxonomyReader(taxonomyDir);
+      } catch (IOException wrapped) {
+        throw new SearcherBuilderException(wrapped);
+      }
+
+      return builder.build();
+    }
+
     public Searcher build() {
+
+      if (dataDirectory != null && taxonomyReader == null && indexReader == null) {
+        indexConfiguration =
+            new IndexConfiguration(
+                dataDirectory,
+                categoryExtractor == null ? CategoryExtractor.NOOP : categoryExtractor);
+
+        try {
+          indexReader = DirectoryReader.open(indexConfiguration.openIndexDirectory());
+          taxonomyReader = new DirectoryTaxonomyReader(indexConfiguration.openTaxonomyDirectory());
+        } catch (IOException wrapped) {
+          throw new SearcherBuilderException(wrapped);
+        }
+      }
+
       if (indexReader == null || taxonomyReader == null || indexConfiguration == null) {
-        throw new IllegalStateException("`dataDirectory` not set");
+        throw new SearcherBuilderException("This should never happen");
       }
 
       if (searchPolicy != null) {
@@ -87,6 +105,10 @@ public interface Searcher {
     static class SearcherBuilderException extends RuntimeException {
       SearcherBuilderException(Throwable throwable) {
         super(throwable);
+      }
+
+      SearcherBuilderException(String message) {
+        super(message);
       }
     }
   }
