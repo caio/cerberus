@@ -83,8 +83,6 @@ class CategoryExtractorTest {
           fd.children()
               .forEach(
                   ld -> {
-                    System.out.println(fd);
-                    System.out.println(ld);
                     assertTrue(wanted.containsKey(ld.label()));
                     assertEquals((long) wanted.get(ld.label()), ld.count());
                   });
