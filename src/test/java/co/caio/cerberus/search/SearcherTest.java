@@ -83,12 +83,7 @@ class SearcherTest {
         new SearchQuery.Builder().fulltext("vegetarian").maxResults(1).maxFacets(10).build();
     var result = searcher.search(query);
 
-    var dietFacet =
-        result
-            .facets()
-            .stream()
-            .filter(x -> x.dimension().equals(IndexField.FACET_DIET))
-            .findFirst();
+    var dietFacet = result.facets().stream().filter(x -> x.dimension().equals("diet")).findFirst();
     assertTrue(dietFacet.isPresent());
     // make sure that when searching for vegetarian we actually get a
     // count for Diet => vegetarian
