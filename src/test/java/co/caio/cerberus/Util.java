@@ -1,6 +1,7 @@
 package co.caio.cerberus;
 
 import co.caio.cerberus.model.Recipe;
+import co.caio.cerberus.search.CategoryExtractor;
 import co.caio.cerberus.search.Indexer;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -9,8 +10,10 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +59,25 @@ public class Util {
       throw new RuntimeException(rethrown);
     }
 
-    indexer = new Indexer.Builder().dataDirectory(testDataDir).createMode().build();
+    indexer =
+        new Indexer.Builder()
+            .dataDirectory(testDataDir)
+            .categoryExtractor(
+                new CategoryExtractor.Builder()
+                    .addCategory(
+                        "diet",
+                        true,
+                        recipe ->
+                            recipe
+                                .diets()
+                                .entrySet()
+                                .stream()
+                                .filter(es -> es.getValue() == 1f)
+                                .map(Entry::getKey)
+                                .collect(Collectors.toSet()))
+                    .build())
+            .createMode()
+            .build();
 
     getSampleRecipes()
         .forEach(
