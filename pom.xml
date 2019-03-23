@@ -176,23 +176,6 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>build-index</id>
-                        <configuration>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-classpath</argument>
-                                <classpath />
-                                <argument>-Xmx1024m</argument>
-                                <argument>-Xms1024m</argument>
-                                <argument>co.caio.cerberus.Loader</argument>
-                                <argument>tmp/lucene</argument>
-                                <argument>tmp/chronicle.db</argument>
-                                <argument>tmp/document.jsonlines</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
