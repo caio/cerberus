@@ -14,6 +14,7 @@ import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
+import co.caio.cerberus.search.Searcher.Builder.SearcherBuilderException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.OptionalInt;
@@ -33,7 +34,7 @@ class SearcherTest {
   @Test
   void builder() {
     // Missing indexReader
-    assertThrows(IllegalStateException.class, () -> new Searcher.Builder().build());
+    assertThrows(SearcherBuilderException.class, () -> new Searcher.Builder().build());
     // Bad directory
     assertThrows(
         IndexConfigurationException.class,
