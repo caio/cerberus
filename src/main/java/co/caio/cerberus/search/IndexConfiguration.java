@@ -15,23 +15,19 @@ class IndexConfiguration {
   private final FacetsConfig facetsConfig;
   private final Analyzer analyzer;
   private final Path baseDirectory;
+  private final CategoryExtractor categoryExtractor;
 
-  IndexConfiguration(Path baseDirectory) {
-
+  IndexConfiguration(Path baseDirectory, CategoryExtractor categoryExtractor) {
     if (!baseDirectory.toFile().isDirectory()) {
       throw new IndexConfigurationException("Not a directory: " + baseDirectory);
     }
 
     this.baseDirectory = baseDirectory;
+    this.analyzer = new EnglishAnalyzer();
 
-    facetsConfig = new FacetsConfig();
-
-    // Static facets that have inclusive ranges configured
-    facetsConfig.setMultiValued(IndexField.FACET_DIET, true);
-    facetsConfig.setMultiValued(IndexField.FACET_TOTAL_TIME, true);
-    facetsConfig.setMultiValued(IndexField.FACET_CALORIES, true);
-
-    analyzer = new EnglishAnalyzer();
+    this.categoryExtractor = categoryExtractor;
+    this.facetsConfig = new FacetsConfig();
+    categoryExtractor.multiValuedCategories().forEach(c -> facetsConfig.setMultiValued(c, true));
   }
 
   FacetsConfig getFacetsConfig() {
@@ -40,6 +36,10 @@ class IndexConfiguration {
 
   Analyzer getAnalyzer() {
     return analyzer;
+  }
+
+  CategoryExtractor getCategoryExtractor() {
+    return categoryExtractor;
   }
 
   Directory openIndexDirectory() {
