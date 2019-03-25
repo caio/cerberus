@@ -46,9 +46,6 @@ class SearchQueryTest {
   @Test
   void dietThresholds() {
     assertThrows(
-        IllegalStateException.class,
-        () -> new Builder().putDietThreshold("unknown diet", 1).build());
-    assertThrows(
         IllegalStateException.class, () -> new Builder().putDietThreshold("paleo", 0).build());
     assertThrows(
         IllegalStateException.class, () -> new Builder().putDietThreshold("lowcarb", -1).build());

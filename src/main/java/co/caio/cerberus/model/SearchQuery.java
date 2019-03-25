@@ -106,9 +106,6 @@ public interface SearchQuery {
               if (score <= 0 || score > 1) {
                 throw new IllegalStateException("score must be in ]0,1]");
               }
-              if (!Diet.isKnown(diet)) {
-                throw new IllegalStateException(String.format("Unknown diet `%s`", diet));
-              }
             });
     if (fulltext().isPresent()
         || !dietThreshold().isEmpty()

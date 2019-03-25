@@ -59,9 +59,6 @@ public interface Recipe {
           .diets()
           .forEach(
               (diet, score) -> {
-                if (!Diet.isKnown(diet)) {
-                  throw new IllegalStateException(String.format("Unknown diet `%s`", diet));
-                }
                 if (score < 0 || score > 1) {
                   throw new IllegalStateException(
                       String.format("Score for diet `%s` (%f) should be [0,1]", diet, score));
