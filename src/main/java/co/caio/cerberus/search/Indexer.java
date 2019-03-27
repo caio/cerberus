@@ -11,7 +11,6 @@ import java.util.function.Function;
 import org.apache.lucene.document.*;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.facet.FacetField;
-import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -94,9 +93,6 @@ public interface Indexer {
       if (categoryExtractor == null) {
         categoryExtractor = CategoryExtractor.NOOP;
       }
-
-      var facetsConfig = new FacetsConfig();
-      categoryExtractor.multiValuedCategories().forEach(c -> facetsConfig.setMultiValued(c, true));
 
       indexConfiguration = new IndexConfiguration(dataDirectory, categoryExtractor);
 
