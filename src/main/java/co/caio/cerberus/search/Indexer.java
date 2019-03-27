@@ -212,14 +212,13 @@ public interface Indexer {
                 });
 
         categoryExtractors.forEach(
-            (dimension, getLabels) -> {
-              getLabels
-                  .apply(recipe)
-                  .forEach(
-                      label -> {
-                        doc.add(new FacetField(dimension, label));
-                      });
-            });
+            (dimension, getLabels) ->
+                getLabels
+                    .apply(recipe)
+                    .forEach(
+                        label -> {
+                          doc.add(new FacetField(dimension, label));
+                        }));
 
         indexWriter.addDocument(indexConfiguration.getFacetsConfig().build(taxonomyWriter, doc));
       }
