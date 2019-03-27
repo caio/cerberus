@@ -75,18 +75,20 @@ class CategoryExtractorTest {
 
     assertEquals(2, facets.size());
 
-    facets.forEach(
-        fd -> {
-          var wanted = categoryToWantedPerLabel.get(fd.dimension());
-          assertEquals(wanted.size(), fd.children().size());
+    facets
+        .values()
+        .forEach(
+            fd -> {
+              var wanted = categoryToWantedPerLabel.get(fd.dimension());
+              assertEquals(wanted.size(), fd.children().size());
 
-          fd.children()
-              .forEach(
-                  ld -> {
-                    assertTrue(wanted.containsKey(ld.label()));
-                    assertEquals((long) wanted.get(ld.label()), ld.count());
-                  });
-        });
+              fd.children()
+                  .forEach(
+                      ld -> {
+                        assertTrue(wanted.containsKey(ld.label()));
+                        assertEquals((long) wanted.get(ld.label()), ld.count());
+                      });
+            });
   }
 
   private Recipe fakeRecipe(long recipeId, int numIngredients, int calories) {

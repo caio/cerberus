@@ -102,7 +102,7 @@ class SearcherImpl implements Searcher {
     for (int i = 0; i < fr.labelValues.length; i++) {
       facetDataBuilder.addChild(fr.labelValues[i].label, fr.labelValues[i].value.longValue());
     }
-    sb.addFacets(facetDataBuilder.build());
+    sb.putFacets(fr.dim, facetDataBuilder.build());
   }
 
   Query parseFulltext(String fulltext) {

@@ -3,6 +3,7 @@ package co.caio.cerberus.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
+import java.util.Map;
 import org.immutables.value.Value;
 
 @ImmutableStyle
@@ -18,7 +19,7 @@ public interface SearchResult {
 
   List<Long> recipeIds();
 
-  List<FacetData> facets();
+  Map<String, FacetData> facets();
 
   class Builder extends ImmutableSearchResult.Builder {
     public Builder addRecipe(long recipeId) {

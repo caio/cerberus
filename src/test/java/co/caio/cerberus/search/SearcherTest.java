@@ -47,7 +47,7 @@ class SearcherTest {
     assertTrue(searcher.search(builder.maxFacets(0).build()).facets().isEmpty());
 
     var result = searcher.search(builder.maxFacets(2).build());
-    result.facets().forEach(facetData -> assertTrue(facetData.children().size() <= 2));
+    result.facets().values().forEach(facetData -> assertTrue(facetData.children().size() <= 2));
   }
 
   @Test
@@ -68,6 +68,7 @@ class SearcherTest {
     var nrDistinctPerDietCounts =
         result
             .facets()
+            .values()
             .stream()
             .filter(fd -> fd.dimension().equals("diet"))
             .flatMap(fd -> fd.children().stream())
@@ -83,12 +84,12 @@ class SearcherTest {
         new SearchQuery.Builder().fulltext("vegetarian").maxResults(1).maxFacets(10).build();
     var result = searcher.search(query);
 
-    var dietFacet = result.facets().stream().filter(x -> x.dimension().equals("diet")).findFirst();
-    assertTrue(dietFacet.isPresent());
+    var dietFacet = result.facets().get("diet");
+    assertNotNull(dietFacet);
     // make sure that when searching for vegetarian we actually get a
     // count for Diet => vegetarian
     var vegetarianData =
-        dietFacet.get().children().stream().filter(x -> x.label().equals("vegetarian")).findFirst();
+        dietFacet.children().stream().filter(x -> x.label().equals("vegetarian")).findFirst();
     assertTrue(vegetarianData.isPresent());
     var nrVegetarianRecipes = vegetarianData.get().count();
     assertTrue(vegetarianData.get().count() > 0);
