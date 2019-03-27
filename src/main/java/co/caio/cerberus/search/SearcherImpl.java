@@ -98,9 +98,10 @@ class SearcherImpl implements Searcher {
     if (fr == null) {
       return;
     }
+
     var facetDataBuilder = new FacetData.Builder().dimension(fr.dim);
     for (int i = 0; i < fr.labelValues.length; i++) {
-      facetDataBuilder.addChild(fr.labelValues[i].label, fr.labelValues[i].value.longValue());
+      facetDataBuilder.putChildren(fr.labelValues[i].label, fr.labelValues[i].value.longValue());
     }
     sb.putFacets(fr.dim, facetDataBuilder.build());
   }

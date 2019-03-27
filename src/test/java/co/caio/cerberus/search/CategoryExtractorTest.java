@@ -84,9 +84,9 @@ class CategoryExtractorTest {
 
               fd.children()
                   .forEach(
-                      ld -> {
-                        assertTrue(wanted.containsKey(ld.label()));
-                        assertEquals((long) wanted.get(ld.label()), ld.count());
+                      (label, count) -> {
+                        assertTrue(wanted.containsKey(label));
+                        assertEquals(wanted.get(label), count);
                       });
             });
   }

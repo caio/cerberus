@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.caio.cerberus.Util;
-import co.caio.cerberus.model.FacetData.LabelData;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
@@ -66,15 +65,7 @@ class SearcherTest {
     // This test is just to prevent a regression
     var result = searcher.search(new SearchQuery.Builder().fulltext("oil").maxFacets(50).build());
     var nrDistinctPerDietCounts =
-        result
-            .facets()
-            .values()
-            .stream()
-            .filter(fd -> fd.dimension().equals("diet"))
-            .flatMap(fd -> fd.children().stream())
-            .map(LabelData::count)
-            .distinct()
-            .count();
+        result.facets().get("diet").children().values().stream().distinct().count();
     assertTrue(nrDistinctPerDietCounts > 1);
   }
 
@@ -88,11 +79,9 @@ class SearcherTest {
     assertNotNull(dietFacet);
     // make sure that when searching for vegetarian we actually get a
     // count for Diet => vegetarian
-    var vegetarianData =
-        dietFacet.children().stream().filter(x -> x.label().equals("vegetarian")).findFirst();
-    assertTrue(vegetarianData.isPresent());
-    var nrVegetarianRecipes = vegetarianData.get().count();
-    assertTrue(vegetarianData.get().count() > 0);
+    var nrVegetarianRecipes = dietFacet.children().get("vegetarian");
+    assertNotNull(nrVegetarianRecipes);
+    assertTrue(nrVegetarianRecipes > 0);
 
     // now lets drill down the same query on the vegetarian facet.
     //  it should give us just `nrVegetarianRecipes` results as verified above
