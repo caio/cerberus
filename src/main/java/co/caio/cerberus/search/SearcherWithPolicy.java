@@ -1,7 +1,6 @@
 package co.caio.cerberus.search;
 
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TopDocs;
 
 class SearcherWithPolicy extends SearcherImpl implements Searcher {
 
@@ -13,8 +12,8 @@ class SearcherWithPolicy extends SearcherImpl implements Searcher {
   }
 
   @Override
-  boolean canComputeFacets(TopDocs luceneResult) {
-    return searchPolicy.shouldComputeFacets(luceneResult);
+  boolean canComputeFacets(int totalHits) {
+    return searchPolicy.shouldComputeFacets(totalHits);
   }
 
   @Override

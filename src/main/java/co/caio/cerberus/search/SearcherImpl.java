@@ -62,35 +62,49 @@ class SearcherImpl implements Searcher {
   }
 
   private SearchResult _search(SearchQuery query) throws IOException {
-    var fc = new FacetsCollector();
+    final int maxFacets = query.maxFacets();
+    boolean computeFacets = maxFacets > 0;
 
-    var result =
-        FacetsCollector.search(
-            indexSearcher,
-            toLuceneQuery(query),
-            query.offset() + query.maxResults(),
-            toLuceneSort(query.sort()),
-            fc);
-    var builder = new SearchResult.Builder().totalHits(result.totalHits);
-
-    for (int i = query.offset(); i < result.scoreDocs.length; i++) {
-      Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
-      builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
+    var luceneQuery = toLuceneQuery(query);
+    if (computeFacets && !canComputeFacets(indexSearcher.count(luceneQuery))) {
+      computeFacets = false;
     }
 
-    var maxFacets = query.maxFacets();
-    if (maxFacets > 0 && canComputeFacets(result)) {
+    TopDocs result;
+    var builder = new SearchResult.Builder();
+
+    if (computeFacets) {
+      var fc = new FacetsCollector();
+
+      result =
+          FacetsCollector.search(
+              indexSearcher,
+              luceneQuery,
+              query.offset() + query.maxResults(),
+              toLuceneSort(query.sort()),
+              fc);
 
       var staticFacets =
           new FastTaxonomyFacetCounts(taxonomyReader, indexConfiguration.getFacetsConfig(), fc);
 
       staticFacets.getAllDims(maxFacets).forEach(fr -> addFacetData(builder, fr));
+
+    } else {
+      result =
+          indexSearcher.search(
+              luceneQuery, query.offset() + query.maxResults(), toLuceneSort(query.sort()));
+    }
+
+    builder.totalHits(result.totalHits);
+    for (int i = query.offset(); i < result.scoreDocs.length; i++) {
+      Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
+      builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
     }
 
     return builder.build();
   }
 
-  boolean canComputeFacets(TopDocs luceneResult) {
+  boolean canComputeFacets(int unused) {
     return true;
   }
 

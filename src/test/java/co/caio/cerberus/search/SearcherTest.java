@@ -2,6 +2,7 @@ package co.caio.cerberus.search;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -290,11 +291,11 @@ class SearcherTest {
     // maxFacets is set to zero, policy shouldn't be called
     searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").maxFacets(0).build());
 
-    verify(policyMock, never()).shouldComputeFacets(any());
+    verify(policyMock, never()).shouldComputeFacets(anyInt());
 
     // But with any other valid use it should
     searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").maxFacets(10).build());
-    verify(policyMock).shouldComputeFacets(any());
+    verify(policyMock).shouldComputeFacets(anyInt());
   }
 
   @Test
@@ -333,13 +334,13 @@ class SearcherTest {
     var queryWithFacets = new SearchQuery.Builder().fulltext("oil").maxFacets(4).build();
 
     // Allow computing facets irrespective of results
-    when(policyMock.shouldComputeFacets(any())).thenReturn(true);
+    when(policyMock.shouldComputeFacets(anyInt())).thenReturn(true);
 
     // precondition: base query actually generates facets
     assertFalse(searcherWithPolicy.search(queryWithFacets).facets().isEmpty());
 
     // But when the policy is to deny, we get no facets in the result
-    when(policyMock.shouldComputeFacets(any())).thenReturn(false);
+    when(policyMock.shouldComputeFacets(anyInt())).thenReturn(false);
 
     assertTrue(searcherWithPolicy.search(queryWithFacets).facets().isEmpty());
   }
