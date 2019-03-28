@@ -23,7 +23,7 @@ class IndexerTest {
   @Test
   void simpleLocalIndexer() throws IOException {
     var tempDir = Files.createTempDirectory("cerberus-test");
-    var index = new Indexer.Builder().dataDirectory(tempDir).createOrAppendMode().build();
+    var index = new Indexer.Builder().dataDirectory(tempDir).createMode().build();
     assertEquals(0, index.numDocs());
     index.addRecipe(Util.getBasicRecipe());
     assertEquals(1, index.numDocs());

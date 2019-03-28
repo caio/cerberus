@@ -77,10 +77,6 @@ public interface Indexer {
       return openMode(IndexWriterConfig.OpenMode.APPEND);
     }
 
-    public Builder createOrAppendMode() {
-      return openMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-    }
-
     public Indexer build() {
       if (openMode == null) {
         throw new IndexBuilderException("Missing `openMode`");
@@ -94,7 +90,9 @@ public interface Indexer {
         categoryExtractor = CategoryExtractor.NOOP;
       }
 
-      indexConfiguration = new IndexConfiguration(dataDirectory, categoryExtractor);
+      indexConfiguration =
+          new IndexConfiguration(dataDirectory, categoryExtractor.multiValuedCategories());
+      indexConfiguration.save();
 
       indexDirectory = indexConfiguration.openIndexDirectory();
       taxonomyDirectory = indexConfiguration.openTaxonomyDirectory();

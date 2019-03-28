@@ -23,19 +23,9 @@ public interface Searcher {
     private IndexConfiguration indexConfiguration;
     private SearchPolicy searchPolicy;
     private Path dataDirectory;
-    private CategoryExtractor categoryExtractor;
 
     public Builder dataDirectory(Path dir) {
       dataDirectory = dir;
-      return this;
-    }
-
-    public Builder categoryExtractor(CategoryExtractor extractor) {
-      if (indexConfiguration != null) {
-        throw new SearcherBuilderException(
-            "Can't have categoryExtractor and indexConfiguration set at the same time");
-      }
-      categoryExtractor = extractor;
       return this;
     }
 
@@ -62,11 +52,7 @@ public interface Searcher {
     public Searcher build() {
 
       if (dataDirectory != null && taxonomyReader == null && indexReader == null) {
-        indexConfiguration =
-            new IndexConfiguration(
-                dataDirectory,
-                categoryExtractor == null ? CategoryExtractor.NOOP : categoryExtractor);
-
+        indexConfiguration = IndexConfiguration.fromBaseDirectory(dataDirectory);
         try {
           indexReader = DirectoryReader.open(indexConfiguration.openIndexDirectory());
           taxonomyReader = new DirectoryTaxonomyReader(indexConfiguration.openTaxonomyDirectory());
