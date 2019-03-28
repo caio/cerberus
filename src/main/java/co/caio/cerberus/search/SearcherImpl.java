@@ -63,12 +63,11 @@ class SearcherImpl implements Searcher {
 
   private SearchResult _search(SearchQuery query) throws IOException {
     final int maxFacets = query.maxFacets();
-    boolean computeFacets = maxFacets > 0;
 
     var luceneQuery = toLuceneQuery(query);
-    if (computeFacets && !canComputeFacets(indexSearcher.count(luceneQuery))) {
-      computeFacets = false;
-    }
+    final int count = indexSearcher.count(luceneQuery);
+
+    var computeFacets = maxFacets > 0 && canComputeFacets(count);
 
     TopDocs result;
     var builder = new SearchResult.Builder();
@@ -95,7 +94,7 @@ class SearcherImpl implements Searcher {
               luceneQuery, query.offset() + query.maxResults(), toLuceneSort(query.sort()));
     }
 
-    builder.totalHits(result.totalHits.value);
+    builder.totalHits(count);
     for (int i = query.offset(); i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
       builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
