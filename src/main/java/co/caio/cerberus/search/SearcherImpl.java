@@ -95,7 +95,7 @@ class SearcherImpl implements Searcher {
               luceneQuery, query.offset() + query.maxResults(), toLuceneSort(query.sort()));
     }
 
-    builder.totalHits(result.totalHits);
+    builder.totalHits(result.totalHits.value);
     for (int i = query.offset(); i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
       builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
