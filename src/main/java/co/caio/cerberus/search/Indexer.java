@@ -191,12 +191,7 @@ public interface Indexer {
                   doc.add(new NumericDocValuesField(CALORIES, value));
                 });
 
-        recipe
-            .fatContent()
-            .ifPresent(
-                value -> {
-                  doc.add(new FloatPoint(FAT_CONTENT, (float) value));
-                });
+        recipe.fatContent().ifPresent(value -> doc.add(new FloatPoint(FAT_CONTENT, (float) value)));
 
         recipe
             .proteinContent()
@@ -204,10 +199,7 @@ public interface Indexer {
 
         recipe
             .carbohydrateContent()
-            .ifPresent(
-                value -> {
-                  doc.add(new FloatPoint(CARBOHYDRATE_CONTENT, (float) value));
-                });
+            .ifPresent(value -> doc.add(new FloatPoint(CARBOHYDRATE_CONTENT, (float) value)));
 
         categoryExtractors.forEach(
             (dimension, getLabels) ->
