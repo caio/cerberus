@@ -13,6 +13,7 @@ class IndexField {
   static final String FAT_CONTENT = "fatContent";
   static final String PROTEIN_CONTENT = "proteinContent";
   static final String CARBOHYDRATE_CONTENT = "carbohydrateContent";
+  static final String FULL_RECIPE = "fullRecipe";
 
   static String getFieldNameForDiet(String diet) {
     return "diet_" + diet;

@@ -17,6 +17,7 @@ import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
 import co.caio.cerberus.search.Searcher.Builder.SearcherBuilderException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeAll;
@@ -343,5 +344,43 @@ class SearcherTest {
     when(policyMock.shouldComputeFacets(anyInt())).thenReturn(false);
 
     assertTrue(searcherWithPolicy.search(queryWithFacets).facets().isEmpty());
+  }
+
+  @Test
+  void similaritySearch() {
+
+    Util.getSampleRecipes()
+        .forEach(
+            testRecipe -> {
+              var recipeText =
+                  String.join(
+                      "\n",
+                      List.of(
+                          testRecipe.name(),
+                          String.join("\n", testRecipe.ingredients()),
+                          String.join("\n", testRecipe.instructions())));
+
+              var similar = searcher.findSimilar(recipeText, 10);
+
+              assertTrue(similar.totalHits() > 0);
+
+              var foundIndex = similar.recipeIds().indexOf(testRecipe.recipeId());
+
+              // Searching for similar recipes using the content of a recipe
+              // we have in the database should find said recipe in the top 5
+              // similar items
+              assertTrue(foundIndex != -1 && foundIndex < 5);
+
+              // if (foundIndex != 0) {
+              //   System.out.println(testRecipe.name());
+              //   similar
+              //       .recipeIds()
+              //       .forEach(
+              //           simId -> {
+              //             var sr = Util.getRecipe(simId);
+              //             System.out.println(" - " + sr.name());
+              //           });
+              // }
+            });
   }
 }
