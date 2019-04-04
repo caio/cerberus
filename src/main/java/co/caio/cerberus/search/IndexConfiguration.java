@@ -5,12 +5,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenFilter;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.minhash.MinHashFilter;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -32,7 +39,26 @@ class IndexConfiguration {
     }
 
     this.baseDirectory = baseDirectory;
-    this.analyzer = new EnglishAnalyzer();
+    this.analyzer =
+        new PerFieldAnalyzerWrapper(
+            new EnglishAnalyzer(),
+            Map.of(
+                IndexField.MINHASH,
+                new Analyzer() {
+                  @Override
+                  protected TokenStreamComponents createComponents(String fieldName) {
+                    final Tokenizer source = new WhitespaceTokenizer();
+                    TokenFilter result = new ShingleFilter(source, 2, 2);
+                    result =
+                        new MinHashFilter(
+                            result,
+                            MinHashFilter.DEFAULT_HASH_COUNT,
+                            MinHashFilter.DEFAULT_BUCKET_COUNT,
+                            MinHashFilter.DEFAULT_HASH_SET_SIZE,
+                            true);
+                    return new TokenStreamComponents(source, result);
+                  }
+                }));
 
     this.facetsConfig = new FacetsConfig();
     multiValuedDimensions.forEach(c -> facetsConfig.setMultiValued(c, true));

@@ -17,6 +17,7 @@ import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
 import co.caio.cerberus.search.Searcher.Builder.SearcherBuilderException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeAll;
@@ -343,5 +344,30 @@ class SearcherTest {
     when(policyMock.shouldComputeFacets(anyInt())).thenReturn(false);
 
     assertTrue(searcherWithPolicy.search(queryWithFacets).facets().isEmpty());
+  }
+
+  @Test
+  void similaritySearch() {
+    var testRecipe = Util.getSampleRecipes().skip(10).limit(1).findFirst().orElseThrow();
+
+    var recipeText =
+        String.join(
+            "\n",
+            List.of(
+                testRecipe.name(),
+                String.join("\n", testRecipe.ingredients()),
+                String.join("\n", testRecipe.instructions())));
+
+    System.out.println(testRecipe.recipeId());
+    System.out.println(testRecipe.name());
+    var similar = searcher.findSimilar(recipeText);
+    System.out.println(similar);
+    similar
+        .recipeIds()
+        .forEach(
+            id -> {
+              var r = Util.getRecipe(id);
+              System.out.println(r.recipeId() + " " + r.name());
+            });
   }
 }

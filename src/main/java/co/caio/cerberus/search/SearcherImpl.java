@@ -7,6 +7,7 @@ import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResult;
 import java.io.IOException;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
@@ -14,13 +15,16 @@ import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortField.Type;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
 class SearcherImpl implements Searcher {
@@ -57,6 +61,41 @@ class SearcherImpl implements Searcher {
     }
   }
 
+  @Override
+  public SearchResult findSimilar(String recipeText) {
+    try {
+      var queryBuilder = new BooleanQuery.Builder();
+      var tokenStream = indexConfiguration.getAnalyzer().tokenStream(MINHASH, recipeText);
+      var token = tokenStream.addAttribute(CharTermAttribute.class);
+
+      int numTokens = 0;
+      tokenStream.reset();
+      while (tokenStream.incrementToken()) {
+        queryBuilder.add(
+            new ConstantScoreQuery(new TermQuery(new Term(MINHASH, token.toString()))),
+            Occur.SHOULD);
+        numTokens++;
+      }
+      tokenStream.close();
+      queryBuilder.setMinimumNumberShouldMatch((int) (numTokens * 0.2));
+
+      var query = queryBuilder.build();
+
+      var result = indexSearcher.search(query, 20);
+
+      var builder = new SearchResult.Builder().totalHits(result.totalHits.value);
+
+      for (int i = 0; i < result.scoreDocs.length; i++) {
+        Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
+        builder.addRecipe(doc.getField(RECIPE_ID).numericValue().longValue());
+      }
+
+      return builder.build();
+    } catch (IOException wrapped) {
+      throw new SearcherException(wrapped);
+    }
+  }
+
   public int numDocs() {
     return indexSearcher.getIndexReader().numDocs();
   }
@@ -65,12 +104,12 @@ class SearcherImpl implements Searcher {
     final int maxFacets = query.maxFacets();
 
     var luceneQuery = toLuceneQuery(query);
+
     final int count = indexSearcher.count(luceneQuery);
+    final boolean computeFacets = maxFacets > 0 && canComputeFacets(count);
 
-    var computeFacets = maxFacets > 0 && canComputeFacets(count);
-
+    var builder = new SearchResult.Builder().totalHits(count);
     TopDocs result;
-    var builder = new SearchResult.Builder();
 
     if (computeFacets) {
       var fc = new FacetsCollector();
@@ -94,10 +133,9 @@ class SearcherImpl implements Searcher {
               luceneQuery, query.offset() + query.maxResults(), toLuceneSort(query.sort()));
     }
 
-    builder.totalHits(count);
     for (int i = query.offset(); i < result.scoreDocs.length; i++) {
       Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
-      builder.addRecipe(doc.getField(IndexField.RECIPE_ID).numericValue().longValue());
+      builder.addRecipe(doc.getField(RECIPE_ID).numericValue().longValue());
     }
 
     return builder.build();

@@ -138,6 +138,10 @@ public interface Indexer {
         recipe.instructions().forEach(i -> doc.add(new TextField(INSTRUCTIONS, i, Store.NO)));
         recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Store.NO)));
 
+        doc.add(new TextField(MINHASH, recipe.name(), Store.NO));
+        recipe.instructions().forEach(i -> doc.add(new TextField(MINHASH, i, Store.NO)));
+        recipe.ingredients().forEach(i -> doc.add(new TextField(MINHASH, i, Store.NO)));
+
         recipe
             .diets()
             .forEach(

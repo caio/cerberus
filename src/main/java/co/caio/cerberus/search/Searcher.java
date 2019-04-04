@@ -14,6 +14,8 @@ public interface Searcher {
 
   SearchResult search(SearchQuery query);
 
+  SearchResult findSimilar(String recipeText);
+
   int numDocs();
 
   class Builder {
