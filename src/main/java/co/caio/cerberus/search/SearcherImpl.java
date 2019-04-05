@@ -8,9 +8,11 @@ import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResult;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.OptionalInt;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
@@ -82,6 +84,16 @@ class SearcherImpl implements Searcher {
     } catch (IOException wrapped) {
       throw new SearcherException(wrapped);
     }
+  }
+
+  OptionalInt findDocId(long recipeId) throws IOException {
+    var result = indexSearcher.search(LongPoint.newExactQuery(RECIPE_ID, recipeId), 1);
+
+    if (result.scoreDocs.length == 0) {
+      return OptionalInt.empty();
+    }
+
+    return OptionalInt.of(result.scoreDocs[0].doc);
   }
 
   public int numDocs() {

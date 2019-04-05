@@ -133,6 +133,7 @@ public interface Indexer {
         var doc = new Document();
 
         doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
+        doc.add(new LongPoint(RECIPE_ID, recipe.recipeId()));
 
         doc.add(new TextField(NAME, recipe.name(), Store.NO));
         recipe.instructions().forEach(i -> doc.add(new TextField(INSTRUCTIONS, i, Store.NO)));
