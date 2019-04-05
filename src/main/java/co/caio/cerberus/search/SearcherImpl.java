@@ -35,6 +35,9 @@ class SearcherImpl implements Searcher {
   private static final Sort sortTotalTime = integerSorterWithDefault(TOTAL_TIME);
   private static final Sort sortCalories = integerSorterWithDefault(CALORIES);
 
+  private static final SearchResult EMPTY_SEARCH_RESULT =
+      new SearchResult.Builder().totalHits(0).build();
+
   private final IndexSearcher indexSearcher;
   private final TaxonomyReader taxonomyReader;
   private final IndexConfiguration indexConfiguration;
@@ -51,6 +54,8 @@ class SearcherImpl implements Searcher {
     moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
     // Ignore words that occurr in more than 50% of recipes
     moreLikeThis.setMaxDocFreqPct(50);
+    // Relevant for docId-based similarity
+    moreLikeThis.setFieldNames(new String[] {FULL_RECIPE});
   }
 
   private static Sort integerSorterWithDefault(String fieldName) {
@@ -81,6 +86,38 @@ class SearcherImpl implements Searcher {
       }
 
       return builder.build();
+    } catch (IOException wrapped) {
+      throw new SearcherException(wrapped);
+    }
+  }
+
+  @Override
+  public SearchResult findSimilar(long recipeId, int maxResults) {
+    try {
+      var docId = findDocId(recipeId);
+
+      if (docId.isEmpty()) {
+        return EMPTY_SEARCH_RESULT;
+      }
+
+      // We use `maxResults + 1` because we'll filter out the
+      // given recipeId from the results
+      var result = indexSearcher.search(moreLikeThis.like(docId.getAsInt()), maxResults + 1);
+
+      var builder = new SearchResult.Builder();
+
+      int totalHits = 0;
+      for (int i = 0; i < result.scoreDocs.length; i++) {
+        Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
+        long foundRecipeId = doc.getField(RECIPE_ID).numericValue().longValue();
+
+        if (foundRecipeId != recipeId) {
+          builder.addRecipe(foundRecipeId);
+          totalHits++;
+        }
+      }
+
+      return builder.totalHits(totalHits).build();
     } catch (IOException wrapped) {
       throw new SearcherException(wrapped);
     }

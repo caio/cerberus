@@ -16,6 +16,8 @@ public interface Searcher {
 
   SearchResult findSimilar(String recipeText, int maxResults);
 
+  SearchResult findSimilar(long recipeId, int maxResults);
+
   int numDocs();
 
   class Builder {

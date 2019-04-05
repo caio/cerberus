@@ -383,4 +383,17 @@ class SearcherTest {
               // }
             });
   }
+
+  @Test
+  void similarToRecipeIdNeverIncludesSelf() {
+    Util.getSampleRecipes()
+        .limit(10)
+        .forEach(
+            sampleRecipe -> {
+              var similar = searcher.findSimilar(sampleRecipe.recipeId(), 100);
+
+              assertTrue(similar.totalHits() > 0);
+              assertEquals(-1, similar.recipeIds().indexOf(sampleRecipe.recipeId()));
+            });
+  }
 }
