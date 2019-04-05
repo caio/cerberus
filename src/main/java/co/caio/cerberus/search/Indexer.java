@@ -2,6 +2,7 @@ package co.caio.cerberus.search;
 
 import static co.caio.cerberus.search.IndexField.*;
 
+import co.caio.cerberus.lucene.TextFieldWithVectors;
 import co.caio.cerberus.model.Recipe;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -139,9 +140,9 @@ public interface Indexer {
         recipe.instructions().forEach(i -> doc.add(new TextField(INSTRUCTIONS, i, Store.NO)));
         recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Store.NO)));
 
-        doc.add(new TextField(FULL_RECIPE, recipe.name(), Store.NO));
-        recipe.instructions().forEach(i -> doc.add(new TextField(FULL_RECIPE, i, Store.NO)));
-        recipe.ingredients().forEach(i -> doc.add(new TextField(FULL_RECIPE, i, Store.NO)));
+        doc.add(new TextFieldWithVectors(FULL_RECIPE, recipe.name()));
+        recipe.instructions().forEach(i -> doc.add(new TextFieldWithVectors(FULL_RECIPE, i)));
+        recipe.ingredients().forEach(i -> doc.add(new TextFieldWithVectors(FULL_RECIPE, i)));
 
         recipe
             .diets()
