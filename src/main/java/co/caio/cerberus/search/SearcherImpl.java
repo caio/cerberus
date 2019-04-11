@@ -107,7 +107,7 @@ class SearcherImpl implements Searcher {
       var builder = new SearchResult.Builder();
 
       int totalHits = 0;
-      for (int i = 0; i < result.scoreDocs.length; i++) {
+      for (int i = 0; i < result.scoreDocs.length && totalHits <= maxResults; i++) {
         Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
         long foundRecipeId = doc.getField(RECIPE_ID).numericValue().longValue();
 
