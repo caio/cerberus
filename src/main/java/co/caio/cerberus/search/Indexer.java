@@ -149,7 +149,7 @@ public interface Indexer {
             .forEach(
                 (diet, score) -> {
                   if (score > 0) {
-                    doc.add(new FloatPoint(IndexField.getFieldNameForDiet(diet), score));
+                    doc.add(new FloatPoint(getFieldNameForDiet(diet), score));
                   }
                 });
 

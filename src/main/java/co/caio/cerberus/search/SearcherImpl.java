@@ -288,8 +288,7 @@ class SearcherImpl implements Searcher {
         .forEach(
             (diet, score) ->
                 queryBuilder.add(
-                    FloatPoint.newRangeQuery(
-                        IndexField.getFieldNameForDiet(diet), score, Float.MAX_VALUE),
+                    FloatPoint.newRangeQuery(getFieldNameForDiet(diet), score, Float.MAX_VALUE),
                     Occur.MUST));
 
     return queryBuilder.build();
