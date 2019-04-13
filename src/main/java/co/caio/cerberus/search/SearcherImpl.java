@@ -8,11 +8,10 @@ import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResult;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.OptionalInt;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
@@ -49,10 +48,8 @@ class SearcherImpl implements Searcher {
 
     moreLikeThis = new MoreLikeThis(builder.getIndexReader());
     moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
-    // Ignore words that occurr in more than 50% of recipes
-    moreLikeThis.setMaxDocFreqPct(50);
-    // Relevant for docId-based similarity
-    moreLikeThis.setFieldNames(new String[] {FULL_RECIPE});
+    moreLikeThis.setStopWords(EnglishAnalyzer.ENGLISH_STOP_WORDS_SET);
+    moreLikeThis.setMaxDocFreq(10000);
   }
 
   private static Sort integerSorterWithDefault(String fieldName) {
