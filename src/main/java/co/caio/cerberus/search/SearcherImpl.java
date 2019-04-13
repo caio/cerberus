@@ -35,9 +35,6 @@ class SearcherImpl implements Searcher {
   private static final Sort sortTotalTime = integerSorterWithDefault(TOTAL_TIME);
   private static final Sort sortCalories = integerSorterWithDefault(CALORIES);
 
-  private static final SearchResult EMPTY_SEARCH_RESULT =
-      new SearchResult.Builder().totalHits(0).build();
-
   private final IndexSearcher indexSearcher;
   private final TaxonomyReader taxonomyReader;
   private final IndexConfiguration indexConfiguration;
@@ -89,48 +86,6 @@ class SearcherImpl implements Searcher {
     } catch (IOException wrapped) {
       throw new SearcherException(wrapped);
     }
-  }
-
-  @Override
-  public SearchResult findSimilar(long recipeId, int maxResults) {
-    try {
-      var docId = findDocId(recipeId);
-
-      if (docId.isEmpty()) {
-        return EMPTY_SEARCH_RESULT;
-      }
-
-      // We use `maxResults + 1` because we'll filter out the
-      // given recipeId from the results
-      var result = indexSearcher.search(moreLikeThis.like(docId.getAsInt()), maxResults + 1);
-
-      var builder = new SearchResult.Builder();
-
-      int totalHits = 0;
-      for (int i = 0; i < result.scoreDocs.length && totalHits <= maxResults; i++) {
-        Document doc = indexSearcher.doc(result.scoreDocs[i].doc);
-        long foundRecipeId = doc.getField(RECIPE_ID).numericValue().longValue();
-
-        if (foundRecipeId != recipeId) {
-          builder.addRecipe(foundRecipeId);
-          totalHits++;
-        }
-      }
-
-      return builder.totalHits(totalHits).build();
-    } catch (IOException wrapped) {
-      throw new SearcherException(wrapped);
-    }
-  }
-
-  OptionalInt findDocId(long recipeId) throws IOException {
-    var result = indexSearcher.search(LongPoint.newExactQuery(RECIPE_ID, recipeId), 1);
-
-    if (result.scoreDocs.length == 0) {
-      return OptionalInt.empty();
-    }
-
-    return OptionalInt.of(result.scoreDocs[0].doc);
   }
 
   public int numDocs() {

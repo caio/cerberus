@@ -383,17 +383,4 @@ class SearcherTest {
               // }
             });
   }
-
-  @Test
-  void similarToRecipeIdNeverIncludesSelf() {
-    final int maxResults = 100;
-    Util.getSampleRecipes()
-        .forEach(
-            sampleRecipe -> {
-              var similar = searcher.findSimilar(sampleRecipe.recipeId(), maxResults);
-
-              assertTrue(similar.totalHits() > 0 && similar.totalHits() <= maxResults);
-              assertEquals(-1, similar.recipeIds().indexOf(sampleRecipe.recipeId()));
-            });
-  }
 }
