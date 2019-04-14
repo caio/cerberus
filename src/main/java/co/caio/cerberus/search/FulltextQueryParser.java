@@ -9,11 +9,7 @@ class FulltextQueryParser extends SimpleQueryParser {
 
   private static final int FEATURES = NOT_OPERATOR | PHRASE_OPERATOR | WHITESPACE_OPERATOR;
 
-  private static final Map<String, Float> weights =
-      Map.of(
-          IndexField.NAME, 1f,
-          IndexField.INGREDIENTS, 1f,
-          IndexField.INSTRUCTIONS, 0.5f);
+  private static final Map<String, Float> weights = Map.of(IndexField.FULL_RECIPE, 1F);
 
   FulltextQueryParser(Analyzer analyzer) {
     super(analyzer, weights, FEATURES);
