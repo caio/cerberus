@@ -19,7 +19,6 @@ class SearcherWithPolicy extends SearcherImpl implements Searcher {
   @Override
   Query parseFulltext(String fulltext) {
     var parsed = super.parseFulltext(fulltext);
-    searchPolicy.inspectParsedFulltextQuery(parsed);
-    return parsed;
+    return searchPolicy.rewriteParsedFulltextQuery(parsed);
   }
 }

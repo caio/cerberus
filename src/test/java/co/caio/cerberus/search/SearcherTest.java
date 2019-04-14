@@ -3,6 +3,7 @@ package co.caio.cerberus.search;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -20,6 +21,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.Function;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MatchNoDocsQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -268,6 +271,8 @@ class SearcherTest {
   void policyInspectLuceneQueryIsAlwaysCalled() {
     var policyMock = mock(SearchPolicy.class);
 
+    given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchAllDocsQuery());
+
     var searcherWithPolicy =
         new Searcher.Builder()
             .searchPolicy(policyMock)
@@ -276,12 +281,14 @@ class SearcherTest {
 
     searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").build());
 
-    verify(policyMock).inspectParsedFulltextQuery(any());
+    verify(policyMock).rewriteParsedFulltextQuery(any());
   }
 
   @Test
   void policyShouldComputeFacetsIsOnlyCalledWhenRelevant() {
     var policyMock = mock(SearchPolicy.class);
+
+    given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchAllDocsQuery());
 
     var searcherWithPolicy =
         new Searcher.Builder()
@@ -300,6 +307,25 @@ class SearcherTest {
   }
 
   @Test
+  void policyRewriteIsCalled() {
+    var policyMock = mock(SearchPolicy.class);
+
+    // Policy will rewrite to MatchNoDocsQuery()
+    given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchNoDocsQuery());
+
+    var searcherWithPolicy =
+        new Searcher.Builder()
+            .searchPolicy(policyMock)
+            .dataDirectory(Util.getTestDataDir())
+            .build();
+
+    // So even when searching for all docs, we should
+    // get zero results
+    var allQuery = new SearchQuery.Builder().fulltext("*").build();
+    assertEquals(0, searcherWithPolicy.search(allQuery).totalHits());
+  }
+
+  @Test
   void throwingFromPolicyIsAllowed() {
     var policyMock = mock(SearchPolicy.class);
 
@@ -315,7 +341,7 @@ class SearcherTest {
       }
     }
 
-    doThrow(CustomTestException.class).when(policyMock).inspectParsedFulltextQuery(any());
+    doThrow(CustomTestException.class).when(policyMock).rewriteParsedFulltextQuery(any());
 
     assertThrows(
         CustomTestException.class,
@@ -325,6 +351,8 @@ class SearcherTest {
   @Test
   void negatingShouldComputeFacetsSkipsFacetComputation() {
     var policyMock = mock(SearchPolicy.class);
+
+    given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchAllDocsQuery());
 
     var searcherWithPolicy =
         new Searcher.Builder()
