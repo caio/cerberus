@@ -135,10 +135,6 @@ public interface Indexer {
         doc.add(new StoredField(RECIPE_ID, recipe.recipeId()));
         doc.add(new LongPoint(RECIPE_ID, recipe.recipeId()));
 
-        doc.add(new TextField(NAME, recipe.name(), Store.NO));
-        recipe.instructions().forEach(i -> doc.add(new TextField(INSTRUCTIONS, i, Store.NO)));
-        recipe.ingredients().forEach(i -> doc.add(new TextField(INGREDIENTS, i, Store.NO)));
-
         doc.add(new TextField(FULL_RECIPE, recipe.name(), Store.NO));
         recipe.instructions().forEach(i -> doc.add(new TextField(FULL_RECIPE, i, Store.NO)));
         recipe.ingredients().forEach(i -> doc.add(new TextField(FULL_RECIPE, i, Store.NO)));

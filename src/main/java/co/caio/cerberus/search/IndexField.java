@@ -2,9 +2,6 @@ package co.caio.cerberus.search;
 
 class IndexField {
   static final String RECIPE_ID = "recipeId";
-  static final String NAME = "name";
-  static final String INGREDIENTS = "ingredients";
-  static final String INSTRUCTIONS = "instructions";
   static final String NUM_INGREDIENTS = "numIngredients";
   static final String PREP_TIME = "prepTime";
   static final String COOK_TIME = "cookTime";
