@@ -43,6 +43,8 @@ public interface Recipe {
 
   OptionalDouble proteinContent();
 
+  List<Long> similarRecipeIds();
+
   @Value.Check
   default void check() {
     RecipePrecondition.check(this);

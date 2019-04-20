@@ -35,6 +35,8 @@ public interface RecipeMetadata {
 
   OptionalDouble getCarbohydrateContent();
 
+  List<Long> getSimilarRecipeIds();
+
   static RecipeMetadata fromRecipe(Recipe recipe) {
     return new RecipeMetadataRecipeAdapter(recipe);
   }

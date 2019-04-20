@@ -30,6 +30,10 @@ public class FlatBufferSerializer {
         recipe.getIngredients().stream().mapToInt(builder::createString).toArray();
     var ingredientsVectorOffset = FlatRecipe.createIngredientsVector(builder, ingredientsOffsets);
 
+    var similarIdsVectorOffset =
+        FlatRecipe.createSimilarIdsVector(
+            builder, recipe.getSimilarRecipeIds().stream().mapToLong(Long::valueOf).toArray());
+
     var rootTable =
         FlatRecipe.createFlatRecipe(
             builder,
@@ -45,7 +49,8 @@ public class FlatBufferSerializer {
             recipe.getCalories().orElse(NON_EXISTENT_OPTIONAL_INT),
             (float) recipe.getFatContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT),
             (float) recipe.getProteinContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT),
-            (float) recipe.getCarbohydrateContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT));
+            (float) recipe.getCarbohydrateContent().orElse(NON_EXISTENT_OPTIONAL_FLOAT),
+            similarIdsVectorOffset);
 
     builder.finish(rootTable);
     return builder.dataBuffer();

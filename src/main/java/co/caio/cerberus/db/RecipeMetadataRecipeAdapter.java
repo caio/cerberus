@@ -81,4 +81,9 @@ class RecipeMetadataRecipeAdapter implements RecipeMetadata {
   public OptionalDouble getCarbohydrateContent() {
     return recipe.carbohydrateContent();
   }
+
+  @Override
+  public List<Long> getSimilarRecipeIds() {
+    return recipe.similarRecipeIds();
+  }
 }

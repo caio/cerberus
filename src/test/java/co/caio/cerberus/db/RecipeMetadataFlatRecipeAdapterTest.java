@@ -34,5 +34,6 @@ class RecipeMetadataFlatRecipeAdapterTest {
     assertEquals(sample.fatContent(), copied.getFatContent());
     assertEquals(sample.proteinContent(), copied.getProteinContent());
     assertEquals(sample.carbohydrateContent(), copied.getCarbohydrateContent());
+    assertEquals(sample.similarRecipeIds(), copied.getSimilarRecipeIds());
   }
 }

@@ -9,6 +9,7 @@ import java.util.OptionalInt;
 class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
 
   private final FlatRecipe recipe;
+  private static final List<Long> EMPTY_IDS = List.of();
 
   RecipeMetadataFlatRecipeAdapter(FlatRecipe recipe) {
     this.recipe = recipe;
@@ -88,5 +89,20 @@ class RecipeMetadataFlatRecipeAdapter implements RecipeMetadata {
   @Override
   public OptionalDouble getCarbohydrateContent() {
     return FlatBufferSerializer.INSTANCE.readOptionalDouble(recipe.carbohydrateContent());
+  }
+
+  @Override
+  public List<Long> getSimilarRecipeIds() {
+    var numSimilarIds = recipe.similarIdsLength();
+
+    if (numSimilarIds == 0) {
+      return EMPTY_IDS;
+    }
+
+    var similarIds = new ArrayList<Long>(numSimilarIds);
+    for (int i = 0; i < numSimilarIds; i++) {
+      similarIds.add(recipe.similarIds(i));
+    }
+    return similarIds;
   }
 }

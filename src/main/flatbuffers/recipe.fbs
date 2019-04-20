@@ -18,6 +18,8 @@ table FlatRecipe {
   fat_content:float = -1;
   protein_content:float = -1;
   carbohydrate_content:float = -1;
+
+  similar_ids:[long];
 }
 
 root_type FlatRecipe;

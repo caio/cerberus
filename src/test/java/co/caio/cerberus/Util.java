@@ -42,6 +42,7 @@ public class Util {
         .crawlUrl("https://recipes.recipes/1")
         .addInstructions("there is nothing to do")
         .addIngredients("item a", "item b")
+        .addSimilarRecipeIds(2, 3, 4, 5)
         .build();
   }
 
