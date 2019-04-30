@@ -47,7 +47,6 @@ class SearcherImpl implements Searcher {
 
     moreLikeThis = new MoreLikeThis(builder.getIndexReader());
     moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
-    moreLikeThis.setMaxDocFreq(10000);
   }
 
   private static Sort integerSorterWithDefault(String fieldName) {
