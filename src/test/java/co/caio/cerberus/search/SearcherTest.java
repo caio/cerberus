@@ -380,15 +380,7 @@ class SearcherTest {
     Util.getSampleRecipes()
         .forEach(
             testRecipe -> {
-              var recipeText =
-                  String.join(
-                      "\n",
-                      List.of(
-                          testRecipe.name(),
-                          String.join("\n", testRecipe.ingredients()),
-                          String.join("\n", testRecipe.instructions())));
-
-              var similar = searcher.findSimilar(recipeText, 10);
+              var similar = searcher.findSimilar(recipeText(testRecipe), 10);
 
               assertTrue(similar.totalHits() > 0);
 
@@ -410,5 +402,36 @@ class SearcherTest {
               //           });
               // }
             });
+  }
+
+  String recipeText(Recipe testRecipe) {
+    return String.join(
+        "\n",
+        List.of(
+            testRecipe.name(),
+            String.join("\n", testRecipe.ingredients()),
+            String.join("\n", testRecipe.instructions())));
+  }
+
+  @Test
+  void rewriteParsedSimilarityQuery() {
+    var policyMock = mock(SearchPolicy.class);
+
+    given(policyMock.rewriteParsedSimilarityQuery(any())).willReturn(new MatchNoDocsQuery());
+
+    var searcherWithPolicy =
+        new Searcher.Builder()
+            .searchPolicy(policyMock)
+            .dataDirectory(Util.getTestDataDir())
+            .build();
+
+    var text = recipeText(Util.getSampleRecipes().skip(10).findFirst().get());
+
+    // Searching without policy should yield some results
+    assertTrue(searcher.findSimilar(text, 10).totalHits() > 0);
+
+    // But with a policy that rewrites it all to a MatchNoDocsQuery
+    // it should be zero
+    assertEquals(0, searcherWithPolicy.findSimilar(text, 10).totalHits());
   }
 }

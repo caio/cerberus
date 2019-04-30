@@ -21,4 +21,10 @@ class SearcherWithPolicy extends SearcherImpl implements Searcher {
     var parsed = super.parseFulltext(fulltext);
     return searchPolicy.rewriteParsedFulltextQuery(parsed);
   }
+
+  @Override
+  Query parseSimilarity(String similarText) {
+    var parsed = super.parseSimilarity(similarText);
+    return searchPolicy.rewriteParsedSimilarityQuery(parsed);
+  }
 }

@@ -66,7 +66,7 @@ class SearcherImpl implements Searcher {
   @Override
   public SearchResult findSimilar(String recipeText, int maxResults) {
     try {
-      var query = moreLikeThis.like(FULL_RECIPE, new StringReader(recipeText));
+      var query = parseSimilarity(recipeText);
       var result = indexSearcher.search(query, maxResults);
 
       var builder = new SearchResult.Builder().totalHits(result.totalHits.value);
@@ -77,6 +77,14 @@ class SearcherImpl implements Searcher {
       }
 
       return builder.build();
+    } catch (IOException wrapped) {
+      throw new SearcherException(wrapped);
+    }
+  }
+
+  Query parseSimilarity(String recipeText) {
+    try {
+      return moreLikeThis.like(FULL_RECIPE, new StringReader(recipeText));
     } catch (IOException wrapped) {
       throw new SearcherException(wrapped);
     }
