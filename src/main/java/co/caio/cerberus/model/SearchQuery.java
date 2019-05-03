@@ -107,19 +107,6 @@ public interface SearchQuery {
                 throw new IllegalStateException("score must be in ]0,1]");
               }
             });
-    if (fulltext().isPresent()
-        || !dietThreshold().isEmpty()
-        || numIngredients().isPresent()
-        || prepTime().isPresent()
-        || cookTime().isPresent()
-        || totalTime().isPresent()
-        || calories().isPresent()
-        || fatContent().isPresent()
-        || proteinContent().isPresent()
-        || carbohydrateContent().isPresent()) {
-      return;
-    }
-    throw new IllegalStateException("At least one field must be set");
   }
 
   class Builder extends ImmutableSearchQuery.Builder {

@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 
 class SearchQueryTest {
   @Test
-  void cantBuildEmptyQuery() {
-    assertThrows(IllegalStateException.class, () -> new SearchQuery.Builder().build());
+  void canBuildEmptyQuery() {
+    assertDoesNotThrow(() -> new SearchQuery.Builder().build());
   }
 
   @Test

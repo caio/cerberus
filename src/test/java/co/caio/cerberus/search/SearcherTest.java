@@ -434,4 +434,9 @@ class SearcherTest {
     // it should be zero
     assertEquals(0, searcherWithPolicy.findSimilar(text, 10).totalHits());
   }
+
+  @Test
+  void emptySearchQueryYieldsEmptyResults() {
+    assertEquals(0, searcher.search(new SearchQuery.Builder().build()).totalHits());
+  }
 }
