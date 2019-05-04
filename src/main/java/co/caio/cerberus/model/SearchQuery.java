@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 @ImmutableStyle
@@ -32,6 +33,32 @@ public interface SearchQuery {
   Optional<RangedSpec> carbohydrateContent();
 
   Map<String, Float> dietThreshold();
+
+  @Value.Derived
+  default long numSelectedFilters() {
+    return Stream.of(
+                numIngredients(),
+                prepTime(),
+                cookTime(),
+                totalTime(),
+                calories(),
+                fatContent(),
+                proteinContent(),
+                carbohydrateContent())
+            .flatMap(Optional::stream)
+            .count()
+        + dietThreshold().size();
+  }
+
+  @Value.Derived
+  default boolean isFulltextOnly() {
+    return fulltext().isPresent() && numSelectedFilters() == 0;
+  }
+
+  @Value.Derived
+  default boolean isEmpty() {
+    return numSelectedFilters() == 0 && fulltext().isEmpty();
+  }
 
   @Value.Default
   default int maxResults() {
