@@ -97,7 +97,7 @@ class SearcherImpl implements Searcher {
   private SearchResult _search(SearchQuery query) throws IOException {
     final int maxFacets = query.maxFacets();
 
-    var luceneQuery = toLuceneQuery(query);
+    var luceneQuery = indexSearcher.rewrite(toLuceneQuery(query));
 
     final int count = indexSearcher.count(luceneQuery);
     final boolean computeFacets = maxFacets > 0 && canComputeFacets(count);
