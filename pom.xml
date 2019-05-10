@@ -22,7 +22,7 @@
         <flatbuffers.version>1.10.0.2</flatbuffers.version>
         <flatbuffers.sources>${basedir}/src/main/flatbuffers</flatbuffers.sources>
         <flatbuffers.generated.sources>${project.build.directory}/generated-sources/java</flatbuffers.generated.sources>
-        <chronicle.version>3.17.1</chronicle.version>
+        <chronicle.version>3.17.2</chronicle.version>
     </properties>
 
     <dependencies>
