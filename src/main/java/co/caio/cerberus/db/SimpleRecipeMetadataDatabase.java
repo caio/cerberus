@@ -16,21 +16,19 @@ import java.util.Optional;
 
 public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
-  static final String FILE_OFFSETS = "offsets.sdb";
-  static final String FILE_DATA = "data.sdb";
+  private static final String FILE_OFFSETS = "offsets.sdb";
+  private static final String FILE_DATA = "data.sdb";
 
-  final Path baseDir;
-  // Fixme maybe scatter? rewrite key?
-  final LongIntHashMap idToOffset;
-  final ByteBuffer rawData;
+  private static final int OFFSET_NOT_FOUND = -1;
+
+  private final LongIntHashMap idToOffset;
+  private final ByteBuffer rawData;
 
   public SimpleRecipeMetadataDatabase(Path baseDir) {
 
     if (!baseDir.toFile().isDirectory()) {
       throw new InvalidPathException(baseDir.toString(), "Not a directory");
     }
-
-    this.baseDir = baseDir;
 
     try (var raf = new RandomAccessFile(baseDir.resolve(FILE_OFFSETS).toFile(), "r")) {
 
@@ -44,7 +42,7 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
       }
 
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RecipeMetadataDbException(e);
     }
 
     try {
@@ -56,11 +54,9 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
               .map(MapMode.READ_ONLY, 0, Files.size(dataPath));
 
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RecipeMetadataDbException(e);
     }
   }
-
-  static final int OFFSET_NOT_FOUND = -1;
 
   @Override
   public Optional<RecipeMetadata> findById(long recipeId) {
@@ -82,7 +78,7 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
   @Override
   public void saveAll(List<RecipeMetadata> recipes) {
-    throw new RuntimeException("Read-only!");
+    throw new RecipeMetadataDbException("Read-only! Use the Writer inner class to create a db");
   }
 
   public static class Writer {
@@ -98,14 +94,14 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
       try {
         Files.createDirectories(baseDir);
       } catch (IOException wrapped) {
-        throw new RuntimeException(wrapped);
+        throw new RecipeMetadataDbException(wrapped);
       }
 
       var dataPath = baseDir.resolve(FILE_DATA);
       var offsetsPath = baseDir.resolve(FILE_OFFSETS);
 
       if (dataPath.toFile().exists() || offsetsPath.toFile().exists()) {
-        throw new InvalidPathException(baseDir.toString(), "Database already exists at given path");
+        throw new RecipeMetadataDbException("Database already exists at given path");
       }
 
       try {
@@ -113,17 +109,18 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
         this.offsetsFile = new RandomAccessFile(offsetsPath.toFile(), "rw");
 
       } catch (FileNotFoundException wrapped) {
-        throw new RuntimeException(wrapped);
+        throw new RecipeMetadataDbException(wrapped);
       }
 
       try {
         this.offsetsFile.writeInt(0);
       } catch (IOException wrapped) {
-        throw new RuntimeException(wrapped);
+        throw new RecipeMetadataDbException(wrapped);
       }
     }
 
     public void addRecipe(RecipeMetadata recipe) {
+      // XXX Not thread safe
       try {
         int offset = (int) dataChannel.position();
         dataChannel.write(FlatBufferSerializer.INSTANCE.flattenRecipe(recipe));
@@ -133,18 +130,19 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
         this.numRecipes++;
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new RecipeMetadataDbException(e);
       }
     }
 
     public void close() {
       try {
         dataChannel.close();
+
         offsetsFile.seek(0);
         offsetsFile.writeInt(numRecipes);
         offsetsFile.close();
       } catch (IOException wrapped) {
-        throw new RuntimeException(wrapped);
+        throw new RecipeMetadataDbException(wrapped);
       }
     }
   }
