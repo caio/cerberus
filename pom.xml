@@ -10,7 +10,7 @@
 
     <groupId>co.caio.cerberus</groupId>
     <artifactId>cerberus</artifactId>
-    <version>0.6.4-SNAPSHOT</version>
+    <version>0.7.0</version>
     <url>https://caio.co</url>
     <packaging>jar</packaging>
 
@@ -182,4 +182,8 @@
             <!-- flatbuffers end -->
         </plugins>
     </build>
+
+  <scm>
+    <tag>0.7.0</tag>
+  </scm>
 </project>
