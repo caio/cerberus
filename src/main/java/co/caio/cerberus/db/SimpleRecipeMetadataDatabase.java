@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -24,16 +23,22 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   private final LongIntHashMap idToOffset;
   private final ByteBuffer rawData;
 
+  public int size() {
+    return idToOffset.size();
+  }
+
   public SimpleRecipeMetadataDatabase(Path baseDir) {
 
     if (!baseDir.toFile().isDirectory()) {
-      throw new InvalidPathException(baseDir.toString(), "Not a directory");
+      throw new RecipeMetadataDbException("Not a directory: " + baseDir);
     }
 
     try (var raf = new RandomAccessFile(baseDir.resolve(FILE_OFFSETS).toFile(), "r")) {
 
       int size = raf.readInt();
-      assert size > 0;
+      if (size < 0) {
+        throw new RecipeMetadataDbException("Invalid offsets file length");
+      }
 
       idToOffset = new LongIntHashMap(size);
 
@@ -113,7 +118,10 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
       }
 
       try {
-        this.offsetsFile.writeInt(0);
+        // First bytes are for the number of items in the database
+        // we set to -1 here and, during close(), configure the
+        // correct value
+        this.offsetsFile.writeInt(-1);
       } catch (IOException wrapped) {
         throw new RecipeMetadataDbException(wrapped);
       }
@@ -136,10 +144,11 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
 
     public void close() {
       try {
-        dataChannel.close();
-
+        // Write the number of recipes to the beginning of the offsets file
         offsetsFile.seek(0);
         offsetsFile.writeInt(numRecipes);
+
+        dataChannel.close();
         offsetsFile.close();
       } catch (IOException wrapped) {
         throw new RecipeMetadataDbException(wrapped);
