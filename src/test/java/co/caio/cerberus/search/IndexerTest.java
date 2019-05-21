@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class IndexerTest {
   @Test
@@ -21,8 +21,7 @@ class IndexerTest {
   }
 
   @Test
-  void simpleLocalIndexer() throws IOException {
-    var tempDir = Files.createTempDirectory("cerberus-test");
+  void simpleLocalIndexer(@TempDir Path tempDir) throws IOException {
     var index = new Indexer.Builder().dataDirectory(tempDir).createMode().build();
     assertEquals(0, index.numDocs());
     index.addRecipe(Util.getBasicRecipe());
