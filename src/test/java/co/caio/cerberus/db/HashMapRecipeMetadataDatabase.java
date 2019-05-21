@@ -1,6 +1,5 @@
 package co.caio.cerberus.db;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +16,6 @@ public class HashMapRecipeMetadataDatabase implements RecipeMetadataDatabase {
   @Override
   public Optional<RecipeMetadata> findById(long recipeId) {
     return Optional.ofNullable(map.get(recipeId));
-  }
-
-  @Override
-  public List<RecipeMetadata> findAllById(List<Long> recipeIds) {
-    var result = new ArrayList<RecipeMetadata>();
-    recipeIds.forEach(id -> findById(id).ifPresent(result::add));
-    return result;
   }
 
   @Override

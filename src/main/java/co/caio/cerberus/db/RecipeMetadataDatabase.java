@@ -7,8 +7,6 @@ public interface RecipeMetadataDatabase {
 
   Optional<RecipeMetadata> findById(long recipeId);
 
-  List<RecipeMetadata> findAllById(List<Long> recipeIds);
-
   void saveAll(List<RecipeMetadata> recipes);
 
   default void close() {}

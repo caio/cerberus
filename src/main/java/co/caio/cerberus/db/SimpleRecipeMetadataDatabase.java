@@ -77,11 +77,6 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
   }
 
   @Override
-  public List<RecipeMetadata> findAllById(List<Long> recipeIds) {
-    return null;
-  }
-
-  @Override
   public void saveAll(List<RecipeMetadata> recipes) {
     throw new RecipeMetadataDbException("Read-only! Use the Writer inner class to create a db");
   }
