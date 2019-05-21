@@ -16,7 +16,6 @@ import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
 import co.caio.cerberus.search.Searcher.Builder.SearcherBuilderException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.OptionalInt;
@@ -25,6 +24,7 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class SearcherTest {
   private static Searcher searcher;
@@ -109,12 +109,8 @@ class SearcherTest {
   }
 
   @Test
-  void dietThreshold() throws Exception {
-    var indexer =
-        new Indexer.Builder()
-            .dataDirectory(Files.createTempDirectory("threshold-test"))
-            .createMode()
-            .build();
+  void dietThreshold(@TempDir Path tmpDir) throws Exception {
+    var indexer = new Indexer.Builder().dataDirectory(tmpDir).createMode().build();
 
     var recipeBuilder =
         new Recipe.Builder()

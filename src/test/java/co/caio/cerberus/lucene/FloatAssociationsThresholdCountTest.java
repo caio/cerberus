@@ -3,7 +3,7 @@ package co.caio.cerberus.lucene;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetsCollector;
@@ -21,6 +21,7 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class FloatAssociationsThresholdCountTest {
 
@@ -84,9 +85,9 @@ class FloatAssociationsThresholdCountTest {
   }
 
   @BeforeAll
-  static void setUp() throws IOException {
-    final var indexDir = FSDirectory.open(Files.createTempDirectory("lucene-test"));
-    final var taxoDir = FSDirectory.open(Files.createTempDirectory("lucene-test-taxo"));
+  static void setUp(@TempDir Path tmpDir) throws IOException {
+    final var indexDir = FSDirectory.open(tmpDir.resolve("index"));
+    final var taxoDir = FSDirectory.open(tmpDir.resolve("taxo"));
 
     config = new FacetsConfig();
     config.setMultiValued("score", true);

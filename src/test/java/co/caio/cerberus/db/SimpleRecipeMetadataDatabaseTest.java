@@ -4,19 +4,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.Util;
 import co.caio.cerberus.db.RecipeMetadataDatabase.RecipeMetadataDbException;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class SimpleRecipeMetadataDatabaseTest {
 
   @Test
-  void canSaveAndReadSamples() throws IOException {
+  void canSaveAndReadSamples(@TempDir Path dbPath) {
     var numSamples = 10;
-    var dbPath = Files.createTempDirectory("sdb-");
 
     var writer = new SimpleRecipeMetadataDatabase.Writer(dbPath);
 
@@ -42,8 +40,7 @@ class SimpleRecipeMetadataDatabaseTest {
   }
 
   @Test
-  void canCreateEmptyDb() throws IOException {
-    var dbPath = Files.createTempDirectory("sdb-empty-");
+  void canCreateEmptyDb(@TempDir Path dbPath) {
     new SimpleRecipeMetadataDatabase.Writer(dbPath).close();
     assertDoesNotThrow(() -> new SimpleRecipeMetadataDatabase(dbPath));
     assertEquals(0, new SimpleRecipeMetadataDatabase(dbPath).size());
@@ -57,8 +54,7 @@ class SimpleRecipeMetadataDatabaseTest {
   }
 
   @Test
-  void cannotWriteToExistingDb() throws IOException {
-    var dbPath = Files.createTempDirectory("sdb-empty-");
+  void cannotWriteToExistingDb(@TempDir Path dbPath) {
 
     // First open+close should work
     assertDoesNotThrow(() -> new SimpleRecipeMetadataDatabase.Writer(dbPath).close());
@@ -68,8 +64,7 @@ class SimpleRecipeMetadataDatabaseTest {
   }
 
   @Test
-  void saveAllIsNotAllowed() throws IOException {
-    var dbPath = Files.createTempDirectory("sdb-empty-");
+  void saveAllIsNotAllowed(@TempDir Path dbPath) {
     new SimpleRecipeMetadataDatabase.Writer(dbPath).close();
     var db = new SimpleRecipeMetadataDatabase(dbPath);
     assertThrows(

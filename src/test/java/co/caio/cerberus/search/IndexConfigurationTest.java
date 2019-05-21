@@ -4,25 +4,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.lucene.facet.FacetsConfig;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class IndexConfigurationTest {
 
   @Test
-  void canCreateEmpty() {
-    assertDoesNotThrow(
-        () -> new IndexConfiguration(Files.createTempDirectory("indexconfig-"), Set.of()));
+  void canCreateEmpty(@TempDir Path tempDir) {
+    assertDoesNotThrow(() -> new IndexConfiguration(tempDir, Set.of()));
   }
 
   @Test
-  void multiValuedDimensionsConfiguresFacetConfig() throws IOException {
+  void multiValuedDimensionsConfiguresFacetConfig(@TempDir Path tempDir) throws IOException {
     var originalMv = Set.of("a", "b", "c");
-    var config = new IndexConfiguration(Files.createTempDirectory("indexconfig-"), originalMv);
+    var config = new IndexConfiguration(tempDir, originalMv);
 
     var configuredMv = extractMultiValued(config.getFacetsConfig());
 
@@ -30,15 +30,13 @@ class IndexConfigurationTest {
   }
 
   @Test
-  void cantLoadFromConfigIfItDoesNotExist() {
+  void cantLoadFromConfigIfItDoesNotExist(@TempDir Path tempDir) {
     assertThrows(
-        IndexConfigurationException.class,
-        () -> IndexConfiguration.fromBaseDirectory(Files.createTempDirectory("indexconfig-")));
+        IndexConfigurationException.class, () -> IndexConfiguration.fromBaseDirectory(tempDir));
   }
 
   @Test
-  void loadFromConfigWorks() throws IOException {
-    var base = Files.createTempDirectory("indexconfig-");
+  void loadFromConfigWorks(@TempDir Path base) {
     var multiValued = Set.of("a", "b", "c", "d");
     var config = new IndexConfiguration(base, multiValued);
 
