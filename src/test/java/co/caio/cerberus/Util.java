@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -122,6 +123,22 @@ public class Util {
       assertionNumbers.load(Util.class.getResource("/assertions.properties").openStream());
     } catch (Exception rethrown) {
       throw new RuntimeException(rethrown);
+    }
+
+    deleteOnExit(testDataDir);
+  }
+
+  private static void deleteOnExit(Path path) {
+    path.toFile().deleteOnExit();
+
+    if (!path.toFile().isDirectory()) {
+      return;
+    }
+
+    try (var items = Files.list(path)) {
+      items.forEach(Util::deleteOnExit);
+    } catch (IOException wrapped) {
+      throw new RuntimeException(wrapped);
     }
   }
 
