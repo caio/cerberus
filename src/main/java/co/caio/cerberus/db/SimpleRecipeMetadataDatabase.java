@@ -1,5 +1,6 @@
 package co.caio.cerberus.db;
 
+import co.caio.cerberus.db.RecipeMetadataDatabase.RecipeMetadataDbException;
 import co.caio.cerberus.flatbuffers.FlatRecipe;
 import com.carrotsearch.hppc.LongIntHashMap;
 import java.io.FileNotFoundException;
@@ -33,9 +34,12 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
       throw new RecipeMetadataDbException("Not a directory: " + baseDir);
     }
 
-    try (var raf = new RandomAccessFile(baseDir.resolve(FILE_OFFSETS).toFile(), "r")) {
+    var offsetsPath = baseDir.resolve(FILE_OFFSETS);
+    try (var raf = new RandomAccessFile(offsetsPath.toFile(), "r")) {
 
-      int size = raf.readInt();
+      var mapped = raf.getChannel().map(MapMode.READ_ONLY, 0, Files.size(offsetsPath));
+
+      int size = mapped.getInt();
       if (size < 0) {
         throw new RecipeMetadataDbException("Invalid offsets file length");
       }
@@ -43,7 +47,7 @@ public class SimpleRecipeMetadataDatabase implements RecipeMetadataDatabase {
       idToOffset = new LongIntHashMap(size);
 
       while (size-- > 0) {
-        idToOffset.put(raf.readLong(), raf.readInt());
+        idToOffset.put(mapped.getLong(), mapped.getInt());
       }
 
     } catch (IOException e) {
