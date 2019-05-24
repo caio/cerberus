@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -32,22 +31,22 @@ public interface SearchQuery {
 
   Optional<RangedSpec> carbohydrateContent();
 
-  Map<String, Float> dietThreshold();
+  Optional<DietSpec> diet();
 
   @Value.Derived
   default long numSelectedFilters() {
     return Stream.of(
-                numIngredients(),
-                prepTime(),
-                cookTime(),
-                totalTime(),
-                calories(),
-                fatContent(),
-                proteinContent(),
-                carbohydrateContent())
-            .flatMap(Optional::stream)
-            .count()
-        + dietThreshold().size();
+            numIngredients(),
+            prepTime(),
+            cookTime(),
+            totalTime(),
+            calories(),
+            fatContent(),
+            proteinContent(),
+            carbohydrateContent(),
+            diet())
+        .flatMap(Optional::stream)
+        .count();
   }
 
   @Value.Derived
@@ -116,6 +115,30 @@ public interface SearchQuery {
     }
   }
 
+  @Value.Immutable(builder = false)
+  @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+  @JsonPropertyOrder({"name", "threshold"})
+  @JsonSerialize(as = ImmutableDietSpec.class)
+  @JsonDeserialize(as = ImmutableDietSpec.class)
+  interface DietSpec {
+    @Value.Parameter
+    String name();
+
+    @Value.Parameter
+    float threshold();
+
+    static DietSpec of(String name, float threshold) {
+      return ImmutableDietSpec.of(name, threshold);
+    }
+
+    @Value.Check
+    default void check() {
+      if (threshold() <= 0 || threshold() > 1) {
+        throw new IllegalStateException("Threshold must be > 0 and <= 1");
+      }
+    }
+  }
+
   @Value.Check
   default void check() {
     if (maxResults() < 1) {
@@ -127,19 +150,16 @@ public interface SearchQuery {
     if (offset() < 0) {
       throw new IllegalStateException("offset must be >= 0");
     }
-    dietThreshold()
-        .forEach(
-            (diet, score) -> {
-              if (score <= 0 || score > 1) {
-                throw new IllegalStateException("score must be in ]0,1]");
-              }
-            });
   }
 
   class Builder extends ImmutableSearchQuery.Builder {
-    public Builder addMatchDiet(String dietName) {
-      putDietThreshold(dietName, 1f);
+    public Builder diet(String dietName, float threshold) {
+      diet(DietSpec.of(dietName, threshold));
       return this;
+    }
+
+    public Builder diet(String dietName) {
+      return diet(dietName, 1F);
     }
   }
 }

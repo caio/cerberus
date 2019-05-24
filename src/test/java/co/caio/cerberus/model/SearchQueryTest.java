@@ -39,20 +39,15 @@ class SearchQueryTest {
 
   @Test
   void addMatchDietAlias() {
-    assertEquals(
-        new Builder().addMatchDiet("keto").build(),
-        new Builder().putDietThreshold("keto", 1f).build());
+    assertEquals(new Builder().diet("keto").build(), new Builder().diet("keto", 1f).build());
   }
 
   @Test
   void dietThresholds() {
-    assertThrows(
-        IllegalStateException.class, () -> new Builder().putDietThreshold("paleo", 0).build());
-    assertThrows(
-        IllegalStateException.class, () -> new Builder().putDietThreshold("lowcarb", -1).build());
-    assertThrows(
-        IllegalStateException.class, () -> new Builder().putDietThreshold("vegan", 1.1f).build());
-    assertDoesNotThrow(() -> new Builder().putDietThreshold("paleo", 1.0f).build());
+    assertThrows(IllegalStateException.class, () -> new Builder().diet("paleo", 0).build());
+    assertThrows(IllegalStateException.class, () -> new Builder().diet("lowcarb", -1).build());
+    assertThrows(IllegalStateException.class, () -> new Builder().diet("vegan", 1.1f).build());
+    assertDoesNotThrow(() -> new Builder().diet("paleo", 1.0f).build());
   }
 
   @Test
@@ -61,6 +56,6 @@ class SearchQueryTest {
     assertEquals(0, builder.build().numSelectedFilters());
     assertEquals(1, builder.numIngredients(RangedSpec.of(1, 10)).build().numSelectedFilters());
     assertEquals(2, builder.carbohydrateContent(RangedSpec.of(0, 30)).build().numSelectedFilters());
-    assertEquals(3, builder.addMatchDiet("keto").build().numSelectedFilters());
+    assertEquals(3, builder.diet("keto").build().numSelectedFilters());
   }
 }

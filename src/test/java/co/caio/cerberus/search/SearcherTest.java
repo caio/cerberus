@@ -94,7 +94,7 @@ class SearcherTest {
         searcher.search(
             new SearchQuery.Builder()
                 .fulltext("vegetarian")
-                .addMatchDiet("vegetarian")
+                .diet("vegetarian")
                 .maxResults(1)
                 .build());
     assertEquals(nrVegetarianRecipes, result.totalHits());
@@ -103,8 +103,7 @@ class SearcherTest {
     // term<vegetarian> in the whole index would give us AT LEAST the same number
     // as above, but maybe more since a recipe can be vegetarian without having to
     // call itself vegetarian
-    result =
-        searcher.search(new SearchQuery.Builder().addMatchDiet("vegetarian").maxResults(1).build());
+    result = searcher.search(new SearchQuery.Builder().diet("vegetarian").maxResults(1).build());
     assertTrue(result.totalHits() >= nrVegetarianRecipes);
   }
 
@@ -121,21 +120,18 @@ class SearcherTest {
             .crawlUrl("https://who.cares")
             .addIngredients("doesnt matter")
             .addInstructions("nothing to do");
-    indexer.addRecipe(recipeBuilder.putDiets("keto", 0.8f).putDiets("paleo", 0.5f).build());
-    indexer.addRecipe(recipeBuilder.putDiets("keto", 0.6f).putDiets("paleo", 0.1f).build());
+    indexer.addRecipe(recipeBuilder.putDiets("keto", 0.8F).build());
+    indexer.addRecipe(recipeBuilder.putDiets("keto", 0.6F).build());
+    indexer.addRecipe(recipeBuilder.putDiets("keto", 1F).build());
     indexer.commit();
 
     var searcher = indexer.buildSearcher();
-    var result = searcher.search(new SearchQuery.Builder().putDietThreshold("keto", 0.9f).build());
-    assertEquals(0, result.totalHits());
+    var sqb = new SearchQuery.Builder();
 
-    result =
-        searcher.search(
-            new SearchQuery.Builder()
-                .putDietThreshold("keto", 0.8f)
-                .putDietThreshold("paleo", 0.1f)
-                .build());
-    assertEquals(1, result.totalHits());
+    assertEquals(1, searcher.search(sqb.diet("keto").build()).totalHits());
+    assertEquals(1, searcher.search(sqb.diet("keto", 1F).build()).totalHits());
+    assertEquals(2, searcher.search(sqb.diet("keto", 0.7F).build()).totalHits());
+    assertEquals(3, searcher.search(sqb.diet("keto", 0.6F).build()).totalHits());
   }
 
   @Test

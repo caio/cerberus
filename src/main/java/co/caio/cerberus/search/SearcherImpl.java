@@ -241,11 +241,12 @@ class SearcherImpl implements Searcher {
                     Occur.MUST));
 
     searchQuery
-        .dietThreshold()
-        .forEach(
-            (diet, score) ->
+        .diet()
+        .ifPresent(
+            (diet) ->
                 queryBuilder.add(
-                    FloatPoint.newRangeQuery(getFieldNameForDiet(diet), score, Float.MAX_VALUE),
+                    FloatPoint.newRangeQuery(
+                        getFieldNameForDiet(diet.name()), diet.threshold(), Float.MAX_VALUE),
                     Occur.MUST));
 
     return queryBuilder.build();
