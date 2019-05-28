@@ -14,8 +14,7 @@ import co.caio.cerberus.Util;
 import co.caio.cerberus.model.Recipe;
 import co.caio.cerberus.model.SearchQuery;
 import co.caio.cerberus.model.SearchQuery.SortOrder;
-import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
-import co.caio.cerberus.search.Searcher.Builder.SearcherBuilderException;
+import co.caio.cerberus.search.Searcher.SearcherException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.OptionalInt;
@@ -36,13 +35,11 @@ class SearcherTest {
   }
 
   @Test
-  void builder() {
-    // Missing indexReader
-    assertThrows(SearcherBuilderException.class, () -> new Searcher.Builder().build());
-    // Bad directory
+  void throwsOnInvalidDir() {
+    assertThrows(SearcherException.class, () -> Searcher.Factory.open(Path.of("/does/not/exist")));
     assertThrows(
-        IndexConfigurationException.class,
-        () -> new Searcher.Builder().dataDirectory(Path.of("/this/doesnt/exist")).build());
+        SearcherException.class,
+        () -> Searcher.Factory.open(Path.of("/does/not/exist"), mock(SearchPolicy.class)));
   }
 
   @Test
@@ -265,11 +262,7 @@ class SearcherTest {
 
     given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchAllDocsQuery());
 
-    var searcherWithPolicy =
-        new Searcher.Builder()
-            .searchPolicy(policyMock)
-            .dataDirectory(Util.getTestDataDir())
-            .build();
+    var searcherWithPolicy = Searcher.Factory.open(Util.getTestDataDir(), policyMock);
 
     searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").build());
 
@@ -282,11 +275,7 @@ class SearcherTest {
 
     given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchAllDocsQuery());
 
-    var searcherWithPolicy =
-        new Searcher.Builder()
-            .searchPolicy(policyMock)
-            .dataDirectory(Util.getTestDataDir())
-            .build();
+    var searcherWithPolicy = Searcher.Factory.open(Util.getTestDataDir(), policyMock);
 
     // maxFacets is set to zero, policy shouldn't be called
     searcherWithPolicy.search(new SearchQuery.Builder().fulltext("unused").maxFacets(0).build());
@@ -305,11 +294,7 @@ class SearcherTest {
     // Policy will rewrite to MatchNoDocsQuery()
     given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchNoDocsQuery());
 
-    var searcherWithPolicy =
-        new Searcher.Builder()
-            .searchPolicy(policyMock)
-            .dataDirectory(Util.getTestDataDir())
-            .build();
+    var searcherWithPolicy = Searcher.Factory.open(Util.getTestDataDir(), policyMock);
 
     // So even when searching for all docs, we should
     // get zero results
@@ -321,11 +306,7 @@ class SearcherTest {
   void throwingFromPolicyIsAllowed() {
     var policyMock = mock(SearchPolicy.class);
 
-    var searcherWithPolicy =
-        new Searcher.Builder()
-            .searchPolicy(policyMock)
-            .dataDirectory(Util.getTestDataDir())
-            .build();
+    var searcherWithPolicy = Searcher.Factory.open(Util.getTestDataDir(), policyMock);
 
     class CustomTestException extends RuntimeException {
       CustomTestException() {
@@ -346,11 +327,7 @@ class SearcherTest {
 
     given(policyMock.rewriteParsedFulltextQuery(any())).willReturn(new MatchAllDocsQuery());
 
-    var searcherWithPolicy =
-        new Searcher.Builder()
-            .searchPolicy(policyMock)
-            .dataDirectory(Util.getTestDataDir())
-            .build();
+    var searcherWithPolicy = Searcher.Factory.open(Util.getTestDataDir(), policyMock);
 
     var queryWithFacets = new SearchQuery.Builder().fulltext("oil").maxFacets(4).build();
 
@@ -411,11 +388,7 @@ class SearcherTest {
 
     given(policyMock.rewriteParsedSimilarityQuery(any())).willReturn(new MatchNoDocsQuery());
 
-    var searcherWithPolicy =
-        new Searcher.Builder()
-            .searchPolicy(policyMock)
-            .dataDirectory(Util.getTestDataDir())
-            .build();
+    var searcherWithPolicy = Searcher.Factory.open(Util.getTestDataDir(), policyMock);
 
     var text = recipeText(Util.getSampleRecipes().skip(10).findFirst().get());
 

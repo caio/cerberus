@@ -8,6 +8,7 @@ import co.caio.cerberus.model.SearchQuery.SortOrder;
 import co.caio.cerberus.model.SearchResult;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
@@ -15,6 +16,8 @@ import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.FacetsCollector;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -39,13 +42,16 @@ class SearcherImpl implements Searcher {
   private final FulltextQueryParser queryParser;
   private final MoreLikeThis moreLikeThis;
 
-  SearcherImpl(Builder builder) {
-    indexSearcher = new IndexSearcher(builder.getIndexReader());
-    taxonomyReader = builder.getTaxonomyReader();
-    indexConfiguration = builder.getIndexConfiguration();
-    queryParser = new FulltextQueryParser(indexConfiguration.getAnalyzer());
+  SearcherImpl(Path dir) throws IOException {
+    indexConfiguration = IndexConfiguration.fromBaseDirectory(dir);
 
-    moreLikeThis = new MoreLikeThis(builder.getIndexReader());
+    var indexReader = DirectoryReader.open(indexConfiguration.openIndexDirectory());
+
+    this.indexSearcher = new IndexSearcher(indexReader);
+    this.taxonomyReader = new DirectoryTaxonomyReader(indexConfiguration.openTaxonomyDirectory());
+
+    queryParser = new FulltextQueryParser(indexConfiguration.getAnalyzer());
+    moreLikeThis = new MoreLikeThis(indexReader);
     moreLikeThis.setAnalyzer(indexConfiguration.getAnalyzer());
   }
 

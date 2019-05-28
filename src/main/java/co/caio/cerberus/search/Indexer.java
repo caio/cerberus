@@ -238,8 +238,7 @@ public interface Indexer {
 
       @Override
       public Searcher buildSearcher() {
-        return Searcher.Builder.fromOpened(
-            indexConfiguration, indexWriter.getDirectory(), taxonomyWriter.getDirectory());
+        return Searcher.Factory.open(indexConfiguration.getBaseDirectory());
       }
     }
   }
