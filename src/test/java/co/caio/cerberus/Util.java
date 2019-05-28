@@ -80,25 +80,22 @@ public class Util {
       throw new RuntimeException(rethrown);
     }
 
-    indexer =
-        new Indexer.Builder()
-            .dataDirectory(testDataDir)
-            .categoryExtractor(
-                new CategoryExtractor.Builder()
-                    .addCategory(
-                        "diet",
-                        true,
-                        recipe ->
-                            recipe
-                                .diets()
-                                .entrySet()
-                                .stream()
-                                .filter(es -> es.getValue() == 1f)
-                                .map(Entry::getKey)
-                                .collect(Collectors.toSet()))
-                    .build())
-            .createMode()
+    var extractor =
+        new CategoryExtractor.Builder()
+            .addCategory(
+                "diet",
+                true,
+                recipe ->
+                    recipe
+                        .diets()
+                        .entrySet()
+                        .stream()
+                        .filter(es -> es.getValue() == 1f)
+                        .map(Entry::getKey)
+                        .collect(Collectors.toSet()))
             .build();
+
+    indexer = Indexer.Factory.open(testDataDir, extractor);
 
     getSampleRecipes()
         .forEach(

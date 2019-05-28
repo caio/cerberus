@@ -25,10 +25,6 @@ class IndexConfiguration {
   private final FacetsConfig facetsConfig;
   private final Analyzer analyzer;
 
-  Path getBaseDirectory() {
-    return baseDirectory;
-  }
-
   private final Path baseDirectory;
 
   IndexConfiguration(Path baseDirectory, Set<String> multiValuedDimensions) {

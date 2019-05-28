@@ -50,8 +50,7 @@ class CategoryExtractorTest {
                 })
             .build();
 
-    var indexer =
-        new Indexer.Builder().dataDirectory(dataDir).categoryExtractor(ce).createMode().build();
+    var indexer = Indexer.Factory.open(dataDir, ce);
 
     var categoryToWantedPerLabel =
         Map.of(
@@ -68,8 +67,9 @@ class CategoryExtractorTest {
     indexer.addRecipe(fakeRecipe(6, 22, 500));
 
     indexer.commit();
+    indexer.close();
 
-    var searcher = indexer.buildSearcher();
+    var searcher = Searcher.Factory.open(dataDir);
     var facets =
         searcher.search(new SearchQuery.Builder().fulltext("*").maxFacets(3).build()).facets();
 

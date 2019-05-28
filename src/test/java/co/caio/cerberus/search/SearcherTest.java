@@ -30,7 +30,7 @@ class SearcherTest {
 
   @BeforeAll
   static void prepare() {
-    searcher = Util.getTestIndexer().buildSearcher();
+    searcher = Searcher.Factory.open(Util.getTestDataDir());
     assertEquals(Util.expectedIndexSize(), searcher.numDocs());
   }
 
@@ -106,7 +106,7 @@ class SearcherTest {
 
   @Test
   void dietThreshold(@TempDir Path tmpDir) throws Exception {
-    var indexer = new Indexer.Builder().dataDirectory(tmpDir).createMode().build();
+    var indexer = Indexer.Factory.open(tmpDir, CategoryExtractor.NOOP);
 
     var recipeBuilder =
         new Recipe.Builder()
@@ -121,8 +121,9 @@ class SearcherTest {
     indexer.addRecipe(recipeBuilder.putDiets("keto", 0.6F).build());
     indexer.addRecipe(recipeBuilder.putDiets("keto", 1F).build());
     indexer.commit();
+    indexer.close();
 
-    var searcher = indexer.buildSearcher();
+    var searcher = Searcher.Factory.open(tmpDir);
     var sqb = new SearchQuery.Builder();
 
     assertEquals(1, searcher.search(sqb.diet("keto").build()).totalHits());
