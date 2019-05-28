@@ -28,10 +28,6 @@ class IndexConfiguration {
   private final Path baseDirectory;
 
   IndexConfiguration(Path baseDirectory, Set<String> multiValuedDimensions) {
-    if (!baseDirectory.toFile().isDirectory()) {
-      throw new IndexConfigurationException("Not a directory: " + baseDirectory);
-    }
-
     this.baseDirectory = baseDirectory;
     this.analyzer = new EnglishAnalyzer();
 
@@ -39,7 +35,7 @@ class IndexConfiguration {
     multiValuedDimensions.forEach(c -> facetsConfig.setMultiValued(c, true));
   }
 
-  void save() {
+  void save() throws IOException {
     var props = new Properties();
     props.setProperty(
         CONFIG_MULTI_VALUED_KEY,
@@ -51,11 +47,7 @@ class IndexConfiguration {
             .map(Entry::getKey)
             .collect(Collectors.joining(",")));
 
-    try {
-      props.store(new FileWriter(baseDirectory.resolve(CONFIG_NAME).toFile()), null);
-    } catch (IOException wrapped) {
-      throw new IndexConfigurationException(wrapped);
-    }
+    props.store(new FileWriter(baseDirectory.resolve(CONFIG_NAME).toFile()), null);
   }
 
   FacetsConfig getFacetsConfig() {
@@ -66,54 +58,28 @@ class IndexConfiguration {
     return analyzer;
   }
 
-  Directory openIndexDirectory() {
-    return uncheckedOpen(INDEX_DIR_NAME);
+  Directory openIndexDirectory() throws IOException {
+    return FSDirectory.open(baseDirectory.resolve(INDEX_DIR_NAME));
   }
 
-  Directory openTaxonomyDirectory() {
-    return uncheckedOpen(TAXONOMY_DIR_NAME);
+  Directory openTaxonomyDirectory() throws IOException {
+    return FSDirectory.open(baseDirectory.resolve(TAXONOMY_DIR_NAME));
   }
 
-  private Directory uncheckedOpen(String dirName) {
-    try {
-      return FSDirectory.open(baseDirectory.resolve(dirName));
-    } catch (IOException wrapped) {
-      throw new IndexConfigurationException(wrapped);
-    }
-  }
-
-  static IndexConfiguration fromBaseDirectory(Path baseDirectory) {
-    if (!baseDirectory.toFile().isDirectory()) {
-      throw new IndexConfigurationException("Not a directory: " + baseDirectory);
-    }
-
+  static IndexConfiguration fromBaseDirectory(Path baseDirectory) throws IOException {
     var configPath = baseDirectory.resolve(CONFIG_NAME);
     var props = new Properties();
 
-    try {
-      props.load(new FileReader(configPath.toFile()));
-    } catch (IOException wrapped) {
-      throw new IndexConfigurationException(wrapped);
-    }
+    props.load(new FileReader(configPath.toFile()));
 
     var csv = props.getProperty(CONFIG_MULTI_VALUED_KEY);
 
     if (csv == null) {
-      throw new IndexConfigurationException("Configuration file is invalid");
+      throw new IOException("Invalid configuration file");
     }
 
     var multiValuedDimensions = Arrays.stream(csv.split(",")).collect(Collectors.toSet());
 
     return new IndexConfiguration(baseDirectory, multiValuedDimensions);
-  }
-
-  static class IndexConfigurationException extends RuntimeException {
-    IndexConfigurationException(Throwable throwable) {
-      super(throwable);
-    }
-
-    IndexConfigurationException(String message) {
-      super(message);
-    }
   }
 }

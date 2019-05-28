@@ -2,7 +2,6 @@ package co.caio.cerberus.search;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import co.caio.cerberus.search.IndexConfiguration.IndexConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map.Entry;
@@ -31,12 +30,11 @@ class IndexConfigurationTest {
 
   @Test
   void cantLoadFromConfigIfItDoesNotExist(@TempDir Path tempDir) {
-    assertThrows(
-        IndexConfigurationException.class, () -> IndexConfiguration.fromBaseDirectory(tempDir));
+    assertThrows(IOException.class, () -> IndexConfiguration.fromBaseDirectory(tempDir));
   }
 
   @Test
-  void loadFromConfigWorks(@TempDir Path base) {
+  void loadFromConfigWorks(@TempDir Path base) throws IOException {
     var multiValued = Set.of("a", "b", "c", "d");
     var config = new IndexConfiguration(base, multiValued);
 
