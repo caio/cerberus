@@ -15,17 +15,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Util {
-
-  private static final Logger logger = LoggerFactory.getLogger(Util.class);
-
   private static final ObjectMapper mapper;
 
   static {
@@ -51,18 +45,17 @@ public class Util {
     var samplesStream = Util.class.getResourceAsStream("/sample_recipes.jsonlines");
     var reader = new BufferedReader(new InputStreamReader(samplesStream));
     try {
-      return reader.lines().map(Util::readRecipe).flatMap(Optional::stream);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+      return reader.lines().map(Util::readRecipe);
+    } catch (Exception wrapped) {
+      throw new RuntimeException(wrapped);
     }
   }
 
-  private static Optional<Recipe> readRecipe(String line) {
+  private static Recipe readRecipe(String line) {
     try {
-      return Optional.of(mapper.readValue(line, Recipe.class));
-    } catch (Exception logged) {
-      logger.warn("Failed reading recipe from string: " + line, logged);
-      return Optional.empty();
+      return mapper.readValue(line, Recipe.class);
+    } catch (Exception wrapped) {
+      throw new RuntimeException(wrapped);
     }
   }
 
@@ -103,8 +96,8 @@ public class Util {
               try {
                 indexer.addRecipe(recipe);
                 tmpRecipeMap.put(recipe.recipeId(), recipe);
-              } catch (Exception logged) {
-                logger.error(String.format("Failed to index recipe %s", recipe), logged);
+              } catch (Exception wrapped) {
+                throw new RuntimeException(wrapped);
               }
             });
     try {
